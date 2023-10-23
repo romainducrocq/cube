@@ -20,7 +20,7 @@ TOKEN_KIND: AttributeDict[str, int] = AttributeDict({
     "brace_open": iota(),           # {
     "brace_close": iota(),          # }
     "semicolon": iota(),            # ;
-    #"newline": iota(),              # \n  # TODO
+    "newline": iota(),              # \n
     "identifier": iota(),           # [a-zA-Z_]\w*\b
     "constant": iota(),             # [0-9]+\b
     "skip": iota(),
@@ -39,8 +39,8 @@ TOKEN_REGEX: AttributeDict[int, str] = AttributeDict({
     TOKEN_KIND.brace_open: r"{",
     TOKEN_KIND.brace_close: r"}",
     TOKEN_KIND.semicolon: r";",
-    #TOKEN_KIND.newline: r"\n",  # TODO
-    TOKEN_KIND.skip: r"(#.*)|[ \n\r\t\f\v]",
+    TOKEN_KIND.newline: r"\n",
+    TOKEN_KIND.skip: r"[ \r\t\f\v]",
     TOKEN_KIND.error: r"."
 })
 

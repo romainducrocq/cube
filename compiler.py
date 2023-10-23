@@ -31,14 +31,14 @@ def compiler(filename: str, opt_stop: str, opt_s: bool) -> None:
     print("Start lexing...")
     lexing(filename)
     tokens: Generator[Token, None, None] = lexing(filename)
-    for token in list(tokens):  # TODO rm
-        debug(f"{token.token}, {token.token_kind}")
+    # for token in list(tokens):  # TODO rm
+    #     debug(f"{token.token}, {token.token_kind}")
     print("Exit lexing: OK")
     if opt_stop == OPT.lex:
         return
 
     print("Start parsing...")
-    parsing()
+    parsing(tokens)
     print("Exit parsing: OK")
     if opt_stop == OPT.parse:
         return
