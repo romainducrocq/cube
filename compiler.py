@@ -3,6 +3,7 @@ import os
 
 from typing import Tuple, List, Callable
 
+from helper import debug
 from lexer import lexing
 from parser import parsing
 from assembly_generator import assembly_generation
@@ -16,22 +17,30 @@ ARG_S: str = "-S"
 
 
 def compiler(input_file: str, opt_stop: str, opt_s: bool) -> None:
-    print(input_file)  # TODO rm
-    print("-S", opt_s)  # TODO rm
+    debug(input_file)  # TODO rm
+    debug(f"-S: {opt_s}")  # TODO rm
 
-    lexing(input_file)
+    print("Start lexing...")
+    token_kinds: List[int] = lexing(input_file)
+    print("Exit lexing: OK")
     if opt_stop == ARG_LEX:
         return
 
+    print("Start parsing...")
     parsing()
+    print("Exit parsing: OK")
     if opt_stop == ARG_PARSE:
         return
 
+    print("Start assembly generation...")
     assembly_generation()
+    print("Exit assembly generation: OK")
     if opt_stop == ARG_CODEGEN:
         return
 
+    print("Start code emission...")
     code_emission()
+    print("Exit code emission: OK")
 
 
 def arg_parse(argv: List[str]) -> Tuple[str, str, bool]:
