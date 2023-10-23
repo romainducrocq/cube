@@ -1,11 +1,21 @@
-DEBUG: bool = True
+""" UTILS """
 
-iota_counter: int = 0
+
+""" debug """
+
+
+DEBUG: bool = True
 
 
 def debug(string: str = "", end="\n") -> None:
     if DEBUG:
         print(string, end=end)
+
+
+""" iota """
+
+
+iota_counter: int = 0
 
 
 def iota(init: bool = False) -> int:
@@ -15,6 +25,9 @@ def iota(init: bool = False) -> int:
 
     iota_counter += 1
     return iota_counter - 1
+
+
+""" attribute dict """
 
 
 class AttributeDict(dict):

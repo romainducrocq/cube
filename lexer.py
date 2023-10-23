@@ -1,56 +1,82 @@
 import re
+from typing import List, Generator
+from dataclasses import dataclass
 
-from typing import Tuple, List
-
-from helper import debug
-from tokens import TOKEN_KIND, TOKEN_REGEX
-
-
-def left_split(string: str) -> str:
-    char_counter: int = 0
-    for char in string:
-        if char in [" ", "\n", "\t", "\r"]:
-            char_counter += 1
-        else:
-            break
-    return string[char_counter:]
+from util import iota, AttributeDict
 
 
-def next_token(string: str) -> Tuple[int, str]:
-    token: str = ""
-    token_kind: int = -1
-    substring: str = string
-    for tk in TOKEN_KIND:
-        expr: str = TOKEN_REGEX[TOKEN_KIND[tk]]
-        match = re.search(f"^{expr}", string)
-
-        if match and len(match.group(0)) >= len(token):
-            token = match.group(0)
-            token_kind = TOKEN_KIND[tk]
-            substring = re.split(f"^{expr}", string)[1]
-
-    assert token and \
-           token_kind >= 0 and \
-           len(substring) < len(string), "No next token was found..."
-
-    return token_kind, substring
+class LexerError(RuntimeError):
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__()
 
 
-def lexing(input_file: str) -> List[int]:
-    f = open(input_file, "r")
-    src: str = f.read()
-    f.close()
+TOKEN_KIND: AttributeDict[str, int] = AttributeDict({
+    "key_int": iota(init=True),     # int\b
+    "key_void": iota(),             # void\b
+    "key_return": iota(),           # return\b
+    "parenthesis_open": iota(),     # \(
+    "parenthesis_close": iota(),    # \)
+    "brace_open": iota(),           # {
+    "brace_close": iota(),          # }
+    "semicolon": iota(),            # ;
+    #"newline": iota(),              # \n  # TODO
+    "identifier": iota(),           # [a-zA-Z_]\w*\b
+    "constant": iota(),             # [0-9]+\b
+    "skip": iota(),
+    "error": iota()
+})
 
-    token_kinds: List[int] = []
 
-    while src:
-        src = left_split(src)
-        if not src:
-            break
+TOKEN_REGEX: AttributeDict[int, str] = AttributeDict({
+    TOKEN_KIND.identifier: r"[a-zA-Z_]\w*\b",
+    TOKEN_KIND.constant: r"[0-9]+\b",
+    TOKEN_KIND.key_int: r"int\b",
+    TOKEN_KIND.key_void: r"void\b",
+    TOKEN_KIND.key_return: r"return\b",
+    TOKEN_KIND.parenthesis_open: r"\(",
+    TOKEN_KIND.parenthesis_close: r"\)",
+    TOKEN_KIND.brace_open: r"{",
+    TOKEN_KIND.brace_close: r"}",
+    TOKEN_KIND.semicolon: r";",
+    #TOKEN_KIND.newline: r"\n",  # TODO
+    TOKEN_KIND.skip: r"(#.*)|[ \n\r\t\f\v]",
+    TOKEN_KIND.error: r"."
+})
 
-        token_kinds.append(-1)
-        token_kinds[-1], src = next_token(src)
 
-    debug(f"Token kinds: {token_kinds}") # TODO rm
+@dataclass
+class Token:
+    token: str
+    token_kind: int
 
-    return token_kinds
+
+TOKEN_PATTERN: re.Pattern = re.compile(
+    "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND[tk]]})" for tk in TOKEN_KIND),
+    flags=re.IGNORECASE
+)
+
+
+def tokenize(filename: str) -> Generator[Token, None, None]:
+
+    with open(filename, "r", encoding="utf-8") as input_file:
+        for line in input_file:
+
+            for match in re.finditer(TOKEN_PATTERN, line):
+                if match.lastgroup is None:
+                    raise LexerError(
+                        f"No token found in line:\n    {line}")
+
+                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.error:
+                    raise LexerError(
+                        f"Invalid token \"{match.group()}\" found in line:\n    {line}")
+
+                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.skip:
+                    continue
+
+                yield Token(token=match.group(), token_kind=TOKEN_KIND[match.lastgroup])
+
+
+def lexing(filename: str) -> List[Token]:
+
+    return list(tokenize(filename))

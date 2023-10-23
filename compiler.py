@@ -3,39 +3,50 @@ import os
 
 from typing import Tuple, List, Callable
 
-from helper import debug
-from lexer import lexing
+from util import AttributeDict, debug
+from lexer import lexing, Token
 from parser import parsing
 from assembly_generator import assembly_generation
 from code_emitter import code_emission
 
 
-ARG_LEX: str = "--lex"
-ARG_PARSE: str = "--parse"
-ARG_CODEGEN: str = "--codegen"
-ARG_S: str = "-S"
+class CompilerError(RuntimeError):
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__()
 
 
-def compiler(input_file: str, opt_stop: str, opt_s: bool) -> None:
-    debug(input_file)  # TODO rm
+OPT: AttributeDict[str, str] = AttributeDict({
+    "lex": "--lex",
+    "parse": "--parse",
+    "codegen": "--codegen",
+    "S": "-S"
+})
+
+
+def compiler(filename: str, opt_stop: str, opt_s: bool) -> None:
+    debug(filename)  # TODO rm
     debug(f"-S: {opt_s}")  # TODO rm
 
     print("Start lexing...")
-    token_kinds: List[int] = lexing(input_file)
+    lexing(filename)
+    tokens: List[Token] = lexing(filename)
+    for token in tokens:  # TODO rm
+        debug(f"{token.token}, {token.token_kind}")
     print("Exit lexing: OK")
-    if opt_stop == ARG_LEX:
+    if opt_stop == OPT.lex:
         return
 
     print("Start parsing...")
     parsing()
     print("Exit parsing: OK")
-    if opt_stop == ARG_PARSE:
+    if opt_stop == OPT.parse:
         return
 
     print("Start assembly generation...")
     assembly_generation()
     print("Exit assembly generation: OK")
-    if opt_stop == ARG_CODEGEN:
+    if opt_stop == OPT.codegen:
         return
 
     print("Start code emission...")
@@ -49,22 +60,26 @@ def arg_parse(argv: List[str]) -> Tuple[str, str, bool]:
         lambda: "" if not argv else argv.pop(0)
 
     _ = shift()
-    assert argv, "ERROR: No file was provided..."
+    if not argv:
+        raise CompilerError(
+            f"No file was provided in args")
 
-    input_file = shift()
-    assert os.path.exists(input_file), "ERROR: File does not exist..."
+    filename = shift()
+    if not os.path.exists(filename):
+        raise CompilerError(
+            f"File {filename} does not exist")
 
     opt_stop: str = ""
-    if ARG_CODEGEN in argv:
-        opt_stop = ARG_CODEGEN
-    elif ARG_PARSE in argv:
-        opt_stop = ARG_PARSE
-    elif ARG_LEX in argv:
-        opt_stop = ARG_LEX
+    if OPT.codegen in argv:
+        opt_stop = OPT.codegen
+    elif OPT.parse in argv:
+        opt_stop = OPT.parse
+    elif OPT.lex in argv:
+        opt_stop = OPT.lex
 
-    opt_s: bool = ARG_S in argv
+    opt_s: bool = OPT.S in argv
 
-    return input_file, opt_stop, opt_s
+    return filename, opt_stop, opt_s
 
 
 if __name__ == "__main__":
