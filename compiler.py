@@ -1,7 +1,7 @@
 import sys
 import os
 
-from typing import Tuple, List, Callable
+from typing import Tuple, List, Callable, Generator
 
 from util import AttributeDict, debug
 from lexer import lexing, Token
@@ -30,8 +30,8 @@ def compiler(filename: str, opt_stop: str, opt_s: bool) -> None:
 
     print("Start lexing...")
     lexing(filename)
-    tokens: List[Token] = lexing(filename)
-    for token in tokens:  # TODO rm
+    tokens: Generator[Token, None, None] = lexing(filename)
+    for token in list(tokens):  # TODO rm
         debug(f"{token.token}, {token.token_kind}")
     print("Exit lexing: OK")
     if opt_stop == OPT.lex:

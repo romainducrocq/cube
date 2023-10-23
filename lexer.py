@@ -1,5 +1,5 @@
 import re
-from typing import List, Generator
+from typing import Generator
 from dataclasses import dataclass
 
 from util import iota, AttributeDict
@@ -57,25 +57,21 @@ TOKEN_PATTERN: re.Pattern = re.compile(
 )
 
 
-def lexing(filename: str) -> List[Token]:
+def lexing(filename: str) -> Generator[Token, None, None]:
 
-    def tokenize() -> Generator[Token, None, None]:
+    with open(filename, "r", encoding="utf-8") as input_file:
+        for line in input_file:
 
-        with open(filename, "r", encoding="utf-8") as input_file:
-            for line in input_file:
+            for match in re.finditer(TOKEN_PATTERN, line):
+                if match.lastgroup is None:
+                    raise LexerError(
+                        f"No token found in line:\n    {line}")
 
-                for match in re.finditer(TOKEN_PATTERN, line):
-                    if match.lastgroup is None:
-                        raise LexerError(
-                            f"No token found in line:\n    {line}")
+                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.error:
+                    raise LexerError(
+                        f"Invalid token \"{match.group()}\" found in line:\n    {line}")
 
-                    if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.error:
-                        raise LexerError(
-                            f"Invalid token \"{match.group()}\" found in line:\n    {line}")
+                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.skip:
+                    continue
 
-                    if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.skip:
-                        continue
-
-                    yield Token(token=match.group(), token_kind=TOKEN_KIND[match.lastgroup])
-
-    return list(tokenize())
+                yield Token(token=match.group(), token_kind=TOKEN_KIND[match.lastgroup])
