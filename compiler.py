@@ -26,21 +26,17 @@ OPT: AttributeDict[str, str] = AttributeDict({
 
 
 def compiler(filename: str, opt_stop: str, opt_s: bool) -> None:
-    debug(filename)  # TODO rm
-    debug(f"-S: {opt_s}")  # TODO rm
 
     print("Start lexing...")
     lexing(filename)
     tokens: Generator[Token, None, None] = lexing(filename)
-    for token in list(tokens):  # TODO rm
-        debug(f"{token.token}, {token.token_kind}")  # TODO rm
     print("Exit lexing: OK")
     if opt_stop == OPT.lex:
         return
 
     print("Start parsing...")
     ast: AST = parsing(tokens)
-    debug(str(list(tokens)))  # TODO rm
+    debug(str(list(tokens)))
     print("Exit parsing: OK")
     if opt_stop == OPT.parse:
         return
