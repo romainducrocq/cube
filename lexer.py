@@ -58,8 +58,7 @@ class Token:
 
 
 TOKEN_PATTERN: re.Pattern = re.compile(
-    "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND[tk]]})" for tk in TOKEN_KIND),
-    flags=re.IGNORECASE
+    "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND[tk]]})" for tk in TOKEN_KIND)
 )
 
 
