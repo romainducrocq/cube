@@ -4,6 +4,7 @@ import os
 from typing import Tuple, List, Callable, Generator
 
 from util import AttributeDict, debug
+from __ast import AST
 from lexer import lexing, Token
 from parser import parsing
 from assembly_generator import assembly_generation
@@ -31,14 +32,15 @@ def compiler(filename: str, opt_stop: str, opt_s: bool) -> None:
     print("Start lexing...")
     lexing(filename)
     tokens: Generator[Token, None, None] = lexing(filename)
-    # for token in list(tokens):  # TODO rm
-    #     debug(f"{token.token}, {token.token_kind}")
+    for token in list(tokens):  # TODO rm
+        debug(f"{token.token}, {token.token_kind}")  # TODO rm
     print("Exit lexing: OK")
     if opt_stop == OPT.lex:
         return
 
     print("Start parsing...")
-    parsing(tokens)
+    ast: AST = parsing(tokens)
+    debug(str(list(tokens)))  # TODO rm
     print("Exit parsing: OK")
     if opt_stop == OPT.parse:
         return
