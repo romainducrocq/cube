@@ -1,8 +1,8 @@
 import re
-from typing import Generator
+from typing import Dict, Generator
 from dataclasses import dataclass
 
-from util import iota, AttributeDict
+from util import IotaEnum
 
 __all__ = [
     'TOKEN_KIND',
@@ -17,26 +17,23 @@ class LexerError(RuntimeError):
         super().__init__()
 
 
-TOKEN_KIND: AttributeDict[str, int] = AttributeDict({
-    "key_int": iota(init=True),     # int\b
-    "key_void": iota(),             # void\b
-    "key_return": iota(),           # return\b
-    "parenthesis_open": iota(),     # \(
-    "parenthesis_close": iota(),    # \)
-    "brace_open": iota(),           # {
-    "brace_close": iota(),          # }
-    "semicolon": iota(),            # ;
-    # "newline": iota(),              # \n
-    "identifier": iota(),           # [a-zA-Z_]\w*\b
-    "constant": iota(),             # [0-9]+\b
-    "skip": iota(),
-    "error": iota()
-})
+TOKEN_KIND: IotaEnum = IotaEnum(
+    "key_int",
+    "key_void",
+    "key_return",
+    "parenthesis_open",
+    "parenthesis_close",
+    "brace_open",
+    "brace_close",
+    "semicolon",
+    # "newline",
+    "identifier",
+    "constant",
+    "skip",
+    "error"
+)
 
-
-TOKEN_REGEX: AttributeDict[int, str] = AttributeDict({
-    TOKEN_KIND.identifier: r"[a-zA-Z_]\w*\b",
-    TOKEN_KIND.constant: r"[0-9]+\b",
+TOKEN_REGEX: Dict[int, str] = {
     TOKEN_KIND.key_int: r"int\b",
     TOKEN_KIND.key_void: r"void\b",
     TOKEN_KIND.key_return: r"return\b",
@@ -46,9 +43,11 @@ TOKEN_REGEX: AttributeDict[int, str] = AttributeDict({
     TOKEN_KIND.brace_close: r"}",
     TOKEN_KIND.semicolon: r";",
     # TOKEN_KIND.newline: r"\n",
+    TOKEN_KIND.identifier: r"[a-zA-Z_]\w*\b",
+    TOKEN_KIND.constant: r"[0-9]+\b",
     TOKEN_KIND.skip: r"[ \n\r\t\f\v]",
     TOKEN_KIND.error: r"."
-})
+}
 
 
 @dataclass

@@ -1,6 +1,5 @@
 from typing import Generator
 
-from util import debug
 from __ast import *
 from lexer import TOKEN_KIND, Token
 
@@ -25,7 +24,6 @@ class Parser:
 
     def expect_next(self, expected_token: int) -> None:
         self.next_token = next(self.tokens)
-        debug(str(self.next_token))  # TODO rm
         if self.next_token.token_kind != expected_token:
             raise ParserError(
                 f"Expected token \"{expected_token}\" but found \"{self.next_token.token_kind}\"")
@@ -78,6 +76,10 @@ def parsing(tokens: Generator[Token, None, None]) -> AST:
 
         except StopIteration:
             break
+
+    if list(tokens):
+        raise ParserError(
+            "An error occurred in parsing, not all tokens were consumed")
 
     if not parser.ast:
         raise ParserError(
