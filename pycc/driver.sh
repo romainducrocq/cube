@@ -28,8 +28,10 @@ if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
 pack && python3 compiler.py ${FILE}.i ${@:1:$#-1}
 if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
 
-# TODO
-# gcc ${FILE}.s -o ${FILE}
-# if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
+echo ${@:1:$#-1} | grep -q -e "--lex" -e "--parse" -e "--codegen"
+if [ ${?} -ne 0 ]; then
+    gcc ${FILE}.s -o ${FILE}
+    if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
+fi
 
 clean ${FILE} && exit 0
