@@ -3,12 +3,12 @@ import os
 
 from typing import Tuple, List, Generator
 
-from util import IotaEnum
-from __ast import AST
-from lexer import lexing, Token
-from parser import parsing
-from assembly_generator import assembly_generation
-from code_emitter import code_emission
+from pycc.util.iota_enum import IotaEnum
+from pycc.parser.__ast import AST
+from pycc.parser.lexer import lexing, Token
+from pycc.parser.parser import parsing
+from pycc.parser.assembly_generator import assembly_generation
+from pycc.parser.code_emitter import code_emission
 
 DEBUG: bool = True
 

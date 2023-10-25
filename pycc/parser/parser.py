@@ -1,7 +1,7 @@
 from typing import Generator
 
-from __ast import *
-from lexer import TOKEN_KIND, Token
+from pycc.parser.__ast import *
+from pycc.parser.lexer import TOKEN_KIND, Token
 
 __all__ = [
     'parsing'

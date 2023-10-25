@@ -2,7 +2,7 @@ import re
 from typing import Dict, Generator
 from dataclasses import dataclass
 
-from util import IotaEnum
+from pycc.util.iota_enum import IotaEnum
 
 __all__ = [
     'TOKEN_KIND',
