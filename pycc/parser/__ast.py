@@ -17,7 +17,7 @@ __all__ = [
 
 class AST:
     """ AST node """
-    @staticmethod  # TODO keep ?
+    @staticmethod
     def fields(cls):
         return [attr for attr in dir(cls)
                 if not attr.startswith("__") and not callable(getattr(cls, attr))]
@@ -25,18 +25,19 @@ class AST:
     def pretty_string(self) -> str:
         string = ""
 
-        def _pretty_string(node: Optional[AST] = None, indent: int = 0) -> None:
+        def _pretty_string(kind: str = "AST", node: Optional[AST] = None, indent: int = 0) -> None:
             nonlocal string
             if not node:
                 node = self
 
-            string += str(' ' * indent + type(node).__name__ + ':' + '\n')
+            string += str(' ' * indent + "<" + kind + "> " + type(node).__name__ + ':' + '\n')
             indent += 4
-            for kind, child in node.__dict__.items():
+            for c_kind, child in node.__dict__.items():
                 if '__dict__' in dir(child):
-                    _pretty_string(child, indent)
+                    _pretty_string(c_kind, child, indent)
                 else:
-                    string += str(' ' * indent + kind + ': ' + str(child) + '\n')
+                    string += str(' ' * indent + "<" + c_kind + "> " + type(str(child)).__name__ + ': '
+                                  + str(child) + '\n')
 
         _pretty_string()
         return string[:-1]
