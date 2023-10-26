@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, List
 from dataclasses import dataclass
 
 __all__ = [
@@ -25,19 +25,34 @@ class AST:
     def pretty_string(self) -> str:
         string = ""
 
-        def _pretty_string(kind: str = "AST", node: Optional[AST] = None, indent: int = 0) -> None:
+        def _pretty_string(kind: str = "<AST> ", node: Any = None, indent: int = 0) -> None:
             nonlocal string
             if not node:
                 node = self
 
-            string += str(' ' * indent + "<" + kind + "> " + type(node).__name__ + ':' + '\n')
+            string += str(' ' * indent + kind + type(node).__name__ + ':' + '\n')
             indent += 4
-            for child_kind, child_node in node.__dict__.items():
-                if '__dict__' in dir(child_node):
-                    _pretty_string(child_kind, child_node, indent)
+
+            def _pretty_string_child(_child_kind: str, _child_node: Any):
+                nonlocal string
+                if '__dict__' in dir(_child_node):
+                    _pretty_string(_child_kind, _child_node, indent)
                 else:
-                    string += str(' ' * indent + "<" + child_kind + "> " + type(str(child_node)).__name__
-                                  + ': ' + str(child_node) + '\n')
+                    string += str(' ' * indent + _child_kind + type(str(_child_node)).__name__ + ': '
+                                  + str(_child_node) + '\n')
+
+            for child_kind, child_node in node.__dict__.items():
+                if isinstance(child_node, list):
+                    string += str(' ' * indent + "<" + child_kind + "[" + str(len(child_node)) + "]> " + '\n')
+                    indent += 4
+
+                    for e, list_node in enumerate(child_node):
+                        for list_child_node in list_node.__dict__.values():
+                            _pretty_string_child(f'{e}: ', list_child_node)
+                    indent -= 4
+
+                else:
+                    _pretty_string_child("<" + child_kind + "> ", child_node)
 
         _pretty_string()
         return string[:-1]
