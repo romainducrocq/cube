@@ -32,12 +32,12 @@ class AST:
 
             string += str(' ' * indent + "<" + kind + "> " + type(node).__name__ + ':' + '\n')
             indent += 4
-            for c_kind, child in node.__dict__.items():
-                if '__dict__' in dir(child):
-                    _pretty_string(c_kind, child, indent)
+            for child_kind, child_node in node.__dict__.items():
+                if '__dict__' in dir(child_node):
+                    _pretty_string(child_kind, child_node, indent)
                 else:
-                    string += str(' ' * indent + "<" + c_kind + "> " + type(str(child)).__name__ + ': '
-                                  + str(child) + '\n')
+                    string += str(' ' * indent + "<" + child_kind + "> " + type(str(child_node)).__name__
+                                  + ': ' + str(child_node) + '\n')
 
         _pretty_string()
         return string[:-1]
