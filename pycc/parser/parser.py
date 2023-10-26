@@ -1,4 +1,4 @@
-from typing import Optional, Generator
+from typing import Generator
 
 from pycc.parser.__ast import *
 from pycc.parser.lexer import TOKEN_KIND, Token
@@ -15,10 +15,10 @@ class ParserError(RuntimeError):
 
 
 class Parser:
+    c_ast: AST = None
+    next_token: Token = None
 
     def __init__(self, tokens: Generator[Token, None, None]):
-        self.c_ast: Optional[AST] = None
-        self.next_token: Optional[Token] = None
         self.tokens: Generator[Token, None, None] = tokens
 
     def expect_next(self, expected_token: int) -> None:
