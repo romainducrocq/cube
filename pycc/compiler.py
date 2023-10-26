@@ -37,7 +37,6 @@ def debug(string: str = "", end="\n") -> None:
 def compile(filename: str, opt_exit: int, opt_s: int) -> None:
 
     print("Start lexing...")
-    lexing(filename)
     tokens: Generator[Token, None, None] = lexing(filename)
     print("Exit lexing: OK")
     if opt_exit == OPT.lex:
