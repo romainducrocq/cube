@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Optional, Generator
 
 from pycc.parser.__ast import *
 from pycc.parser.lexer import TOKEN_KIND, Token
@@ -15,12 +15,11 @@ class ParserError(RuntimeError):
 
 
 class Parser:
-    ast: AST = None
-    next_token: Token = None
-    tokens: Generator[Token, None, None] = None
 
     def __init__(self, tokens: Generator[Token, None, None]):
-        self.tokens = tokens
+        self.c_ast: Optional[AST] = None
+        self.next_token: Optional[Token] = None
+        self.tokens: Generator[Token, None, None] = tokens
 
     def expect_next(self, expected_token: int) -> None:
         self.next_token = next(self.tokens)
@@ -33,24 +32,24 @@ class Parser:
         self.expect_next(TOKEN_KIND.identifier)
         return self.next_token.token
 
-    def parse_constant(self) -> Constant:
+    def parse_constant(self) -> CConstant:
         """ <int> ::= ? A constant token ? """
         self.expect_next(TOKEN_KIND.constant)
-        return Constant(int(self.next_token.token))
+        return CConstant(int(self.next_token.token))
 
-    def parse_expr(self) -> Expr:
+    def parse_expr(self) -> CExpr:
         """ <exp> ::= <int> """
-        int_const: Constant = self.parse_constant()
+        int_const: CConstant = self.parse_constant()
         return int_const
 
-    def parse_statement(self) -> Statement:
+    def parse_statement(self) -> CStatement:
         """ <statement> ::= "return" <exp> ";" """
         self.expect_next(TOKEN_KIND.key_return)
-        return_expr: Expr = self.parse_expr()
+        return_expr: CExpr = self.parse_expr()
         self.expect_next(TOKEN_KIND.semicolon)
-        return Return(return_expr)
+        return CReturn(return_expr)
 
-    def parse_function(self) -> Function:
+    def parse_function(self) -> CFunction:
         """ <function> ::= "int" <identifier> "(" "void" ")" "{" <statement> "}" """
         self.expect_next(TOKEN_KIND.key_int)
         identifier: str = self.parse_identifier()
@@ -58,13 +57,13 @@ class Parser:
         self.expect_next(TOKEN_KIND.key_void)
         self.expect_next(TOKEN_KIND.parenthesis_close)
         self.expect_next(TOKEN_KIND.brace_open)
-        body: Statement = self.parse_statement()
+        body: CStatement = self.parse_statement()
         self.expect_next(TOKEN_KIND.brace_close)
-        return Function(identifier, body)
+        return CFunction(identifier, body)
 
     def parse_program(self) -> None:
         """ <program> ::= <function> """
-        self.ast = self.parse_function()
+        self.c_ast = self.parse_function()
 
 
 def parsing(tokens: Generator[Token, None, None]) -> AST:
@@ -81,8 +80,8 @@ def parsing(tokens: Generator[Token, None, None]) -> AST:
         raise ParserError(
             "An error occurred in parsing, not all tokens were consumed")
 
-    if not parser.ast:
+    if not parser.c_ast:
         raise ParserError(
             "An error occurred in parsing, AST was not parsed")
 
-    return parser.ast
+    return parser.c_ast

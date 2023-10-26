@@ -45,10 +45,10 @@ def compiler(filename: str, opt_exit: int, opt_s: int) -> None:
         return
 
     print("Start parsing...")
-    ast: AST = parsing(tokens)
+    c_ast: AST = parsing(tokens)
     print("Exit parsing: OK")
     if opt_exit == OPT.parse:
-        debug(ast.pretty_string())
+        debug(c_ast.pretty_string())
         return
 
     print("Start assembly generation...")

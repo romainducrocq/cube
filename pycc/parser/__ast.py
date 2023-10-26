@@ -1,12 +1,13 @@
+from typing import Optional
 from dataclasses import dataclass
 
 __all__ = [
     'AST',
-    'Expr',
-    'Constant',
-    'Statement',
-    'Return',
-    'Function'
+    'CExpr',
+    'CConstant',
+    'CStatement',
+    'CReturn',
+    'CFunction'
 ]
 
 
@@ -20,7 +21,7 @@ class AST:
     def pretty_string(self) -> str:
         string = ""
 
-        def _pretty_string(node: AST = None, indent: int = 0) -> None:
+        def _pretty_string(node: Optional[AST] = None, indent: int = 0) -> None:
             nonlocal string
             if not node:
                 node = self
@@ -37,7 +38,7 @@ class AST:
         return string[:-1]
 
 
-class Expr(AST):
+class CExpr(AST):
     """
     expr = Constant(constant value)
     """
@@ -45,12 +46,12 @@ class Expr(AST):
 
 
 @dataclass
-class Constant(Expr):
+class CConstant(CExpr):
     """ Constant(constant value) """
     value: int = None
 
 
-class Statement(AST):
+class CStatement(AST):
     """
     stmt = Return(expr? value)
     """
@@ -58,16 +59,16 @@ class Statement(AST):
 
 
 @dataclass
-class Return(Statement):
+class CReturn(CStatement):
     """ Return(expr? value) """
-    expr: Expr = None
+    expr: CExpr = None
 
 
 @dataclass
-class Function(AST):
+class CFunction(AST):
     """
     stmt = Function(identifier name, statement body)
     """
     name: str = None
-    body: Statement = None
+    body: CStatement = None
 
