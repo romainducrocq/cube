@@ -27,19 +27,19 @@ class Parser:
             raise ParserError(
                 f"Expected token \"{expected_token}\" but found \"{self.next_token.token_kind}\"")
 
-    def parse_identifier(self) -> CIdentifier:
+    def parse_identifier(self) -> TIdentifier:
         """ <identifier> ::= ? An identifier token ? """
         self.expect_next(TOKEN_KIND.identifier)
-        return CIdentifier(self.next_token.token)
+        return TIdentifier(self.next_token.token)
 
-    def parse_int(self) -> CInt:
+    def parse_int(self) -> TInt:
         """ <int> ::= ? A constant token ? """
-        return CInt(int(self.next_token.token))
+        return TInt(int(self.next_token.token))
 
     def parse_constant(self) -> CConstant:
         """ <constant> ::= <int> """
         self.expect_next(TOKEN_KIND.constant)
-        value: CInt = self.parse_int()
+        value: TInt = self.parse_int()
         return CConstant(value)
 
     def parse_exp(self) -> CExp:
@@ -57,7 +57,7 @@ class Parser:
     def parse_function_def(self) -> CFunctionDef:
         """ <function> ::= "int" <identifier> "(" "void" ")" "{" <statement> "}" """
         self.expect_next(TOKEN_KIND.key_int)
-        name: CIdentifier = self.parse_identifier()
+        name: TIdentifier = self.parse_identifier()
         self.expect_next(TOKEN_KIND.parenthesis_open)
         self.expect_next(TOKEN_KIND.key_void)
         self.expect_next(TOKEN_KIND.parenthesis_close)

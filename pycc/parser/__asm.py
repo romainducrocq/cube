@@ -1,12 +1,24 @@
 from typing import List
 from dataclasses import dataclass
 
-from pycc.parser.__ast import AST
+from pycc.parser.__ast import AST, TIdentifier, TInt
+
+__all__ = [
+    'AsmOperand',
+    'AsmImm',
+    'AsmRegister',
+    'AsmInstruction',
+    'AsmMov',
+    'AsmRet',
+    'AsmFunctionDef',
+    'AsmFunction',
+    'AsmProgram'
+]
 
 
-class AsmOperand(AST):
+class AsmOperand:
     """
-    operand = Imm(int) | Register
+    operand = Imm(int value) | Register
     """
     pass
 
@@ -14,17 +26,15 @@ class AsmOperand(AST):
 @dataclass
 class AsmImm(AsmOperand):
     """ Imm(int value) """
-    value: int = None
+    value: TInt = None
 
 
 class AsmRegister(AsmOperand):
-    """
-    Register
-    """
+    """ Register """
     pass
 
 
-class AsmInstruction(AST):
+class AsmInstruction:
     """
     instruction = Mov(operand src, operand dst) | Ret
     """
@@ -43,12 +53,20 @@ class AsmRet(AsmInstruction):
     pass
 
 
-class AsmFunctionDef(AST):
-    """ function_definition = Function(identifier name, instruction* instructions) """
+class AsmFunctionDef:
+    """
+    function_definition = Function(identifier name, instruction* instructions)
+    """
     pass
 
 
 class AsmFunction(AsmFunctionDef):
     """ Function(identifier name, instruction* instructions) """
-    identifier: str = None
-    instructions: List[AsmInstruction] = []
+    name: TIdentifier = None
+    instructions: List[AsmInstruction] = None
+
+
+@dataclass
+class AsmProgram(AST):
+    """ AST = Program(function_definition) """
+    function_def: AsmFunctionDef = None

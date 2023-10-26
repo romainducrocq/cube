@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 __all__ = [
     'AST',
-    'CIdentifier',
-    'CInt',
+    'TIdentifier',
+    'TInt',
     'CExp',
     'CConstant',
     'CStatement',
@@ -59,13 +59,13 @@ class AST:
 
 
 @dataclass
-class CIdentifier:
+class TIdentifier:
     """ identifier str_t """
     str_t: str = None
 
 
 @dataclass
-class CInt:
+class TInt:
     """ int int_t """
     int_t: int = None
 
@@ -80,7 +80,7 @@ class CExp:
 @dataclass
 class CConstant(CExp):
     """ Constant(int value) """
-    value: CInt = None
+    value: TInt = None
 
 
 class CStatement:
@@ -106,14 +106,12 @@ class CFunctionDef:
 @dataclass
 class CFunction(CFunctionDef):
     """ Function(identifier name, statement body) """
-    name: CIdentifier = None
+    name: TIdentifier = None
     body: CStatement = None
 
 
 @dataclass
 class CProgram(AST):
-    """
-    program = Program(function_definition)
-    """
+    """ AST = Program(function_definition) """
     function_def: CFunctionDef = None
 
