@@ -1,3 +1,4 @@
+import platform
 import sys
 import os
 
@@ -33,7 +34,7 @@ def debug(string: str = "", end="\n") -> None:
         print(string, end=end)
 
 
-def compiler(filename: str, opt_exit: int, opt_s: int) -> None:
+def compile(filename: str, opt_exit: int, opt_s: int) -> None:
 
     print("Start lexing...")
     lexing(filename)
@@ -99,6 +100,12 @@ def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
 
 if __name__ == "__main__":
 
-    compiler(*arg_parse(sys.argv))
+    if (int(platform.python_version().split('.')[0]) < 3 or
+            (int(platform.python_version().split('.')[0]) >= 3 and
+             int(platform.python_version().split('.')[1]) < 9)):
+        raise CompilerError(
+            f"Python version too old, >= 3.9 required but {platform.python_version()} used")
+
+    compile(*arg_parse(sys.argv))
 
     exit(0)
