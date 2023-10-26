@@ -27,43 +27,49 @@ class Parser:
             raise ParserError(
                 f"Expected token \"{expected_token}\" but found \"{self.next_token.token_kind}\"")
 
-    def parse_identifier(self) -> str:
+    def parse_identifier(self) -> CIdentifier:
         """ <identifier> ::= ? An identifier token ? """
         self.expect_next(TOKEN_KIND.identifier)
-        return self.next_token.token
+        return CIdentifier(self.next_token.token)
+
+    def parse_int(self) -> CInt:
+        """ <int> ::= ? A constant token ? """
+        return CInt(int(self.next_token.token))
 
     def parse_constant(self) -> CConstant:
-        """ <int> ::= ? A constant token ? """
+        """ <constant> ::= <int> """
         self.expect_next(TOKEN_KIND.constant)
-        return CConstant(int(self.next_token.token))
+        value: CInt = self.parse_int()
+        return CConstant(value)
 
-    def parse_expr(self) -> CExpr:
-        """ <exp> ::= <int> """
+    def parse_exp(self) -> CExp:
+        """ <exp> ::= <constant> """
         int_const: CConstant = self.parse_constant()
         return int_const
 
     def parse_statement(self) -> CStatement:
         """ <statement> ::= "return" <exp> ";" """
         self.expect_next(TOKEN_KIND.key_return)
-        return_expr: CExpr = self.parse_expr()
+        return_exp: CExp = self.parse_exp()
         self.expect_next(TOKEN_KIND.semicolon)
-        return CReturn(return_expr)
+        return CReturn(return_exp)
 
-    def parse_function(self) -> CFunction:
+    def parse_function_def(self) -> CFunctionDef:
         """ <function> ::= "int" <identifier> "(" "void" ")" "{" <statement> "}" """
         self.expect_next(TOKEN_KIND.key_int)
-        identifier: str = self.parse_identifier()
+        name: CIdentifier = self.parse_identifier()
         self.expect_next(TOKEN_KIND.parenthesis_open)
         self.expect_next(TOKEN_KIND.key_void)
         self.expect_next(TOKEN_KIND.parenthesis_close)
         self.expect_next(TOKEN_KIND.brace_open)
         body: CStatement = self.parse_statement()
         self.expect_next(TOKEN_KIND.brace_close)
-        return CFunction(identifier, body)
+        return CFunction(name, body)
 
     def parse_program(self) -> None:
         """ <program> ::= <function> """
-        self.c_ast = self.parse_function()
+        function_def: CFunctionDef = self.parse_function_def()
+        self.c_ast = CProgram(function_def)
 
 
 def parsing(tokens: Generator[Token, None, None]) -> AST:

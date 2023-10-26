@@ -3,11 +3,15 @@ from dataclasses import dataclass
 
 __all__ = [
     'AST',
-    'CExpr',
+    'CIdentifier',
+    'CInt',
+    'CExp',
     'CConstant',
     'CStatement',
     'CReturn',
-    'CFunction'
+    'CFunctionDef',
+    'CFunction',
+    'CProgram'
 ]
 
 
@@ -38,37 +42,62 @@ class AST:
         return string[:-1]
 
 
-class CExpr(AST):
+@dataclass
+class CIdentifier:
+    """ identifier str_t """
+    str_t: str = None
+
+
+@dataclass
+class CInt:
+    """ int int_t """
+    int_t: int = None
+
+
+class CExp:
     """
-    expr = Constant(constant value)
+    exp = Constant(int value)
     """
     pass
 
 
 @dataclass
-class CConstant(CExpr):
-    """ Constant(constant value) """
-    value: int = None
+class CConstant(CExp):
+    """ Constant(int value) """
+    value: CInt = None
 
 
-class CStatement(AST):
+class CStatement:
     """
-    stmt = Return(expr? value)
+    statement = Return(exp)
     """
     pass
 
 
 @dataclass
 class CReturn(CStatement):
-    """ Return(expr? value) """
-    expr: CExpr = None
+    """ Return(exp) """
+    exp: CExp = None
+
+
+class CFunctionDef:
+    """
+    function_definition = Function(identifier name, statement body)
+    """
+    pass
 
 
 @dataclass
-class CFunction(AST):
-    """
-    stmt = Function(identifier name, statement body)
-    """
-    name: str = None
+class CFunction(CFunctionDef):
+    """ Function(identifier name, statement body) """
+    name: CIdentifier = None
     body: CStatement = None
+
+
+@dataclass
+class CProgram(AST):
+    """
+    program = Program(function_definition)
+    """
+    function_def: CFunctionDef = None
 
