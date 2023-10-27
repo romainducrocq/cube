@@ -20,17 +20,28 @@ class AssemblyGenerator:
     def __init__(self):
         pass
 
-    def expect_next(self, next_node, *expected_nodes: int) -> None:
-        if not isinstance(next_node, *expected_nodes):
+    @staticmethod
+    def expect_next(next_node, *expected_nodes: type) -> None:
+        if not isinstance(next_node, expected_nodes):
             raise AssemblyGeneratorError(
-                f"Expected node of types ({str(*expected_nodes)}) but found {type(next_node)}\"")
+                f"Expected node in types {expected_nodes} but found {type(next_node)}\"")
+
+    def generate_identifier(self, node: AST) -> TIdentifier:
+        self.expect_next(node, TIdentifier)
+        return TIdentifier(node.str_t)
+
+    def generate_int(self, node: AST) -> TInt:
+        self.expect_next(node, TInt)
+        return TInt(node.int_t)
 
     def generate_operand(self, node: AST = None) -> AsmOperand:
         """ operand = Imm(int value) | Register """
-        if node:
-            self.expect_next(node, CConstant)
-            return AsmImm(node.value)
-        return AsmRegister()
+        self.expect_next(node, CConstant, type(None))
+        if isinstance(node, CConstant):
+            value: TInt = self.generate_int(node.value)
+            return AsmImm(value)
+        elif isinstance(node, type(None)):
+            return AsmRegister()
 
         raise AssemblyGeneratorError(
             "An error occurred in assembly generation, not all nodes were visited")
@@ -50,7 +61,7 @@ class AssemblyGenerator:
         """ function_definition = Function(identifier name, instruction* instructions) """
         self.expect_next(node, CFunctionDef)
         if isinstance(node, CFunction):
-            name: TIdentifier = TIdentifier(node.name)
+            name: TIdentifier = self.generate_identifier(node.name)
             instructions: List[AsmInstruction] = self.generate_instructions(node.body)
             return AsmFunction(name, instructions)
 
@@ -63,10 +74,11 @@ class AssemblyGenerator:
         if isinstance(node, CProgram):
             function_def: AsmFunctionDef = self.generate_function_def(node.function_def)
             self.asm_ast = AsmProgram(function_def)
-            return
+        else:
 
-        raise AssemblyGeneratorError(
-            "An error occurred in assembly generation, not all nodes were visited")
+            raise AssemblyGeneratorError(
+                "An error occurred in assembly generation, not all nodes were visited")
+
 
 def assembly_generation(c_ast: AST) -> AST:
 

@@ -1,6 +1,6 @@
 from typing import List
 
-from pycc.parser.__ast import AST
+from pycc.parser.__ast import AST, TIdentifier, TInt
 from pycc.parser.__asm import *
 
 __all__ = [
@@ -15,22 +15,78 @@ class CodeEmitterError(RuntimeError):
 
 
 class CodeEmitter:
-    asm_code: str = None
+    asm_code: List[str] = []
 
     def __init__(self):
         pass
 
+    def emit(self, line: str, t=0) -> None:
+        self.asm_code.append("    " * t + line)
+
+    @staticmethod
+    def expect_next(next_node, *expected_nodes: type) -> None:
+        if not isinstance(next_node, *expected_nodes):
+            raise CodeEmitterError(
+                f"Expected node of types ({str(*expected_nodes)}) but found {type(next_node)}\"")
+
+    def emit_identifier(self, node: AST) -> str:
+        self.expect_next(node, TIdentifier)
+        return node.str_t
+
+    def emit_int(self, node: AST) -> str:
+        self.expect_next(node, TInt)
+        return str(node.int_t)
+
+    def emit_operand(self, node: AST) -> str:
+        self.expect_next(node, AsmOperand)
+        if isinstance(node, AsmImm):
+            value = self.emit_int(node.value)
+            return "$" + value
+        elif isinstance(node, AsmRegister):
+            register: str = "eax"
+            return "%" + register
+
+        raise CodeEmitterError(
+            "An error occurred in code emission, not all nodes were visited")
+
+    def emit_instruction(self, node: AST) -> None:
+        self.expect_next(node, AsmInstruction)
+        if isinstance(node, AsmMov):
+            src: str = self.emit_operand(node.src)
+            dst: str = self.emit_operand(node.dst)
+            self.emit(f"movl {src}, {dst}", t=1)
+        elif isinstance(node, AsmRet):
+            self.emit("ret", t=1)
+        else:
+
+            raise CodeEmitterError(
+                "An error occurred in code emission, not all nodes were visited")
+
+    def emit_function_def(self, node: AST) -> None:
+        self.expect_next(node, AsmFunctionDef)
+        if isinstance(node, AsmFunction):
+            name: str = self.emit_identifier(node.name)
+            self.emit(f".globl {name}", t=1)
+            self.emit(f"{name}:", t=0)
+            for instruction in node.instructions:
+                self.emit_instruction(instruction)
+        else:
+
+            raise CodeEmitterError(
+                "An error occurred in code emission, not all nodes were visited")
+
     def emit_program(self, node: AST) -> None:
-        # TODO
-        self.asm_code = """\
-    .globl main
-main:
-    movl $2, %eax
-    ret
+        self.expect_next(node, AST)
+        if isinstance(node, AsmProgram):
+            self.emit_function_def(node.function_def)
+            self.emit(".section .note.GNU-stack,\"\",@progbits", t=1)
+        else:
 
-   .section .note.GNU-stack,"",@progbits"""
+            raise CodeEmitterError(
+                "An error occurred in code emission, not all nodes were visited")
 
-def code_emission(asm_ast: AST) -> str:
+
+def code_emission(asm_ast: AST) -> List[str]:
 
     code_emitter = CodeEmitter()
 

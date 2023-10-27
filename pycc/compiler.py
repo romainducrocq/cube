@@ -60,10 +60,11 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
         return
 
     print("Start code emission...")
-    asm_code: str = code_emission(asm_ast)
+    asm_code: List[str] = code_emission(asm_ast)
     print("Exit code emission: OK")
     if opt_exit == OPT.codeemit:
-        debug(asm_code)
+        for code_line in asm_code:
+            debug(code_line)
         return
 
 
