@@ -15,7 +15,5 @@ ln -s ../MOOC-NoStarch-Writing_a_C_Compiler/pycc/* .
 if [ ${#} -ne 0 ]; then
     test ${@}
 else
-    test --chapter 1 --stage lex
-    test --chapter 1 --stage parse
-    test --chapter 1 --stage codegen
+    test --chapter 1
 fi
