@@ -59,9 +59,12 @@ class AST:
                     string += str(' ' * indent + "<" + child_kind + "[" + str(len(child_node)) + "]> " + '\n')
                     indent += 4
 
-                    for e, list_node in enumerate(child_node):
+                    e: int = 0
+                    for list_node in child_node:
                         for item_child_node in list_node.__dict__.values():
                             _pretty_string_child(f'{e}: ', item_child_node)
+                            e+=1
+
                     indent -= 4
 
                 else:

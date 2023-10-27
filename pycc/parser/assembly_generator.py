@@ -30,7 +30,7 @@ class AssemblyGenerator:
         if node:
             self.expect_next(node, CConstant)
             return AsmImm(node.value)
-        return AsmRegister
+        return AsmRegister()
 
         raise AssemblyGeneratorError(
             "An error occurred in assembly generation, not all nodes were visited")
