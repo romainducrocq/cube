@@ -78,6 +78,14 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
 
     print("Exit compilation: OK")
 
+    # debug # TODO rm
+    if False:
+        import shutil
+        if not os.path.exists(f"{os.getcwd()}/.temp/"):
+            os.makedirs(f"{os.getcwd()}/.temp/")
+        shutil.copyfile(filename, f"{os.getcwd()}/.temp/{filename.rsplit('/', 1)[1]}")
+        shutil.copyfile(filename_out, f"{os.getcwd()}/.temp/{filename_out.rsplit('/', 1)[1]}")
+
 
 def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
 
