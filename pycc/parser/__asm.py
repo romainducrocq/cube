@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class AsmOperand:
+class AsmOperand(AST):
     """
     operand = Imm(int value) | Register
     """
@@ -34,7 +34,7 @@ class AsmRegister(AsmOperand):
     pass
 
 
-class AsmInstruction:
+class AsmInstruction(AST):
     """
     instruction = Mov(operand src, operand dst) | Ret
     """
@@ -53,7 +53,7 @@ class AsmRet(AsmInstruction):
     pass
 
 
-class AsmFunctionDef:
+class AsmFunctionDef(AST):
     """
     function_definition = Function(identifier name, instruction* instructions)
     """

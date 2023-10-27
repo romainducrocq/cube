@@ -16,11 +16,27 @@ __all__ = [
 
 
 class AST:
-    """ AST node """
+    """
+    AST node
+    """
     @staticmethod
-    def fields(cls):
-        return [attr for attr in dir(cls)
-                if not attr.startswith("__") and not callable(getattr(cls, attr))]
+    def iter_fields(node: Any):
+        for field in [attr for attr in dir(node) if
+                      not attr.startswith("__") and
+                      not callable(getattr(node, attr)) and
+                      (isinstance(getattr(node, attr), AST) or
+                       isinstance(getattr(node, attr), list))]:
+            yield field, getattr(node, field)
+
+    @staticmethod
+    def iter_child_nodes(node: Any):
+        for name, field in AST.iter_fields(node):
+            if isinstance(field, AST):
+                yield field
+            elif isinstance(field, list):
+                for item in field:
+                    if isinstance(item, AST):
+                        yield item
 
     def pretty_string(self) -> str:
         string = ""
@@ -47,8 +63,8 @@ class AST:
                     indent += 4
 
                     for e, list_node in enumerate(child_node):
-                        for list_child_node in list_node.__dict__.values():
-                            _pretty_string_child(f'{e}: ', list_child_node)
+                        for item_child_node in list_node.__dict__.values():
+                            _pretty_string_child(f'{e}: ', item_child_node)
                     indent -= 4
 
                 else:
@@ -59,18 +75,18 @@ class AST:
 
 
 @dataclass
-class TIdentifier:
+class TIdentifier(AST):
     """ identifier str_t """
     str_t: str = None
 
 
 @dataclass
-class TInt:
+class TInt(AST):
     """ int int_t """
     int_t: int = None
 
 
-class CExp:
+class CExp(AST):
     """
     exp = Constant(int value)
     """
@@ -83,7 +99,7 @@ class CConstant(CExp):
     value: TInt = None
 
 
-class CStatement:
+class CStatement(AST):
     """
     statement = Return(exp)
     """
@@ -96,7 +112,7 @@ class CReturn(CStatement):
     exp: CExp = None
 
 
-class CFunctionDef:
+class CFunctionDef(AST):
     """
     function_definition = Function(identifier name, statement body)
     """
