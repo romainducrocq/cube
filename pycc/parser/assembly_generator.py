@@ -27,10 +27,12 @@ class AssemblyGenerator:
                 f"Expected node in types {expected_nodes} but found {type(next_node)}\"")
 
     def generate_identifier(self, node: AST) -> TIdentifier:
+        """ <identifier> = Built-in identifier type """
         self.expect_next(node, TIdentifier)
         return TIdentifier(node.str_t)
 
     def generate_int(self, node: AST) -> TInt:
+        """ <int> = Built-in int type """
         self.expect_next(node, TInt)
         return TInt(node.int_t)
 

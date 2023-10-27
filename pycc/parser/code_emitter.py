@@ -30,14 +30,28 @@ class CodeEmitter:
                 f"Expected node of types ({str(*expected_nodes)}) but found {type(next_node)}\"")
 
     def emit_identifier(self, node: AST) -> str:
+        """
+        identifier ->
+            $ identifier
+        """
         self.expect_next(node, TIdentifier)
         return node.str_t
 
     def emit_int(self, node: AST) -> str:
+        """
+        int ->
+            $ int
+        """
         self.expect_next(node, TInt)
         return str(node.int_t)
 
     def emit_operand(self, node: AST) -> str:
+        """
+        Imm(int) ->
+            $ $<int>
+        Register ->
+            $ %eax
+        """
         self.expect_next(node, AsmOperand)
         if isinstance(node, AsmImm):
             value = self.emit_int(node.value)
@@ -50,6 +64,12 @@ class CodeEmitter:
             "An error occurred in code emission, not all nodes were visited")
 
     def emit_instruction(self, node: AST) -> None:
+        """
+        Mov(src, dst) ->
+            $ movl <src>, <dst>
+        Ret ->
+            $ ret
+        """
         self.expect_next(node, AsmInstruction)
         if isinstance(node, AsmMov):
             src: str = self.emit_operand(node.src)
@@ -63,6 +83,12 @@ class CodeEmitter:
                 "An error occurred in code emission, not all nodes were visited")
 
     def emit_function_def(self, node: AST) -> None:
+        """
+        Function(name, instructions) ->
+            $     .globl <name>
+            $ <name>:
+            $     <instructions>
+        """
         self.expect_next(node, AsmFunctionDef)
         if isinstance(node, AsmFunction):
             name: str = self.emit_identifier(node.name)
@@ -76,6 +102,11 @@ class CodeEmitter:
                 "An error occurred in code emission, not all nodes were visited")
 
     def emit_program(self, node: AST) -> None:
+        """
+        Program(function_definition) ->
+            $ <function_definition>
+            $     .section .note.GNU-stack,"",@progbits
+        """
         self.expect_next(node, AST)
         if isinstance(node, AsmProgram):
             self.emit_function_def(node.function_def)
