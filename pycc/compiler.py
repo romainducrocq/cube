@@ -25,6 +25,7 @@ OPT: IotaEnum = IotaEnum(
     "lex",
     "parse",
     "codegen",
+    "codeemit",
     "S"
 )
 
@@ -59,8 +60,11 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
         return
 
     print("Start code emission...")
-    code_emission()
+    asm_code: str = code_emission(asm_ast)
     print("Exit code emission: OK")
+    if opt_exit == OPT.codeemit:
+        debug(asm_code)
+        return
 
 
 def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
@@ -84,7 +88,9 @@ def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
             f"File {filename} does not exist")
 
     opt_exit: int = OPT.none
-    if "--codegen" in argv:
+    if "--codeemit" in argv:
+        opt_exit = OPT.codeemit
+    elif "--codegen" in argv:
         opt_exit = OPT.codegen
     elif "--parse" in argv:
         opt_exit = OPT.parse
