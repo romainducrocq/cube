@@ -17,7 +17,7 @@ DEBUG: bool = True
 class CompilerError(RuntimeError):
     def __init__(self, message: str) -> None:
         self.message = message
-        super().__init__()
+        super(CompilerError, self).__init__(message)
 
 
 OPT: IotaEnum = IotaEnum(
@@ -52,9 +52,10 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
         return
 
     print("Start assembly generation...")
-    assembly_generation()
+    asm_ast: AST = assembly_generation(c_ast)
     print("Exit assembly generation: OK")
     if opt_exit == OPT.codegen:
+        debug(asm_ast.pretty_string())
         return
 
     print("Start code emission...")
@@ -67,7 +68,7 @@ def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
     class ArgParseError(RuntimeError):
         def __init__(self, message: str) -> None:
             self.message = message
-            super().__init__()
+            super(ArgParseError, self).__init__(message)
 
     def shift() -> str:
         return "" if not argv else argv.pop(0)

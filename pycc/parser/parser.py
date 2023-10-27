@@ -11,7 +11,7 @@ __all__ = [
 class ParserError(RuntimeError):
     def __init__(self, message: str) -> None:
         self.message = message
-        super().__init__()
+        super(ParserError, self).__init__(message)
 
 
 class Parser:

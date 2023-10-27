@@ -14,7 +14,7 @@ __all__ = [
 class LexerError(RuntimeError):
     def __init__(self, message: str) -> None:
         self.message = message
-        super().__init__()
+        super(LexerError, self).__init__(message)
 
 
 TOKEN_KIND: IotaEnum = IotaEnum(
