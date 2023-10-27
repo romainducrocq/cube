@@ -19,7 +19,7 @@ function clean () {
   if [ -f ${1}.s ]; then rm ${1}.s; fi
 }
 
-FILE=${@: -1}
+FILE=$(readlink -f ${@: -1})
 FILE=${FILE%.*}
 
 gcc -E -P ${FILE}.c -o ${FILE}.i

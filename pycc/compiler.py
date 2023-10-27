@@ -36,36 +36,47 @@ def debug(string: str = "", end="\n") -> None:
 
 
 def compile(filename: str, opt_exit: int, opt_s: int) -> None:
+    print("Start compilation...")
 
-    print("Start lexing...")
+    print(f"Read C from: {filename}")
+
+    print("-- Start lexing...")
     tokens: Generator[Token, None, None] = lexing(filename)
-    print("Exit lexing: OK")
+    print("-- Exit lexing: OK")
     if opt_exit == OPT.lex:
         for token in list(tokens):
             debug(str(token))
         return
 
-    print("Start parsing...")
+    print("-- Start parsing...")
     c_ast: AST = parsing(tokens)
-    print("Exit parsing: OK")
+    print("-- Exit parsing: OK")
     if opt_exit == OPT.parse:
         debug(c_ast.pretty_string())
         return
 
-    print("Start assembly generation...")
+    print("-- Start assembly generation...")
     asm_ast: AST = assembly_generation(c_ast)
-    print("Exit assembly generation: OK")
+    print("-- Exit assembly generation: OK")
     if opt_exit == OPT.codegen:
         debug(asm_ast.pretty_string())
         return
 
-    print("Start code emission...")
+    print("-- Start code emission...")
     asm_code: List[str] = code_emission(asm_ast)
-    print("Exit code emission: OK")
+    print("-- Exit code emission: OK")
     if opt_exit == OPT.codeemit:
         for code_line in asm_code:
-            debug(code_line)
+            debug(code_line[:-1])
         return
+
+    filename_out: str = f"{filename.rsplit('.', 1)[0]}.s"
+    with open(filename_out, "w", encoding="utf-8") as output_file:
+        output_file.writelines(asm_code)
+
+    print(f"ASM written to: {filename_out}")
+
+    print("Exit compilation: OK")
 
 
 def arg_parse(argv: List[str]) -> Tuple[str, int, int]:

@@ -21,7 +21,7 @@ class CodeEmitter:
         pass
 
     def emit(self, line: str, t=0) -> None:
-        self.asm_code.append("    " * t + line)
+        self.asm_code.append("    " * t + line + "\n")
 
     @staticmethod
     def expect_next(next_node, *expected_nodes: type) -> None:
