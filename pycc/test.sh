@@ -17,4 +17,5 @@ if [ ${#} -ne 0 ]; then
 else
     test --chapter 1 --stage lex
     test --chapter 1 --stage parse
+    test --chapter 1 --stage codegen
 fi

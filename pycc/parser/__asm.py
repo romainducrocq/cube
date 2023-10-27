@@ -60,6 +60,7 @@ class AsmFunctionDef(AST):
     pass
 
 
+@dataclass
 class AsmFunction(AsmFunctionDef):
     """ Function(identifier name, instruction* instructions) """
     name: TIdentifier = None

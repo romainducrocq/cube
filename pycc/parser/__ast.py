@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Tuple, Generator
 from dataclasses import dataclass
 
 __all__ = [
@@ -14,22 +14,19 @@ __all__ = [
     'CProgram'
 ]
 
-
 class AST:
     """
     AST node
     """
     @staticmethod
-    def iter_fields(node: Any):
-        for field in [attr for attr in dir(node) if
-                      not attr.startswith("__") and
-                      not callable(getattr(node, attr)) and
-                      (isinstance(getattr(node, attr), AST) or
-                       isinstance(getattr(node, attr), list))]:
-            yield field, getattr(node, field)
+    def iter_fields(node: Any) -> Generator[Tuple[str, Any], None, None]:
+        for name, field in [(attr, getattr(node, attr)) for attr in dir(node)
+                            if not attr.startswith("__")]:
+            if not callable(field) and isinstance(field, (AST, list)):
+                yield name, field
 
     @staticmethod
-    def iter_child_nodes(node: Any):
+    def iter_child_nodes(node: Any) -> Generator[Any, None, None]:
         for name, field in AST.iter_fields(node):
             if isinstance(field, AST):
                 yield field
@@ -130,4 +127,3 @@ class CFunction(CFunctionDef):
 class CProgram(AST):
     """ AST = Program(function_definition) """
     function_def: CFunctionDef = None
-
