@@ -1,7 +1,7 @@
 from typing import List
 
-from pycc.parser.__ast import AST, TIdentifier, TInt
-from pycc.parser.__asm import *
+from pycc.util.__ast import *
+from pycc.assembly.asm_ast import *
 
 __all__ = [
     'code_emission'

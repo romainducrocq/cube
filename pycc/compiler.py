@@ -5,11 +5,11 @@ import os
 from typing import Tuple, List
 
 from pycc.util.iota_enum import IotaEnum
-from pycc.parser.__ast import AST
+from pycc.util.__ast import AST
 from pycc.parser.lexer import lexing, Token
 from pycc.parser.parser import parsing
-from pycc.parser.assembly_generator import assembly_generation
-from pycc.parser.code_emitter import code_emission
+from pycc.assembly.assembly_generator import assembly_generation
+from pycc.assembly.code_emitter import code_emission
 
 __all__ = [
     'main'

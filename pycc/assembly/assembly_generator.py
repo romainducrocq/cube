@@ -1,7 +1,8 @@
 from typing import List
 
-from pycc.parser.__ast import *
-from pycc.parser.__asm import *
+from pycc.util.__ast import *
+from pycc.parser.c_ast import *
+from pycc.assembly.asm_ast import *
 
 __all__ = [
     'assembly_generation'

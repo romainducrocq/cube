@@ -1,7 +1,7 @@
 from typing import List
 from dataclasses import dataclass
 
-from pycc.parser.__ast import AST, TIdentifier, TInt
+from pycc.util.__ast import *
 
 __all__ = [
     'AsmOperand',

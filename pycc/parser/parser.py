@@ -1,6 +1,7 @@
 from typing import List
 
-from pycc.parser.__ast import *
+from pycc.util.__ast import *
+from pycc.parser.c_ast import *
 from pycc.parser.lexer import TOKEN_KIND, Token
 
 __all__ = [
