@@ -21,11 +21,11 @@ class Parser:
     def __init__(self, tokens: Generator[Token, None, None]):
         self.tokens: Generator[Token, None, None] = tokens
 
-    def expect_next(self, expected_token: int) -> None:
+    def expect_next(self, *expected_tokens: int) -> None:
         self.next_token = next(self.tokens)
-        if self.next_token.token_kind != expected_token:
+        if self.next_token.token_kind not in expected_tokens:
             raise ParserError(
-                f"Expected token \"{expected_token}\" but found \"{self.next_token.token_kind}\"")
+                f"Expected token in kinds {expected_tokens} but found \"{self.next_token.token_kind}\"")
 
     def parse_identifier(self) -> TIdentifier:
         """ <identifier> ::= ? An identifier token ? """
@@ -36,16 +36,32 @@ class Parser:
         """ <int> ::= ? A constant token ? """
         return TInt(int(self.next_token.token))
 
-    def parse_constant(self) -> CConstant:
-        """ <constant> ::= <int> """
+    def parse_unop(self) -> CUnaryOp:
+        """ <unop>: := "-" | "~" """
+        self.expect_next(TOKEN_KIND.unop_complement,
+                         TOKEN_KIND.unop_negation)
+        if self.next_token == TOKEN_KIND.unop_complement:
+            return CComplement()
+        elif self.next_token == TOKEN_KIND.unop_negation:
+            return CNegate()
+
+    def parse_exp(self) -> CExp:
+        """ <exp> ::= <constant> | < unop > < exp > | "(" < exp > ")" """
+        # self.expect_next(TOKEN_KIND.constant,
+        #                  TOKEN_KIND.unop_complement,
+        #                  TOKEN_KIND.unop_negation,
+        #                  TOKEN_KIND.parenthesis_open)
+        # if self.next_token == TOKEN_KIND.constant:
+        #     value: TInt = self.parse_int()
+        #     return CConstant(value)
+        # elif self.next_token in (TOKEN_KIND.unop_complement,
+        #                          TOKEN_KIND.unop_negation):
+        #     pass
+        # elif self.next_token == TOKEN_KIND.parenthesis_open:
+        #     pass
         self.expect_next(TOKEN_KIND.constant)
         value: TInt = self.parse_int()
         return CConstant(value)
-
-    def parse_exp(self) -> CExp:
-        """ <exp> ::= <constant> """
-        int_const: CConstant = self.parse_constant()
-        return int_const
 
     def parse_statement(self) -> CStatement:
         """ <statement> ::= "return" <exp> ";" """
