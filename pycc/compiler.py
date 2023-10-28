@@ -8,6 +8,7 @@ from pycc.util.iota_enum import IotaEnum
 from pycc.util.__ast import AST
 from pycc.parser.lexer import lexing, Token
 from pycc.parser.parser import parsing
+from pycc.intermediate.three_address_generator import three_address_code_representation
 from pycc.assembly.assembly_generator import assembly_generation
 from pycc.assembly.code_emitter import code_emission
 
@@ -59,10 +60,10 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
         return
 
     print("-- Start tac representation...")
-    # TODO
+    tac_ast: AST = three_address_code_representation(c_ast)
     print("-- Exit tac representation: OK")
     if opt_exit == OPT.tacky:
-        debug("TODO") # TODO
+        debug(tac_ast.pretty_string())
         return
 
     print("-- Start assembly generation...")
