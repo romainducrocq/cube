@@ -1,5 +1,24 @@
 #!/bin/bash
 
+function usage () {
+    echo ${@} |\
+       grep -q -e "--help"
+    if [ ${?} -eq 0 ]; then
+        echo "Usage: pycc [Options] FILE"
+        echo ""
+        echo "Options:"
+        echo "    --help       print help and exit"
+        echo "    --lex        print lexing and exit"
+        echo "    --parse      print parsing and exit"
+        echo "    --codegen    print assembly generation and exit"
+        echo "    --codeemit   print code emission and exit"
+        echo "    -S           print optimization and exit"
+        echo ""
+        echo "FILE:            .c file to compile"
+        exit 0
+    fi
+}
+
 function file () {
     FILE=$(readlink -f ${@: -1})
     FILE=${FILE%.*}
@@ -52,6 +71,8 @@ function link () {
         echo "Executable -> ${FILE}"
     fi
 }
+
+usage ${@}
 
 FILE=$(file ${@})
 ARGV=$(argv ${@})
