@@ -11,6 +11,11 @@ from pycc.parser.parser import parsing
 from pycc.parser.assembly_generator import assembly_generation
 from pycc.parser.code_emitter import code_emission
 
+__all__ = [
+    'main'
+]
+
+
 DEBUG: bool = True
 
 
@@ -36,9 +41,6 @@ def debug(string: str = "", end="\n") -> None:
 
 
 def compile(filename: str, opt_exit: int, opt_s: int) -> None:
-    print("Start compilation...")
-
-    print(f"Read C from: {filename}")
 
     print("-- Start lexing...")
     tokens: Generator[Token, None, None] = lexing(filename)
@@ -73,10 +75,6 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
     filename_out: str = f"{filename.rsplit('.', 1)[0]}.s"
     with open(filename_out, "w", encoding="utf-8") as output_file:
         output_file.writelines(asm_code)
-
-    print(f"ASM written to: {filename_out}")
-
-    print("Exit compilation: OK")
 
     # debug # TODO rm
     if False:
@@ -124,7 +122,7 @@ def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
     return filename, opt_exit, opt_s
 
 
-if __name__ == "__main__":
+def main() -> None:
 
     if (int(platform.python_version().split('.')[0]) < 3 or
             (int(platform.python_version().split('.')[0]) >= 3 and
@@ -135,3 +133,7 @@ if __name__ == "__main__":
     compile(*arg_parse(sys.argv))
 
     exit(0)
+
+
+if __name__ == "__main__":
+    main()
