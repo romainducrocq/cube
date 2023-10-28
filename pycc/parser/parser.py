@@ -61,7 +61,7 @@ class Parser:
                          TOKEN_KIND.unop_negation)
         if self.next_token.token_kind == TOKEN_KIND.unop_complement:
             return CComplement()
-        elif self.next_token.token_kind == TOKEN_KIND.unop_negation:
+        if self.next_token.token_kind == TOKEN_KIND.unop_negation:
             return CNegate()
 
     def parse_exp(self) -> CExp:
@@ -75,10 +75,10 @@ class Parser:
             unary_op: CUnaryOp = self.parse_unary_op()
             inner_exp: CExp = self.parse_exp()
             return CUnary(unary_op, inner_exp)
-        elif self.next().token_kind == TOKEN_KIND.constant:
+        if self.next().token_kind == TOKEN_KIND.constant:
             value: TInt = self.parse_int()
             return CConstant(value)
-        elif self.next_token.token_kind == TOKEN_KIND.parenthesis_open:
+        if self.next_token.token_kind == TOKEN_KIND.parenthesis_open:
             inner_exp: CExp = self.parse_exp()
             self.expect_next(self.next(), TOKEN_KIND.parenthesis_close)
             return inner_exp

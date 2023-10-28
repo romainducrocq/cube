@@ -42,7 +42,7 @@ class AssemblyGenerator:
         if isinstance(node, CConstant):
             value: TInt = self.generate_int(node.value)
             return AsmImm(value)
-        elif isinstance(node, type(None)):
+        if isinstance(node, type(None)):
             return AsmRegister()
 
         raise AssemblyGeneratorError(

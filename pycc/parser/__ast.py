@@ -56,7 +56,7 @@ class AST:
                 if '__dict__' in dir(_child_node):
                     _pretty_string(_child_kind, _child_node, indent)
                 else:
-                    string += str(' ' * indent + _child_kind + type(str(_child_node)).__name__ + ': '
+                    string += str(' ' * indent + _child_kind + type(_child_node).__name__ + ': '
                                   + str(_child_node) + '\n')
 
             for child_kind, child_node in node.__dict__.items():

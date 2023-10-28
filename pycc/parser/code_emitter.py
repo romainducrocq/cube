@@ -56,7 +56,7 @@ class CodeEmitter:
         if isinstance(node, AsmImm):
             value = self.emit_int(node.value)
             return "$" + value
-        elif isinstance(node, AsmRegister):
+        if isinstance(node, AsmRegister):
             register: str = "eax"
             return "%" + register
 
