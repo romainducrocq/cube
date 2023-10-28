@@ -16,4 +16,5 @@ if [ ${#} -ne 0 ]; then
     test ${@}
 else
     test --chapter 1
+    test --chapter 2 --stage lex
 fi
