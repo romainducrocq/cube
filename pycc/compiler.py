@@ -133,7 +133,3 @@ def main() -> None:
     compile(*arg_parse(sys.argv))
 
     exit(0)
-
-
-if __name__ == "__main__":
-    main()

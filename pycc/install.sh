@@ -9,4 +9,4 @@ if [ ! -L "$HOME/.python/pycc" ] && [ ! -e "$HOME/.python/pycc" ]; then
 fi
 
 sudo find /usr/local/bin/ -maxdepth 1 -iname "pycc" -type l -delete
-sudo ln -s driver.sh /usr/local/bin/pycc
+sudo ln -s $(pwd)/driver.sh /usr/local/bin/pycc
