@@ -25,9 +25,9 @@ class CodeEmitter:
 
     @staticmethod
     def expect_next(next_node, *expected_nodes: type) -> None:
-        if not isinstance(next_node, *expected_nodes):
+        if not isinstance(next_node, expected_nodes):
             raise CodeEmitterError(
-                f"Expected node of types ({str(*expected_nodes)}) but found {type(next_node)}\"")
+                f"Expected node of types ({expected_nodes}) but found \"{type(next_node)}\"")
 
     def emit_identifier(self, node: AST) -> str:
         """

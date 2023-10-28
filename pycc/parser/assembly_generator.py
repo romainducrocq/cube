@@ -24,7 +24,7 @@ class AssemblyGenerator:
     def expect_next(next_node, *expected_nodes: type) -> None:
         if not isinstance(next_node, expected_nodes):
             raise AssemblyGeneratorError(
-                f"Expected node in types {expected_nodes} but found {type(next_node)}\"")
+                f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
 
     def generate_identifier(self, node: AST) -> TIdentifier:
         """ <identifier> = Built-in identifier type """

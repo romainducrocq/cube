@@ -23,19 +23,26 @@ class Parser:
 
     def next(self) -> Token:
         try:
-            return self.tokens.pop(0)
+            self.next_token = self.tokens.pop(0)
+            return self.next_token
         except IndexError:
             raise StopIteration
 
-    def expect_next(self, *expected_tokens: int) -> None:
-        self.next_token = self.next()
-        if self.next_token.token_kind not in expected_tokens:
+    def peek(self) -> Token:
+        try:
+            return self.tokens[0]
+        except IndexError:
+            raise StopIteration
+
+    @staticmethod
+    def expect_next(next_token: Token, *expected_tokens: int) -> None:
+        if next_token.token_kind not in expected_tokens:
             raise ParserError(
-                f"Expected token in kinds {expected_tokens} but found \"{self.next_token.token_kind}\"")
+                f"Expected token in kinds {expected_tokens} but found \"{next_token.token_kind}\"")
 
     def parse_identifier(self) -> TIdentifier:
         """ <identifier> ::= ? An identifier token ? """
-        self.expect_next(TOKEN_KIND.identifier)
+        self.expect_next(self.next(), TOKEN_KIND.identifier)
         return TIdentifier(self.next_token.token)
 
     def parse_int(self) -> TInt:
@@ -44,7 +51,7 @@ class Parser:
 
     def parse_unop(self) -> CUnaryOp:
         """ <unop>: := "-" | "~" """
-        self.expect_next(TOKEN_KIND.unop_complement,
+        self.expect_next(self.next(), TOKEN_KIND.unop_complement,
                          TOKEN_KIND.unop_negation)
         if self.next_token == TOKEN_KIND.unop_complement:
             return CComplement()
@@ -53,7 +60,7 @@ class Parser:
 
     def parse_exp(self) -> CExp:
         """ <exp> ::= <constant> | < unop > < exp > | "(" < exp > ")" """
-        # self.expect_next(TOKEN_KIND.constant,
+        # self.expect_next(self.next(), TOKEN_KIND.constant,
         #                  TOKEN_KIND.unop_complement,
         #                  TOKEN_KIND.unop_negation,
         #                  TOKEN_KIND.parenthesis_open)
@@ -65,27 +72,27 @@ class Parser:
         #     pass
         # elif self.next_token == TOKEN_KIND.parenthesis_open:
         #     pass
-        self.expect_next(TOKEN_KIND.constant)
+        self.expect_next(self.next(), TOKEN_KIND.constant)
         value: TInt = self.parse_int()
         return CConstant(value)
 
     def parse_statement(self) -> CStatement:
         """ <statement> ::= "return" <exp> ";" """
-        self.expect_next(TOKEN_KIND.key_return)
+        self.expect_next(self.next(), TOKEN_KIND.key_return)
         return_exp: CExp = self.parse_exp()
-        self.expect_next(TOKEN_KIND.semicolon)
+        self.expect_next(self.next(), TOKEN_KIND.semicolon)
         return CReturn(return_exp)
 
     def parse_function_def(self) -> CFunctionDef:
         """ <function> ::= "int" <identifier> "(" "void" ")" "{" <statement> "}" """
-        self.expect_next(TOKEN_KIND.key_int)
+        self.expect_next(self.next(), TOKEN_KIND.key_int)
         name: TIdentifier = self.parse_identifier()
-        self.expect_next(TOKEN_KIND.parenthesis_open)
-        self.expect_next(TOKEN_KIND.key_void)
-        self.expect_next(TOKEN_KIND.parenthesis_close)
-        self.expect_next(TOKEN_KIND.brace_open)
+        self.expect_next(self.next(), TOKEN_KIND.parenthesis_open)
+        self.expect_next(self.next(), TOKEN_KIND.key_void)
+        self.expect_next(self.next(), TOKEN_KIND.parenthesis_close)
+        self.expect_next(self.next(), TOKEN_KIND.brace_open)
         body: CStatement = self.parse_statement()
-        self.expect_next(TOKEN_KIND.brace_close)
+        self.expect_next(self.next(), TOKEN_KIND.brace_close)
         return CFunction(name, body)
 
     def parse_program(self) -> None:
