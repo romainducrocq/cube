@@ -63,7 +63,8 @@ function link () {
     ARGV=${@:2}
 
     echo ${ARGV} |\
-        grep -q -e "--lex" -e "--parse" -e "--codegen" -e "--codeemit"
+        grep -q -e "--lex" -e "--parse" -e "--tacky" \
+                -e "--codegen" -e "--codeemit"
     if [ ${?} -ne 0 ]; then
         echo "Link       -> ${FILE}.s"
         gcc ${FILE}.s -o ${FILE}
