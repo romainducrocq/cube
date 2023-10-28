@@ -86,6 +86,7 @@ class TacFunctionDef(AST):
     pass
 
 
+@dataclass
 class TacFunction(TacFunctionDef):
     """ Function(identifier, instruction* body) """
     name: TIdentifier = None

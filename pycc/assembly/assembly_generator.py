@@ -39,7 +39,8 @@ class AssemblyGenerator:
 
     def generate_operand(self, node: AST = None) -> AsmOperand:
         """ operand = Imm(int value) | Register """
-        self.expect_next(node, CConstant, type(None))
+        self.expect_next(node, CExp,
+                         type(None))
         if isinstance(node, CConstant):
             value: TInt = self.generate_int(node.value)
             return AsmImm(value)
