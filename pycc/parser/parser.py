@@ -17,6 +17,7 @@ class ParserError(RuntimeError):
 class Parser:
     c_ast: AST = None
     next_token: Token = None
+    peek_token: Token = None
 
     def __init__(self, tokens: List[Token]):
         self.tokens: List[Token] = tokens
@@ -30,7 +31,8 @@ class Parser:
 
     def peek(self) -> Token:
         try:
-            return self.tokens[0]
+            self.peek_token = self.tokens[0]
+            return self.peek_token
         except IndexError:
             raise StopIteration
 
@@ -38,7 +40,11 @@ class Parser:
     def expect_next(next_token: Token, *expected_tokens: int) -> None:
         if next_token.token_kind not in expected_tokens:
             raise ParserError(
-                f"Expected token in kinds {expected_tokens} but found \"{next_token.token_kind}\"")
+                f"""Expected token in kinds { tuple([
+                    list(TOKEN_KIND.keys())[
+                           list(TOKEN_KIND.values()).index(expected_token)
+                    ] for expected_token in expected_tokens])
+                } but found \"{next_token.token}\"""")
 
     def parse_identifier(self) -> TIdentifier:
         """ <identifier> ::= ? An identifier token ? """
@@ -49,32 +55,33 @@ class Parser:
         """ <int> ::= ? A constant token ? """
         return TInt(int(self.next_token.token))
 
-    def parse_unop(self) -> CUnaryOp:
-        """ <unop>: := "-" | "~" """
+    def parse_unary_op(self) -> CUnaryOp:
+        """ <unop> ::= "-" | "~" """
         self.expect_next(self.next(), TOKEN_KIND.unop_complement,
                          TOKEN_KIND.unop_negation)
-        if self.next_token == TOKEN_KIND.unop_complement:
+        if self.next_token.token_kind == TOKEN_KIND.unop_complement:
             return CComplement()
-        elif self.next_token == TOKEN_KIND.unop_negation:
+        elif self.next_token.token_kind == TOKEN_KIND.unop_negation:
             return CNegate()
 
     def parse_exp(self) -> CExp:
-        """ <exp> ::= <constant> | < unop > < exp > | "(" < exp > ")" """
-        # self.expect_next(self.next(), TOKEN_KIND.constant,
-        #                  TOKEN_KIND.unop_complement,
-        #                  TOKEN_KIND.unop_negation,
-        #                  TOKEN_KIND.parenthesis_open)
-        # if self.next_token == TOKEN_KIND.constant:
-        #     value: TInt = self.parse_int()
-        #     return CConstant(value)
-        # elif self.next_token in (TOKEN_KIND.unop_complement,
-        #                          TOKEN_KIND.unop_negation):
-        #     pass
-        # elif self.next_token == TOKEN_KIND.parenthesis_open:
-        #     pass
-        self.expect_next(self.next(), TOKEN_KIND.constant)
-        value: TInt = self.parse_int()
-        return CConstant(value)
+        """ <exp> ::= <constant> | <unop> <exp> | "(" <exp> ")" """
+        self.expect_next(self.peek(), TOKEN_KIND.constant,
+                         TOKEN_KIND.unop_complement,
+                         TOKEN_KIND.unop_negation,
+                         TOKEN_KIND.parenthesis_open)
+        if self.peek_token.token_kind in (TOKEN_KIND.unop_complement,
+                                          TOKEN_KIND.unop_negation):
+            unary_op: CUnaryOp = self.parse_unary_op()
+            inner_exp: CExp = self.parse_exp()
+            return CUnary(unary_op, inner_exp)
+        elif self.next().token_kind == TOKEN_KIND.constant:
+            value: TInt = self.parse_int()
+            return CConstant(value)
+        elif self.next_token.token_kind == TOKEN_KIND.parenthesis_open:
+            inner_exp: CExp = self.parse_exp()
+            self.expect_next(self.next(), TOKEN_KIND.parenthesis_close)
+            return inner_exp
 
     def parse_statement(self) -> CStatement:
         """ <statement> ::= "return" <exp> ";" """
