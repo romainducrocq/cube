@@ -29,6 +29,7 @@ OPT: IotaEnum = IotaEnum(
     "none",
     "lex",
     "parse",
+    "tacky",
     "codegen",
     "codeemit",
     "S"
@@ -55,6 +56,13 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
     print("-- Exit parsing: OK")
     if opt_exit == OPT.parse:
         debug(c_ast.pretty_string())
+        return
+
+    print("-- Start tac representation...")
+    # TODO
+    print("-- Exit tac representation: OK")
+    if opt_exit == OPT.tacky:
+        debug("TODO") # TODO
         return
 
     print("-- Start assembly generation...")
@@ -110,6 +118,8 @@ def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
         opt_exit = OPT.codeemit
     elif "--codegen" in argv:
         opt_exit = OPT.codegen
+    elif "--tacky" in argv:
+        opt_exit = OPT.tacky
     elif "--parse" in argv:
         opt_exit = OPT.parse
     elif "--lex" in argv:

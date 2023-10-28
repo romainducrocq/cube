@@ -10,6 +10,7 @@ function usage () {
         echo "    --help       print help and exit"
         echo "    --lex        print lexing and exit"
         echo "    --parse      print parsing and exit"
+        echo "    --tacky      print tac representation and exit"
         echo "    --codegen    print assembly generation and exit"
         echo "    --codeemit   print code emission and exit"
         echo "    -S           print optimization and exit"
