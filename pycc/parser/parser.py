@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import List
 
 from pycc.parser.__ast import *
 from pycc.parser.lexer import TOKEN_KIND, Token
@@ -18,11 +18,17 @@ class Parser:
     c_ast: AST = None
     next_token: Token = None
 
-    def __init__(self, tokens: Generator[Token, None, None]):
-        self.tokens: Generator[Token, None, None] = tokens
+    def __init__(self, tokens: List[Token]):
+        self.tokens: List[Token] = tokens
+
+    def next(self) -> Token:
+        try:
+            return self.tokens.pop(0)
+        except IndexError:
+            raise StopIteration
 
     def expect_next(self, *expected_tokens: int) -> None:
-        self.next_token = next(self.tokens)
+        self.next_token = self.next()
         if self.next_token.token_kind not in expected_tokens:
             raise ParserError(
                 f"Expected token in kinds {expected_tokens} but found \"{self.next_token.token_kind}\"")
@@ -88,7 +94,7 @@ class Parser:
         self.c_ast = CProgram(function_def)
 
 
-def parsing(tokens: Generator[Token, None, None]) -> AST:
+def parsing(tokens: List[Token]) -> AST:
 
     parser = Parser(tokens)
     while True:
@@ -98,7 +104,7 @@ def parsing(tokens: Generator[Token, None, None]) -> AST:
         except StopIteration:
             break
 
-    if list(tokens):
+    if parser.tokens:
         raise ParserError(
             "An error occurred in parsing, not all tokens were consumed")
 

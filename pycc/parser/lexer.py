@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Generator
+from typing import Dict, List, Generator
 from dataclasses import dataclass
 
 from pycc.util.iota_enum import IotaEnum
@@ -65,21 +65,25 @@ TOKEN_PATTERN: re.Pattern = re.compile(
 )
 
 
-def lexing(filename: str) -> Generator[Token, None, None]:
+def lexing(filename: str) -> List[Token]:
 
-    with open(filename, "r", encoding="utf-8") as input_file:
-        for line in input_file:
+    def tokenize() -> Generator[Token, None, None]:
 
-            for match in re.finditer(TOKEN_PATTERN, line):
-                if match.lastgroup is None:
-                    raise LexerError(
-                        f"No token found in line:\n    {line}")
+        with open(filename, "r", encoding="utf-8") as input_file:
+            for line in input_file:
 
-                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.error:
-                    raise LexerError(
-                        f"Invalid token \"{match.group()}\" found in line:\n    {line}")
+                for match in re.finditer(TOKEN_PATTERN, line):
+                    if match.lastgroup is None:
+                        raise LexerError(
+                            f"No token found in line:\n    {line}")
 
-                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.skip:
-                    continue
+                    if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.error:
+                        raise LexerError(
+                            f"Invalid token \"{match.group()}\" found in line:\n    {line}")
 
-                yield Token(token=match.group(), token_kind=TOKEN_KIND[match.lastgroup])
+                    if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.skip:
+                        continue
+
+                    yield Token(token=match.group(), token_kind=TOKEN_KIND[match.lastgroup])
+
+    return list(tokenize())

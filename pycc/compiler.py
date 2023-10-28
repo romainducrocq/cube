@@ -2,7 +2,7 @@ import platform
 import sys
 import os
 
-from typing import Tuple, List, Generator
+from typing import Tuple, List
 
 from pycc.util.iota_enum import IotaEnum
 from pycc.parser.__ast import AST
@@ -43,10 +43,10 @@ def debug(string: str = "", end="\n") -> None:
 def compile(filename: str, opt_exit: int, opt_s: int) -> None:
 
     print("-- Start lexing...")
-    tokens: Generator[Token, None, None] = lexing(filename)
+    tokens: List[Token] = lexing(filename)
     print("-- Exit lexing: OK")
     if opt_exit == OPT.lex:
-        for token in list(tokens):
+        for token in tokens:
             debug(str(token))
         return
 
