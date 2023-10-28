@@ -5,14 +5,19 @@ __all__ = [
     'AST',
     'TIdentifier',
     'TInt',
+    'CUnaryOp',
+    'CComplement',
+    'CNegate',
     'CExp',
     'CConstant',
+    'CUnary',
     'CStatement',
     'CReturn',
     'CFunctionDef',
     'CFunction',
     'CProgram'
 ]
+
 
 class AST:
     """
@@ -86,9 +91,28 @@ class TInt(AST):
     int_t: int = None
 
 
+class CUnaryOp(AST):
+    """
+    unary_operator = Complement
+                   | Negate
+    """
+    pass
+
+
+class CComplement(CUnaryOp):
+    """ Complement """
+    pass
+
+
+class CNegate(CUnaryOp):
+    """ Negate """
+    pass
+
+
 class CExp(AST):
     """
     exp = Constant(int value)
+        | Unary(unary_operator, exp)
     """
     pass
 
@@ -97,6 +121,13 @@ class CExp(AST):
 class CConstant(CExp):
     """ Constant(int value) """
     value: TInt = None
+
+
+@dataclass
+class CUnary(CExp):
+    """ Unary(unary_operator, exp) """
+    unary_op: CUnaryOp = None
+    exp: CExp = None
 
 
 class CStatement(AST):
