@@ -12,6 +12,11 @@ class AST:
     """
     AST node
     """
+
+    @staticmethod
+    def istype(node: Any, *expected_types: type):
+        return type(node) in expected_types
+
     @staticmethod
     def iter_fields(node: Any) -> Generator[Tuple[str, Any], None, None]:
         for name, field in [(attr, getattr(node, attr)) for attr in dir(node)

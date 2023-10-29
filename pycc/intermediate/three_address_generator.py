@@ -68,28 +68,38 @@ class ThreeAddressCodeGenerator:
         raise ThreeAddressCodeGeneratorError(
             "An error occurred in three address code representation, not all nodes were visited")
 
-    def represent_instruction(self, node: AST) -> TacInstruction:
-        """ instruction = Return(val) | Unary(unary_operator, val src, val dst) """
-        self.expect_next(node, CStatement,
-                         CExp)
-        if isinstance(node, CReturn):
-            val: TacValue = self.represent_value(node.exp)
-            return TacReturn(val)
-        if isinstance(node, CUnary):
-            unary_op: TacUnaryOp = self.represent_unary_op(node.unary_op)
-            src: TacValue = self.represent_value(node.exp)
-            dst: TacValue = self.represent_value()
-            return TacUnary(unary_op, src, dst)
+    def represent_instructions(self, node: AST) -> List[TacInstruction]:
 
-        raise ThreeAddressCodeGeneratorError(
-            "An error occurred in three address code representation, not all nodes were visited")
+        instructions: List[TacInstruction] = []
+
+        def represent_instruction(iter_node: AST) -> None:
+            """ instruction = Return(val) | Unary(unary_operator, val src, val dst) """
+            self.expect_next(iter_node, CStatement,
+                             CExp)
+            if isinstance(iter_node.exp, CUnary):
+                represent_instruction(iter_node.exp)
+            elif isinstance(iter_node, CReturn):
+                val: TacValue = self.represent_value(iter_node.exp)
+                instructions.append(TacReturn(val))
+            elif isinstance(iter_node, CUnary):
+                unary_op: TacUnaryOp = self.represent_unary_op(iter_node.unary_op)
+                src: TacValue = self.represent_value(iter_node.exp)
+                dst: TacValue = self.represent_value()
+                instructions.append(TacUnary(unary_op, src, dst))
+            else:
+
+                raise ThreeAddressCodeGeneratorError(
+                    "An error occurred in three address code representation, not all nodes were visited")
+
+        represent_instruction(node)
+        return instructions
 
     def represent_function_def(self, node: AST) -> TacFunctionDef:
         """ function_definition = Function(identifier, instruction* body) """
         self.expect_next(node, CFunctionDef)
         if isinstance(node, CFunction):
             name: TIdentifier = self.represent_identifier(node.name)
-            instructions: List[TacInstruction] = []  # TODO self.represent_instruction(node.body)
+            instructions: List[TacInstruction] = self.represent_instructions(node.body)
             return TacFunction(name, instructions)
 
         raise ThreeAddressCodeGeneratorError(
