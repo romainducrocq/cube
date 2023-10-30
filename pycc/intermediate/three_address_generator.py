@@ -3,6 +3,7 @@ from typing import List
 from pycc.util.__ast import *
 from pycc.parser.c_ast import *
 from pycc.intermediate.tac_ast import *
+from pycc.intermediate.variables import var_identifier
 
 __all__ = [
     'three_address_code_representation'
@@ -21,11 +22,6 @@ class ThreeAddressCodeGenerator:
 
     def __init__(self):
         pass
-
-    def var_identifier(self) -> TIdentifier:
-        self.var_counter += 1
-        name: str = f"tmp.{self.var_counter - 1}"
-        return TIdentifier(name)
 
     @staticmethod
     def expect_next(next_node, *expected_nodes: type) -> None:
@@ -54,7 +50,7 @@ class ThreeAddressCodeGenerator:
         raise ThreeAddressCodeGeneratorError(
             "An error occurred in three address code representation, not all nodes were visited")
 
-    def represent_value(self, node: AST = None) -> TacValue:
+    def represent_value(self, node: AST = None, var: AST = None) -> TacValue:
         """ val = Constant(int) | Var(identifier) """
         self.expect_next(node, CExp,
                          type(None))
@@ -62,7 +58,7 @@ class ThreeAddressCodeGenerator:
             value: TInt = self.represent_int(node.value)
             return TacConstant(value)
         if isinstance(node, type(None)):
-            identifier: TIdentifier = self.var_identifier()
+            identifier: TIdentifier = var_identifier(var)
             return TacVariable(identifier)
 
         raise ThreeAddressCodeGeneratorError(
@@ -84,7 +80,7 @@ class ThreeAddressCodeGenerator:
             elif isinstance(iter_node, CUnary):
                 unary_op: TacUnaryOp = self.represent_unary_op(iter_node.unary_op)
                 src: TacValue = self.represent_value(iter_node.exp)
-                dst: TacValue = self.represent_value()
+                dst: TacValue = self.represent_value(var=iter_node.exp)
                 instructions.append(TacUnary(unary_op, src, dst))
             else:
 
