@@ -37,7 +37,7 @@ class AST:
     def pretty_string(self) -> str:
         string = ""
 
-        def _pretty_string(kind: str = "<AST> ", node: Any = None, indent: int = 0) -> None:
+        def _pretty_string(kind: str = '<AST> ', node: Any = None, indent: int = 0) -> None:
             nonlocal string
             if not node:
                 node = self
@@ -55,19 +55,16 @@ class AST:
 
             for child_kind, child_node in node.__dict__.items():
                 if isinstance(child_node, list):
-                    string += str(' ' * indent + "<" + child_kind + "[" + str(len(child_node)) + "]> " + '\n')
+                    string += str(' ' * indent + '<' + child_kind + '> List(' + str(len(child_node)) + '):' + '\n')
                     indent += 4
 
-                    e: int = 0
-                    for list_node in child_node:
-                        for item_child_node in list_node.__dict__.values():
-                            _pretty_string_child(f'{e}: ', item_child_node)
-                            e+=1
+                    for e, list_node in enumerate(child_node):
+                        _pretty_string_child('[' + str(e) + '] ', list_node)
 
                     indent -= 4
 
                 else:
-                    _pretty_string_child("<" + child_kind + "> ", child_node)
+                    _pretty_string_child('<' + child_kind + '> ', child_node)
 
         _pretty_string()
         return string[:-1]
