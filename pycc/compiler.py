@@ -67,7 +67,7 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
         return
 
     print("-- Start assembly generation...")
-    asm_ast: AST = assembly_generation(c_ast)
+    asm_ast: AST = assembly_generation(tac_ast)
     print("-- Exit assembly generation: OK")
     if opt_exit == OPT.codegen:
         debug(asm_ast.pretty_string())

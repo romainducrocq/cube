@@ -115,9 +115,9 @@ class AsmMov(AsmInstruction):
 
 @dataclass
 class AsmUnary(AsmInstruction):
-    """ Unary(unary_operator, operand) """
+    """ Unary(unary_operator unop, operand dst) """
     unary_op: AsmUnaryOp = None
-    operand: AsmOperand = None
+    dst: AsmOperand = None
 
 
 @dataclass
