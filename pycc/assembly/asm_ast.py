@@ -4,11 +4,21 @@ from dataclasses import dataclass
 from pycc.util.__ast import *
 
 __all__ = [
+    'AsmReg',
+    'AsmAx',
+    'AsmR10',
     'AsmOperand',
     'AsmImm',
     'AsmRegister',
+    'AsmPseudo',
+    'AsmStack',
+    'AsmUnaryOp',
+    'AsmNot',
+    'AsmNeg',
     'AsmInstruction',
     'AsmMov',
+    'AsmUnary',
+    'AsmAllocStack',
     'AsmRet',
     'AsmFunctionDef',
     'AsmFunction',
@@ -16,9 +26,30 @@ __all__ = [
 ]
 
 
+class AsmReg(AST):
+    """
+    reg = AX
+        | R10
+    """
+    pass
+
+
+class AsmAx(AsmReg):
+    """ AX """
+    pass
+
+
+class AsmR10(AsmReg):
+    """ R10 """
+    pass
+
+
 class AsmOperand(AST):
     """
-    operand = Imm(int value) | Register
+    operand = Imm(int)
+            | Reg(reg)
+            | Pseudo(identifier)
+            | Stack(int)
     """
     pass
 
@@ -29,14 +60,48 @@ class AsmImm(AsmOperand):
     value: TInt = None
 
 
+@dataclass
 class AsmRegister(AsmOperand):
-    """ Register """
+    """ Register(reg register) """
+    register: AsmReg = None
+
+
+@dataclass
+class AsmPseudo(AsmOperand):
+    """ Pseudo(identifier name) """
+    name: TIdentifier = None
+
+
+@dataclass
+class AsmStack(AsmOperand):
+    """ Stack(int value) """
+    value: TInt = None
+
+
+class AsmUnaryOp(AST):
+    """
+    unary_operator = Not
+                   | Neg
+    """
+    pass
+
+
+class AsmNot(AsmUnaryOp):
+    """ Not """
+    pass
+
+
+class AsmNeg(AsmUnaryOp):
+    """ Neg """
     pass
 
 
 class AsmInstruction(AST):
     """
-    instruction = Mov(operand src, operand dst) | Ret
+    instruction = Mov(operand src, operand dst)
+                | Unary(unary_operator, operand)
+                | AllocateStack(int)
+                | Ret
     """
     pass
 
@@ -46,6 +111,19 @@ class AsmMov(AsmInstruction):
     """ Mov(operand src, operand dst) """
     src: AsmOperand = None
     dst: AsmOperand = None
+
+
+@dataclass
+class AsmUnary(AsmInstruction):
+    """ Unary(unary_operator, operand) """
+    unary_op: AsmUnaryOp = None
+    operand: AsmOperand = None
+
+
+@dataclass
+class AsmAllocStack(AsmInstruction):
+    """ AllocateStack(int value) """
+    value: TInt = None
 
 
 class AsmRet(AsmInstruction):
