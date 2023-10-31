@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from copy import deepcopy
 
 from pycc.util.__ast import *
@@ -51,45 +51,46 @@ class ThreeAddressCodeGenerator:
         raise ThreeAddressCodeGeneratorError(
             "An error occurred in three address code representation, not all nodes were visited")
 
-    def represent_value(self, node: AST = None, var: AST = None, last: bool = False,
-                        instructions: List[TacInstruction] = None) -> TacValue:
+    def represent_value(self, node: AST, outer: bool = True) -> TacValue:
         """ val = Constant(int) | Var(identifier) """
-        self.expect_next(node, CExp,
-                         type(None))
-        if isinstance(node, CConstant):
-            value: TInt = self.represent_int(node.value)
-            return TacConstant(value)
-        if isinstance(node, (type(None), CUnary)):
-            if isinstance(node, CUnary):
-                self.represent_instruction(node, instructions)
-            identifier: TIdentifier = self.var_mngr.represent_variable_identifier(var, last)
-            return TacVariable(identifier)
-
-        raise ThreeAddressCodeGeneratorError(
-            "An error occurred in three address code representation, not all nodes were visited")
-
-    def represent_instruction(self, iter_node: AST, instructions: List[TacInstruction]) -> None:
-        """ instruction = Return(val) | Unary(unary_operator, val src, val dst) """
-        self.expect_next(iter_node, CStatement,
-                         CExp)
-        if isinstance(iter_node, CReturn):
-            val: TacValue = self.represent_value(node=iter_node.exp, last=True, instructions=instructions)
-            instructions.append(TacReturn(val))
-        elif isinstance(iter_node, CUnary):
-            unary_op: TacUnaryOp = self.represent_unary_op(iter_node.unary_op)
-            src: TacValue = self.represent_value(node=iter_node.exp, last=True, instructions=instructions)
-            dst: TacValue = self.represent_value(var=iter_node.exp)
-            instructions.append(TacUnary(unary_op, src, dst))
-        else:
+        self.expect_next(node, CExp)
+        if outer:
+            if isinstance(node, CConstant):
+                value: TInt = self.represent_int(node.value)
+                return TacConstant(value)
 
             raise ThreeAddressCodeGeneratorError(
                 "An error occurred in three address code representation, not all nodes were visited")
+
+        identifier: TIdentifier = self.var_mngr.represent_variable_identifier(node)
+        return TacVariable(identifier)
+
+    def represent_instruction(self, node: AST, instructions: List[TacInstruction]) -> Optional[TacValue]:
+        """ instruction = Return(val) | Unary(unary_operator, val src, val dst) """
+        self.expect_next(node, CStatement,
+                         CExp)
+        if isinstance(node, CReturn):
+            val = self.represent_instruction(node.exp, instructions)
+            instructions.append(TacReturn(val))
+            return None
+        if isinstance(node, CConstant):
+            val: TacValue = self.represent_value(node)
+            return val
+        if isinstance(node, CUnary):
+            src: TacValue = self.represent_instruction(node.exp, instructions)
+            dst: TacValue = self.represent_value(node.exp, outer=False)
+            unary_op: TacUnaryOp = self.represent_unary_op(node.unary_op)
+            instructions.append(TacUnary(unary_op, src, dst))
+            return deepcopy(dst)
+
+        raise ThreeAddressCodeGeneratorError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
     def represent_instructions(self, node: AST) -> List[TacInstruction]:
 
         instructions: List[TacInstruction] = []
 
-        self.represent_instruction(node, instructions)
+        _ = self.represent_instruction(node, instructions)
         return instructions
 
     def represent_function_def(self, node: AST) -> TacFunctionDef:
