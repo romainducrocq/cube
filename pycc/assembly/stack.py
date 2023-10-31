@@ -1,7 +1,8 @@
 from typing import Dict, List
+from copy import deepcopy
 
-from pycc.util.__ast import AST, TInt
-from pycc.assembly.asm_ast import AsmFunction, AsmInstruction, AsmPseudo, AsmStack, AsmAllocStack
+from pycc.util.__ast import *
+from pycc.assembly.asm_ast import *
 
 __all__ = [
     'StackManager'
@@ -51,10 +52,21 @@ class StackManager:
             value: TInt = TInt(-1 * self.counter)
             instructions.insert(0, AsmAllocStack(value))
 
-        for child_node, attr, e in AST.iter_child_nodes(node):
+        for child_node, _, _ in AST.iter_child_nodes(node):
             if isinstance(child_node, AsmFunction):
                 prepend_alloc_stack(child_node.instructions)
-                # TODO
+
+                for e, instruction in enumerate(reversed(child_node.instructions)):
+                    if isinstance(instruction, AsmMov) and \
+                       isinstance(instruction.src, AsmStack) and \
+                       isinstance(instruction.dst, AsmStack):
+                        mov_to: AsmMov = deepcopy(instruction)
+                        register: AsmReg = AsmR10()  # TODO helper file for registers
+                        instruction.dst = AsmRegister(register)
+                        mov_to.src = AsmRegister(deepcopy(register))
+                        child_node.instructions.insert(
+                            len(child_node.instructions) - e, mov_to)
+
             else:
                 self.correct_instructions(child_node)
 

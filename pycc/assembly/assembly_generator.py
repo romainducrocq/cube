@@ -18,6 +18,7 @@ class AssemblyGeneratorError(RuntimeError):
 
 
 # TODO add back ADSL comments
+# TODO add helper for registers
 class AssemblyGenerator:
     asm_ast: AST = None
     stack_mngr: StackManager = StackManager()
