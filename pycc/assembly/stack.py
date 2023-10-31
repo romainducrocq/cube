@@ -1,7 +1,7 @@
-from typing import Dict
+from typing import Dict, List
 
 from pycc.util.__ast import AST, TInt
-from pycc.assembly.asm_ast import AsmPseudo, AsmStack
+from pycc.assembly.asm_ast import AsmFunction, AsmInstruction, AsmPseudo, AsmStack, AsmAllocStack
 
 __all__ = [
     'StackManager'
@@ -23,7 +23,7 @@ class StackManager:
     def __init__(self):
         pass
 
-    def generate_stack(self, node: AST) -> None:
+    def replace_pseudo_registers(self, node: AST) -> None:
 
         if self.counter == -1:
             self.counter = 0
@@ -38,10 +38,28 @@ class StackManager:
                 AST.set_child_node(node, attr, e, AsmStack(value))
 
             else:
-                self.generate_stack(child_node)
+                self.replace_pseudo_registers(child_node)
 
-    def generate_alloc_stack(self) -> None:
+    def correct_instructions(self, node: AST) -> None:
 
-        if self.counter == -1:
-            raise StackManagerError(
-                "An error occurred in stack management, stack was not allocated")
+        def prepend_alloc_stack(instructions: List[AsmInstruction]) -> None:
+
+            if self.counter == -1:
+                raise StackManagerError(
+                    "An error occurred in stack management, stack was not allocated")
+
+            value: TInt = TInt(-1 * self.counter)
+            instructions.insert(0, AsmAllocStack(value))
+
+        for child_node, attr, e in AST.iter_child_nodes(node):
+            if isinstance(child_node, AsmFunction):
+                prepend_alloc_stack(child_node.instructions)
+                print(child_node.instructions)
+            else:
+                self.correct_instructions(child_node)
+
+    def generate_stack(self, node: AST) -> None:
+
+        self.replace_pseudo_registers(node)
+
+        self.correct_instructions(node)
