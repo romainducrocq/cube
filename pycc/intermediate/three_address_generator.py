@@ -1,4 +1,5 @@
 from typing import List
+from copy import deepcopy
 
 from pycc.util.__ast import *
 from pycc.parser.c_ast import *
@@ -32,12 +33,12 @@ class ThreeAddressCodeGenerator:
     def represent_identifier(self, node: AST) -> TIdentifier:
         """ <identifier> = Built-in identifier type """
         self.expect_next(node, TIdentifier)
-        return TIdentifier(node.str_t)
+        return TIdentifier(deepcopy(node.str_t))
 
     def represent_int(self, node: AST) -> TInt:
         """ <int> = Built-in int type """
         self.expect_next(node, TInt)
-        return TInt(node.int_t)
+        return TInt(deepcopy(node.int_t))
 
     def represent_unary_op(self, node: AST) -> TacUnaryOp:
         """ unary_operator = Complement | Negate """

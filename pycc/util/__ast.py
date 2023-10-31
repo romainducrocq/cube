@@ -18,21 +18,28 @@ class AST:
         return type(node) in expected_types
 
     @staticmethod
-    def iter_fields(node: Any) -> Generator[Tuple[str, Any], None, None]:
-        for name, field in [(attr, getattr(node, attr)) for attr in dir(node)
+    def iter_fields(node: Any) -> Generator[Tuple[Any, str], None, None]:
+        for field, name in [(getattr(node, attr), attr) for attr in dir(node)
                             if not attr.startswith("__")]:
             if not callable(field) and isinstance(field, (AST, list)):
-                yield name, field
+                yield field, name
 
     @staticmethod
-    def iter_child_nodes(node: Any) -> Generator[Any, None, None]:
-        for name, field in AST.iter_fields(node):
+    def iter_child_nodes(node: Any) -> Generator[Tuple[Any, str, int], None, None]:
+        for field, name in AST.iter_fields(node):
             if isinstance(field, AST):
-                yield field
+                yield field, name, -1
             elif isinstance(field, list):
-                for item in field:
+                for e, item in enumerate(field):
                     if isinstance(item, AST):
-                        yield item
+                        yield item, name, e
+
+    @staticmethod
+    def set_child_node(field: Any, name: str, index: int, set_node: Any) -> None:
+        if isinstance(field, AST):
+            setattr(field, name, set_node)
+        elif isinstance(getattr(field, name), list):
+            getattr(field, name)[index] = set_node
 
     def pretty_string(self) -> str:
         string = ""

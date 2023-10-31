@@ -1,8 +1,10 @@
 from typing import List
+from copy import deepcopy
 
 from pycc.util.__ast import *
 from pycc.intermediate.tac_ast import *
 from pycc.assembly.asm_ast import *
+from pycc.assembly.stack import StackManager
 
 __all__ = [
     'assembly_generation'
@@ -17,9 +19,13 @@ class AssemblyGeneratorError(RuntimeError):
 
 class AssemblyGenerator:
     asm_ast: AST = None
+    stack_mngr: StackManager = StackManager()
 
     def __init__(self):
         pass
+
+    def generate_stack(self) -> None:
+        self.stack_mngr.generate_stack(self.asm_ast)
 
     @staticmethod
     def expect_next(next_node, *expected_nodes: type) -> None:
@@ -29,11 +35,11 @@ class AssemblyGenerator:
 
     def generate_identifier(self, node: AST) -> TIdentifier:
         self.expect_next(node, TIdentifier)
-        return TIdentifier(node.str_t)
+        return TIdentifier(deepcopy(node.str_t))
 
     def generate_int(self, node: AST) -> TInt:
         self.expect_next(node, TInt)
-        return TInt(node.int_t)
+        return TInt(deepcopy(node.int_t))
 
     @staticmethod
     def generate_register(register: str) -> AsmReg:
@@ -86,7 +92,7 @@ class AssemblyGenerator:
                 src: AsmOperand = self.generate_operand(node.src)
                 dst: AsmOperand = self.generate_operand(node.dst)
                 instructions.append(AsmMov(src, dst))
-                instructions.append(AsmUnary(unary_op, dst))
+                instructions.append(AsmUnary(unary_op, deepcopy(dst)))
             else:
 
                 raise AssemblyGeneratorError(
@@ -127,5 +133,7 @@ def assembly_generation(tac_ast: AST) -> AST:
     if not assembly_generator.asm_ast:
         raise AssemblyGeneratorError(
             "An error occurred in assembly generation, ASM was not generated")
+
+    assembly_generator.generate_stack()
 
     return assembly_generator.asm_ast
