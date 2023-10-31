@@ -1,3 +1,5 @@
+from typing import Dict
+
 from pycc.util.__ast import *
 from pycc.parser.c_ast import *
 
@@ -12,7 +14,12 @@ class VariableManagerError(RuntimeError):
         super(VariableManagerError, self).__init__(message)
 
 
-# TODO add enum for names
+VARIABLE_NAME: Dict[type, str] = {
+    CConstant: "constant",
+    CUnary: "unary"
+}
+
+
 class VariableManager:
 
     counter: int = 0
@@ -22,11 +29,10 @@ class VariableManager:
 
     def represent_variable_identifier(self, node: AST) -> TIdentifier:
 
-        if isinstance(node, CConstant):
-            name = "const"
-        elif isinstance(node, CUnary):
-            name = "unary"
-        else:
+        try:
+            name = VARIABLE_NAME[type(node)]
+        except KeyError:
+
             raise VariableManagerError(
                 f"An error occurred in variable management, unmanaged type {type(node)}")
 
