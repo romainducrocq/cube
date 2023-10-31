@@ -8,6 +8,12 @@ __all__ = [
 ]
 
 
+class StackManagerError(RuntimeError):
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super(StackManagerError, self).__init__(message)
+
+
 class StackManager:
 
     offset: int = -4
@@ -35,4 +41,7 @@ class StackManager:
                 self.generate_stack(child_node)
 
     def generate_alloc_stack(self) -> None:
-        pass
+
+        if self.counter == -1:
+            raise StackManagerError(
+                "An error occurred in stack management, stack was not allocated")

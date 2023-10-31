@@ -17,6 +17,7 @@ class AssemblyGeneratorError(RuntimeError):
         super(AssemblyGeneratorError, self).__init__(message)
 
 
+# TODO add back ADSL comments
 class AssemblyGenerator:
     asm_ast: AST = None
     stack_mngr: StackManager = StackManager()
