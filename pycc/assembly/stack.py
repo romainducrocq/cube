@@ -54,7 +54,7 @@ class StackManager:
         for child_node, attr, e in AST.iter_child_nodes(node):
             if isinstance(child_node, AsmFunction):
                 prepend_alloc_stack(child_node.instructions)
-                print(child_node.instructions)
+                # TODO
             else:
                 self.correct_instructions(child_node)
 
