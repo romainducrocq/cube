@@ -7,12 +7,19 @@ __all__ = [
     'TacUnaryOp',
     'TacComplement',
     'TacNegate',
+    'TacBinaryOp',
+    'TacAdd',
+    'TacSubtract',
+    'TacMultiply',
+    'TacDivide',
+    'TacRemainder',
     'TacValue',
     'TacConstant',
     'TacVariable',
     'TacInstruction',
     'TacReturn',
     'TacUnary',
+    'TacBinary',
     'TacFunctionDef',
     'TacFunction',
     'TacProgram'
@@ -34,6 +41,42 @@ class TacComplement(TacUnaryOp):
 
 class TacNegate(TacUnaryOp):
     """ Negate """
+    pass
+
+
+class TacBinaryOp(AST):
+    """
+    binary_operator = Add
+                    | Subtract
+                    | Multiply
+                    | Divide
+                    | Remainder
+    """
+    pass
+
+
+class TacAdd(TacBinaryOp):
+    """ Add """
+    pass
+
+
+class TacSubtract(TacBinaryOp):
+    """ Subtract """
+    pass
+
+
+class TacMultiply(TacBinaryOp):
+    """ Multiply """
+    pass
+
+
+class TacDivide(TacBinaryOp):
+    """ Divide """
+    pass
+
+
+class TacRemainder(TacBinaryOp):
+    """ Remainder """
     pass
 
 
@@ -61,6 +104,7 @@ class TacInstruction(AST):
     """
     instruction = Return(val)
                 | Unary(unary_operator, val src, val dst)
+                | Binary(binary_operator, val src1, val src2, val dst)
     """
     pass
 
@@ -76,6 +120,15 @@ class TacUnary(TacInstruction):
     """ Unary(unary_operator, val src, val dst) """
     unary_op: TacUnaryOp = None
     src: TacValue = None
+    dst: TacValue = None
+
+
+@dataclass
+class TacBinary(TacInstruction):
+    """ Binary(binary_operator, val src1, val src2, val dst) """
+    binary_op: TacBinaryOp = None
+    src1: TacValue = None
+    src2: TacValue = None
     dst: TacValue = None
 
 
