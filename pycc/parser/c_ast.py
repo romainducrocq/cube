@@ -6,9 +6,16 @@ __all__ = [
     'CUnaryOp',
     'CComplement',
     'CNegate',
+    'CBinaryOp',
+    "CAdd",
+    "CSubtract",
+    "CMultiply",
+    "CDivide",
+    "CRemainder",
     'CExp',
     'CConstant',
     'CUnary',
+    'CBinary',
     'CStatement',
     'CReturn',
     'CFunctionDef',
@@ -35,10 +42,47 @@ class CNegate(CUnaryOp):
     pass
 
 
+class CBinaryOp(AST):
+    """
+    binary_operator = Add
+                    | Subtract
+                    | Multiply
+                    | Divide
+                    | Remainder
+    """
+    pass
+
+
+class CAdd(CBinaryOp):
+    """ Add """
+    pass
+
+
+class CSubtract(CBinaryOp):
+    """ Subtract """
+    pass
+
+
+class CMultiply(CBinaryOp):
+    """ Multiply """
+    pass
+
+
+class CDivide(CBinaryOp):
+    """ Divide """
+    pass
+
+
+class CRemainder(CBinaryOp):
+    """ Remainder """
+    pass
+
+
 class CExp(AST):
     """
     exp = Constant(int value)
         | Unary(unary_operator, exp)
+        | Binary(binary_operator, exp, exp)
     """
     pass
 
@@ -54,6 +98,14 @@ class CUnary(CExp):
     """ Unary(unary_operator, exp) """
     unary_op: CUnaryOp = None
     exp: CExp = None
+
+
+@dataclass
+class CBinary(CExp):
+    """ Binary(binary_operator, exp, exp) """
+    binary_op: CBinaryOp = None
+    exp_left: CExp = None
+    exp_right: CExp = None
 
 
 class CStatement(AST):
