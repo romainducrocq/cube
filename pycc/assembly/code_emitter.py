@@ -45,20 +45,57 @@ class CodeEmitter:
         self.expect_next(node, TInt)
         return str(node.int_t)
 
+    def emit_register(self, node: AST) -> str:
+        """
+        Reg(AX) ->
+            $ %eax
+        Reg(R10) ->
+            $ %r10d
+        """
+        self.expect_next(node, AsmReg)
+        if isinstance(node, AsmAx):
+            return "eax"
+        if isinstance(node, AsmR10):
+            return "r10d"
+
+        raise CodeEmitterError(
+            "An error occurred in code emission, not all nodes were visited")
+
     def emit_operand(self, node: AST) -> str:
         """
         Imm(int) ->
             $ $<int>
-        Register ->
-            $ %eax
+        Register(reg) ->
+            $ %reg
+        Stack(int) ->
+            $ <int>(%rbp)
         """
         self.expect_next(node, AsmOperand)
         if isinstance(node, AsmImm):
-            value = self.emit_int(node.value)
+            value: str = self.emit_int(node.value)
             return "$" + value
         if isinstance(node, AsmRegister):
-            register: str = "eax"
+            register: str = self.emit_register(node.register)
             return "%" + register
+        if isinstance(node, AsmStack):
+            value: str = self.emit_int(node.value)
+            return value + "(%rbp)"
+
+        raise CodeEmitterError(
+            "An error occurred in code emission, not all nodes were visited")
+
+    def emit_unary_op(self, node: AST) -> str:
+        """
+        Neg ->
+            $ negl
+        Not ->
+            $ notl
+        """
+        self.expect_next(node, AsmUnaryOp)
+        if isinstance(node, AsmNeg):
+            return "negl"
+        if isinstance(node, AsmNot):
+            return "notl"
 
         raise CodeEmitterError(
             "An error occurred in code emission, not all nodes were visited")
@@ -68,7 +105,13 @@ class CodeEmitter:
         Mov(src, dst) ->
             $ movl <src>, <dst>
         Ret ->
+            $ movq %rbp, %rsp
+            $ popq %rbp
             $ ret
+        Unary(unary_operator, operand) ->
+            $ <unary_operator> <operand>
+        AllocateStack(int) ->
+            $ subq $<int>, %rsp
         """
         self.expect_next(node, AsmInstruction)
         if isinstance(node, AsmMov):
@@ -76,7 +119,16 @@ class CodeEmitter:
             dst: str = self.emit_operand(node.dst)
             self.emit(f"movl {src}, {dst}", t=1)
         elif isinstance(node, AsmRet):
+            self.emit("movq %rbp, %rsp", t=1)
+            self.emit("popq %rbp", t=1)
             self.emit("ret", t=1)
+        elif isinstance(node, AsmUnary):
+            unary_op: str = self.emit_unary_op(node.unary_op)
+            dst: str = self.emit_operand(node.dst)
+            self.emit(f"{unary_op} {dst}", t=1)
+        elif isinstance(node, AsmAllocStack):
+            value: str = self.emit_int(node.value)
+            self.emit(f"subq ${value}, %rsp", t=1)
         else:
 
             raise CodeEmitterError(
@@ -87,6 +139,8 @@ class CodeEmitter:
         Function(name, instructions) ->
             $     .globl <name>
             $ <name>:
+            $     pushq %rbp
+            $     movq %rsp, %rbp
             $     <instructions>
         """
         self.expect_next(node, AsmFunctionDef)
@@ -94,6 +148,8 @@ class CodeEmitter:
             name: str = self.emit_identifier(node.name)
             self.emit(f".globl {name}", t=1)
             self.emit(f"{name}:", t=0)
+            self.emit("pushq %rbp", t=1)
+            self.emit("movq %rsp, %rbp", t=1)
             for instruction in node.instructions:
                 self.emit_instruction(instruction)
         else:
