@@ -18,16 +18,12 @@ class AssemblyGeneratorError(RuntimeError):
         super(AssemblyGeneratorError, self).__init__(message)
 
 
-# TODO add back ADSL comments
 class AssemblyGenerator:
     asm_ast: AST = None
     stack_mngr: StackManager = StackManager()
 
     def __init__(self):
         pass
-
-    def generate_stack(self) -> None:
-        self.stack_mngr.generate_stack(self.asm_ast)
 
     @staticmethod
     def expect_next(next_node, *expected_nodes: type) -> None:
@@ -36,14 +32,17 @@ class AssemblyGenerator:
                 f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
 
     def generate_identifier(self, node: AST) -> TIdentifier:
+        """ <identifier> = Built-in identifier type """
         self.expect_next(node, TIdentifier)
         return TIdentifier(deepcopy(node.str_t))
 
     def generate_int(self, node: AST) -> TInt:
+        """ <int> = Built-in int type """
         self.expect_next(node, TInt)
         return TInt(deepcopy(node.int_t))
 
     def generate_operand(self, node: Union[AST, int]) -> AsmOperand:
+        """ operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int) """
         self.expect_next(node, TacValue,
                          int)
         if isinstance(node, TacConstant):
@@ -60,6 +59,7 @@ class AssemblyGenerator:
             "An error occurred in assembly generation, not all nodes were visited")
 
     def generate_unary_op(self, node: AST) -> AsmUnaryOp:
+        """ unary_operator = Not | Neg """
         self.expect_next(node, TacUnaryOp)
         if isinstance(node, TacComplement):
             return AsmNot()
@@ -70,6 +70,7 @@ class AssemblyGenerator:
             "An error occurred in assembly generation, not all nodes were visited")
 
     def generate_instructions(self, list_node: list) -> List[AsmInstruction]:
+        """ instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | AllocateStack(int) | Ret """
         self.expect_next(list_node, list)
 
         instructions: List[AsmInstruction] = []
@@ -98,6 +99,7 @@ class AssemblyGenerator:
         return instructions
 
     def generate_function_def(self, node: AST) -> AsmFunctionDef:
+        """ function_definition = Function(identifier name, instruction* instructions) """
         self.expect_next(node, TacFunctionDef)
         if isinstance(node, TacFunction):
             name: TIdentifier = self.generate_identifier(node.name)
@@ -108,6 +110,7 @@ class AssemblyGenerator:
             "An error occurred in assembly generation, not all nodes were visited")
 
     def generate_program(self, node: AST) -> None:
+        """ program = Program(function_definition) """
         self.expect_next(node, AST)
         if isinstance(node, TacProgram):
             function_def: AsmFunctionDef = self.generate_function_def(node.function_def)
@@ -116,6 +119,9 @@ class AssemblyGenerator:
 
             raise AssemblyGeneratorError(
                 "An error occurred in assembly generation, not all nodes were visited")
+
+    def generate_stack(self) -> None:
+        self.stack_mngr.generate_stack(self.asm_ast)
 
 
 def assembly_generation(tac_ast: AST) -> AST:
