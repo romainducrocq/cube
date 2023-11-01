@@ -19,7 +19,6 @@ class ThreeAddressCodeGeneratorError(RuntimeError):
 
 class ThreeAddressCodeGenerator:
     tac_ast: AST = None
-    var_mngr: VariableManager = VariableManager()
 
     def __init__(self):
         pass
@@ -62,7 +61,7 @@ class ThreeAddressCodeGenerator:
             raise ThreeAddressCodeGeneratorError(
                 "An error occurred in three address code representation, not all nodes were visited")
 
-        identifier: TIdentifier = self.var_mngr.represent_variable_identifier(node)
+        identifier: TIdentifier = VariableManager.represent_variable_identifier(node)
         return TacVariable(identifier)
 
     def represent_instruction(self, node: AST, instructions: List[TacInstruction]) -> Optional[TacValue]:

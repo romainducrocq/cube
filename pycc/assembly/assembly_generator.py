@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Union
 from copy import deepcopy
 
 from pycc.util.__ast import *
 from pycc.intermediate.tac_ast import *
 from pycc.assembly.asm_ast import *
+from pycc.assembly.register import REGISTER_KIND, RegisterManager
 from pycc.assembly.stack import StackManager
 
 __all__ = [
@@ -18,7 +19,6 @@ class AssemblyGeneratorError(RuntimeError):
 
 
 # TODO add back ADSL comments
-# TODO add helper for registers
 class AssemblyGenerator:
     asm_ast: AST = None
     stack_mngr: StackManager = StackManager()
@@ -43,25 +43,17 @@ class AssemblyGenerator:
         self.expect_next(node, TInt)
         return TInt(deepcopy(node.int_t))
 
-    @staticmethod
-    def generate_register(register: str) -> AsmReg:
-        if register == "ax":
-            return AsmAx()
-
-        raise AssemblyGeneratorError(
-            "An error occurred in assembly generation, not all nodes were visited")
-
-    def generate_operand(self, node: AST = None) -> AsmOperand:
+    def generate_operand(self, node: Union[AST, int]) -> AsmOperand:
         self.expect_next(node, TacValue,
-                         type(None))
+                         int)
         if isinstance(node, TacConstant):
             value: TInt = self.generate_int(node.value)
             return AsmImm(value)
         if isinstance(node, TacVariable):
             identifier: TIdentifier = self.generate_identifier(node.name)
             return AsmPseudo(identifier)
-        if isinstance(node, type(None)):
-            register: AsmReg = self.generate_register("ax")
+        if isinstance(node, int):
+            register: AsmReg = RegisterManager.generate_register(node)
             return AsmRegister(register)
 
         raise AssemblyGeneratorError(
@@ -86,7 +78,7 @@ class AssemblyGenerator:
             self.expect_next(node, TacInstruction)
             if isinstance(node, TacReturn):
                 src: AsmOperand = self.generate_operand(node.val)
-                dst: AsmOperand = self.generate_operand()
+                dst: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
                 instructions.append(AsmMov(src, dst))
                 instructions.append(AsmRet())
             elif isinstance(node, TacUnary):

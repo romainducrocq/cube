@@ -3,6 +3,7 @@ from copy import deepcopy
 
 from pycc.util.__ast import *
 from pycc.assembly.asm_ast import *
+from pycc.assembly.register import REGISTER_KIND, RegisterManager
 
 __all__ = [
     'StackManager'
@@ -61,7 +62,8 @@ class StackManager:
                        isinstance(instruction.src, AsmStack) and \
                        isinstance(instruction.dst, AsmStack):
                         mov_to: AsmMov = deepcopy(instruction)
-                        register: AsmReg = AsmR10()  # TODO helper file for registers
+                        register: AsmReg = RegisterManager.generate_register(
+                            REGISTER_KIND.R10)
                         instruction.dst = AsmRegister(register)
                         mov_to.src = AsmRegister(deepcopy(register))
                         child_node.instructions.insert(
