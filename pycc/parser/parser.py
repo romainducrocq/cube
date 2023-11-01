@@ -56,6 +56,24 @@ class Parser:
         """ <int> ::= ? A constant token ? """
         return TInt(int(self.next_token.token))
 
+    def parse_binary_op(self) -> CBinaryOp:
+        """ <binop> ::= "-" | "+" | "*" | "/" | "%" """
+        self.expect_next(self.next(), TOKEN_KIND.unop_negation,
+                         TOKEN_KIND.binop_addition,
+                         TOKEN_KIND.binop_multiplication,
+                         TOKEN_KIND.binop_division,
+                         TOKEN_KIND.binop_remainder)
+        if self.next_token.token_kind == TOKEN_KIND.unop_negation:
+            return CSubtract()
+        if self.next_token.token_kind == TOKEN_KIND.binop_addition:
+            return CAdd()
+        if self.next_token.token_kind == TOKEN_KIND.binop_multiplication:
+            return CMultiply()
+        if self.next_token.token_kind == TOKEN_KIND.binop_division:
+            return CDivide()
+        if self.next_token.token_kind == TOKEN_KIND.binop_remainder:
+            return CRemainder()
+
     def parse_unary_op(self) -> CUnaryOp:
         """ <unop> ::= "-" | "~" """
         self.expect_next(self.next(), TOKEN_KIND.unop_complement,
