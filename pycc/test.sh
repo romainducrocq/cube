@@ -18,4 +18,5 @@ else
     test --chapter 1 --latest-only
     test --chapter 2 --latest-only
     test --chapter 3 --stage lex --latest-only
+    test --chapter 3 --stage parse --latest-only
 fi

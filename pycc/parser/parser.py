@@ -3,6 +3,7 @@ from typing import List
 from pycc.util.__ast import *
 from pycc.parser.c_ast import *
 from pycc.parser.lexer import TOKEN_KIND, Token
+from pycc.parser.precedence import PrecedenceManager
 
 __all__ = [
     'parsing'
@@ -83,8 +84,8 @@ class Parser:
         if self.next_token.token_kind == TOKEN_KIND.unop_negation:
             return CNegate()
 
-    def parse_exp(self) -> CExp:
-        """ <exp> ::= <constant> | <unop> <exp> | "(" <exp> ")" """
+    def parse_factor(self) -> CExp:
+        """ <factor> ::= <int> | <unop> <factor> | "(" <exp> ")" """
         self.expect_next(self.peek(), TOKEN_KIND.constant,
                          TOKEN_KIND.unop_complement,
                          TOKEN_KIND.unop_negation,
@@ -92,7 +93,7 @@ class Parser:
         if self.peek_token.token_kind in (TOKEN_KIND.unop_complement,
                                           TOKEN_KIND.unop_negation):
             unary_op: CUnaryOp = self.parse_unary_op()
-            inner_exp: CExp = self.parse_exp()
+            inner_exp: CExp = self.parse_factor()
             return CUnary(unary_op, inner_exp)
         if self.next().token_kind == TOKEN_KIND.constant:
             value: TInt = self.parse_int()
@@ -101,6 +102,23 @@ class Parser:
             inner_exp: CExp = self.parse_exp()
             self.expect_next(self.next(), TOKEN_KIND.parenthesis_close)
             return inner_exp
+
+    def parse_exp(self, min_precedence: int = 0) -> CExp:
+        """ <exp> ::= <factor> | <exp> <binop> <exp> """
+        exp_left: CExp = self.parse_factor()
+        while self.peek().token_kind in (TOKEN_KIND.unop_negation,
+                                         TOKEN_KIND.binop_addition,
+                                         TOKEN_KIND.binop_multiplication,
+                                         TOKEN_KIND.binop_division,
+                                         TOKEN_KIND.binop_remainder):
+            precedence: int = PrecedenceManager.\
+                               parse_token_precedence(self.peek_token.token_kind)
+            if precedence < min_precedence:
+                break
+            binary_op: CBinaryOp = self.parse_binary_op()
+            exp_right: CExp = self.parse_exp(precedence + 1)
+            exp_left: CExp = CBinary(binary_op, exp_left, exp_right)
+        return exp_left
 
     def parse_statement(self) -> CStatement:
         """ <statement> ::= "return" <exp> ";" """
