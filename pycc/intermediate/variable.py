@@ -18,7 +18,8 @@ counter: int = 0
 
 VARIABLE_NAME: Dict[type, str] = {
     CConstant: "constant",
-    CUnary: "unary"
+    CUnary: "unary",
+    CBinary: "binary"
 }
 
 

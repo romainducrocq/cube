@@ -39,6 +39,23 @@ class ThreeAddressCodeGenerator:
         self.expect_next(node, TInt)
         return TInt(deepcopy(node.int_t))
 
+    def represent_binary_op(self, node: AST) -> TacBinaryOp:
+        """ binary_operator = Add | Subtract | Multiply | Divide | Remainder """
+        self.expect_next(node, CBinaryOp)
+        if isinstance(node, CAdd):
+            return TacAdd()
+        if isinstance(node, CSubtract):
+            return TacSubtract()
+        if isinstance(node, CMultiply):
+            return TacMultiply()
+        if isinstance(node, CDivide):
+            return TacDivide()
+        if isinstance(node, CRemainder):
+            return TacRemainder()
+
+        raise ThreeAddressCodeGeneratorError(
+            "An error occurred in three address code representation, not all nodes were visited")
+
     def represent_unary_op(self, node: AST) -> TacUnaryOp:
         """ unary_operator = Complement | Negate """
         self.expect_next(node, CUnaryOp)
@@ -65,7 +82,8 @@ class ThreeAddressCodeGenerator:
         return TacVariable(identifier)
 
     def represent_instruction(self, node: AST, instructions: List[TacInstruction]) -> Optional[TacValue]:
-        """ instruction = Return(val) | Unary(unary_operator, val src, val dst) """
+        """ instruction = Return(val) | Unary(unary_operator, val src, val dst) |
+                          Binary(binary_operator, val src1, val src2, val dst) """
         self.expect_next(node, CStatement,
                          CExp)
         if isinstance(node, CReturn):
@@ -80,6 +98,13 @@ class ThreeAddressCodeGenerator:
             dst: TacValue = self.represent_value(node.exp, outer=False)
             unary_op: TacUnaryOp = self.represent_unary_op(node.unary_op)
             instructions.append(TacUnary(unary_op, src, dst))
+            return deepcopy(dst)
+        if isinstance(node, CBinary):
+            src1: TacValue = self.represent_instruction(node.exp_left, instructions)
+            src2: TacValue = self.represent_instruction(node.exp_right, instructions)
+            dst: TacValue = self.represent_value(node.exp_left, outer=False)
+            binary_op: TacBinaryOp = self.represent_binary_op(node.binary_op)
+            instructions.append(TacBinary(binary_op, src1, src2, dst))
             return deepcopy(dst)
 
         raise ThreeAddressCodeGeneratorError(
