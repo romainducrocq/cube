@@ -57,8 +57,9 @@ class StackManager:
             if isinstance(child_node, AsmFunction):
                 prepend_alloc_stack(child_node.instructions)
 
+                size = len(child_node.instructions)
                 for e, instruction in enumerate(reversed(child_node.instructions)):
-                    i = len(child_node.instructions) - e
+                    i = size - e
                     # mov addr, addr
                     if isinstance(instruction, AsmMov) and \
                             isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
@@ -77,8 +78,8 @@ class StackManager:
                                 isinstance(instruction.dst, AsmStack):
                             src: AsmOperand = deepcopy(instruction.dst)
                             instruction.dst = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R11))
-                            child_node.instructions.insert(i - 2, AsmMov(src, deepcopy(instruction.dst)))
-                            child_node.instructions.insert(i, AsmMov(deepcopy(instruction.dst), deepcopy(src)))
+                            child_node.instructions.insert(i - 1, AsmMov(src, deepcopy(instruction.dst)))
+                            child_node.instructions.insert(i + 1, AsmMov(deepcopy(instruction.dst), deepcopy(src)))
                     # idiv imm
                     elif isinstance(instruction, AsmIdiv) and \
                             isinstance(instruction.src2, AsmImm):
