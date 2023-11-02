@@ -77,8 +77,8 @@ class StackManager:
                                 isinstance(instruction.dst, AsmStack):
                             src: AsmOperand = deepcopy(instruction.dst)
                             instruction.dst = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R11))
-                            child_node.instructions.insert(i - 1, AsmMov(src, deepcopy(instruction.dst)))
-                            child_node.instructions.insert(i + 1, AsmMov(deepcopy(instruction.dst), deepcopy(src)))
+                            child_node.instructions.insert(i - 2, AsmMov(src, deepcopy(instruction.dst)))
+                            child_node.instructions.insert(i, AsmMov(deepcopy(instruction.dst), deepcopy(src)))
                     # idiv imm
                     elif isinstance(instruction, AsmIdiv) and \
                             isinstance(instruction.src2, AsmImm):

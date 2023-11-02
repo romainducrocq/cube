@@ -1,0 +1,6 @@
+AssertionError: Expected return code 1, found 0 in /mnt/s/proj/writing-c-compiler/writing-a-c-compiler-tests/tests/chapter_3/valid/associativity_2
+AssertionError: Expected return code 8, found 4 in /mnt/s/proj/writing-c-compiler/writing-a-c-compiler-tests/tests/chapter_3/valid/associativity_3
+AssertionError: Expected return code 10, found 26 in /mnt/s/proj/writing-c-compiler/writing-a-c-compiler-tests/tests/chapter_3/valid/associativity_and_precedence
+AssertionError: Expected return code 2, found 0 in /mnt/s/proj/writing-c-compiler/writing-a-c-compiler-tests/tests/chapter_3/valid/div
+AssertionError: Expected return code 254, found 0 in /mnt/s/proj/writing-c-compiler/writing-a-c-compiler-tests/tests/chapter_3/valid/div_neg
+AssertionError: Expected return code 14, found 5 in /mnt/s/proj/writing-c-compiler/writing-a-c-compiler-tests/tests/chapter_3/valid/precedence

@@ -49,8 +49,12 @@ class CodeEmitter:
         """
         Reg(AX) ->
             $ %eax
+        Reg(DX) ->
+            $ %edx
         Reg(R10) ->
             $ %r10d
+        Reg(R11) ->
+            $ %r11d
         """
         self.expect_next(node, AsmReg)
         if isinstance(node, AsmAx):
@@ -59,6 +63,8 @@ class CodeEmitter:
             return "edx"
         if isinstance(node, AsmR10):
             return "r10d"
+        if isinstance(node, AsmR11):
+            return "r11d"
 
         raise CodeEmitterError(
             "An error occurred in code emission, not all nodes were visited")
@@ -82,6 +88,26 @@ class CodeEmitter:
         if isinstance(node, AsmStack):
             value: str = self.emit_int(node.value)
             return value + "(%rbp)"
+
+        raise CodeEmitterError(
+            "An error occurred in code emission, not all nodes were visited")
+
+    def emit_binary_op(self, node: AST) -> str:
+        """
+        Add ->
+            $ addl
+        Sub ->
+            $ subl
+        Mult ->
+            $ imull
+        """
+        self.expect_next(node, AsmBinaryOp)
+        if isinstance(node, AsmAdd):
+            return "addl"
+        if isinstance(node, AsmSub):
+            return "subl"
+        if isinstance(node, AsmMult):
+            return "imull"
 
         raise CodeEmitterError(
             "An error occurred in code emission, not all nodes were visited")
@@ -112,6 +138,12 @@ class CodeEmitter:
             $ ret
         Unary(unary_operator, operand) ->
             $ <unary_operator> <operand>
+        Binary(binary_operator, src, dst) ->
+            $ <binary_operator> <src>, <dst>
+        Idiv(operand) ->
+            $ idivl <operand>
+        Cdq ->
+            $ cdq
         AllocateStack(int) ->
             $ subq $<int>, %rsp
         """
@@ -128,6 +160,16 @@ class CodeEmitter:
             unary_op: str = self.emit_unary_op(node.unary_op)
             dst: str = self.emit_operand(node.dst)
             self.emit(f"{unary_op} {dst}", t=1)
+        elif isinstance(node, AsmBinary):
+            binary_op: str = self.emit_binary_op(node.binary_op)
+            src: str = self.emit_operand(node.src2)
+            dst: str = self.emit_operand(node.dst)
+            self.emit(f"{binary_op} {src}, {dst}", t=1)
+        elif isinstance(node, AsmIdiv):
+            src: str = self.emit_operand(node.src2)
+            self.emit(f"idivl {src}", t=1)
+        elif isinstance(node, AsmCdq):
+            self.emit("cdq", t=1)
         elif isinstance(node, AsmAllocStack):
             value: str = self.emit_int(node.value)
             self.emit(f"subq ${value}, %rsp", t=1)
