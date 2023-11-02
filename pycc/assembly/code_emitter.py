@@ -162,11 +162,11 @@ class CodeEmitter:
             self.emit(f"{unary_op} {dst}", t=1)
         elif isinstance(node, AsmBinary):
             binary_op: str = self.emit_binary_op(node.binary_op)
-            src: str = self.emit_operand(node.src2)
+            src: str = self.emit_operand(node.src)
             dst: str = self.emit_operand(node.dst)
             self.emit(f"{binary_op} {src}, {dst}", t=1)
         elif isinstance(node, AsmIdiv):
-            src: str = self.emit_operand(node.src2)
+            src: str = self.emit_operand(node.src)
             self.emit(f"idivl {src}", t=1)
         elif isinstance(node, AsmCdq):
             self.emit("cdq", t=1)

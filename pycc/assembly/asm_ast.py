@@ -172,14 +172,14 @@ class AsmUnary(AsmInstruction):
 class AsmBinary(AsmInstruction):
     """ Binary(binary_operator binop, operand src2, operand dst) """
     binary_op: AsmBinaryOp = None
-    src2: AsmOperand = None
+    src: AsmOperand = None
     dst: AsmOperand = None
 
 
 @dataclass
 class AsmIdiv(AsmInstruction):
     """ Idiv(operand src2) """
-    src2: AsmOperand = None
+    src: AsmOperand = None
 
 
 class AsmCdq(AsmInstruction):
