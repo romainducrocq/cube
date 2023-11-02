@@ -100,9 +100,10 @@ class AsmStack(AsmOperand):
 
 
 class AsmBinaryOp(AST):
-    """ binary_operator = Add 
-                        | Sub 
-                        | Mult 
+    """
+    binary_operator = Add
+                    | Sub
+                    | Mult
     """
     pass
 

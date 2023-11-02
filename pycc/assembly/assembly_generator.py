@@ -58,6 +58,19 @@ class AssemblyGenerator:
         raise AssemblyGeneratorError(
             "An error occurred in assembly generation, not all nodes were visited")
 
+    def generate_binary_op(self, node: AST) -> AsmBinaryOp:
+        """ binary_operator = Add | Sub | Mult  """
+        self.expect_next(node, TacBinaryOp)
+        if isinstance(node, TacAdd):
+            return AsmAdd()
+        if isinstance(node, TacSubtract):
+            return AsmSub()
+        if isinstance(node, TacMultiply):
+            return AsmMult()
+
+        raise AssemblyGeneratorError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
     def generate_unary_op(self, node: AST) -> AsmUnaryOp:
         """ unary_operator = Not | Neg """
         self.expect_next(node, TacUnaryOp)
@@ -88,6 +101,26 @@ class AssemblyGenerator:
                 dst: AsmOperand = self.generate_operand(node.dst)
                 instructions.append(AsmMov(src, dst))
                 instructions.append(AsmUnary(unary_op, deepcopy(dst)))
+            elif isinstance(node, TacBinary):
+                if isinstance(node.binary_op, (TacDivide, TacRemainder)):
+                    src1: AsmOperand = self.generate_operand(node.src1)
+                    src2: AsmOperand = self.generate_operand(node.src2)
+                    if isinstance(node.binary_op, TacDivide):
+                        src: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
+                    else:
+                        src: AsmOperand = self.generate_operand(REGISTER_KIND.DX)
+                    dst: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
+                    instructions.append(AsmMov(src1, dst))
+                    instructions.append(AsmCdq())
+                    instructions.append(AsmIdiv(src2))
+                    instructions.append(AsmMov(src, deepcopy(dst)))
+                else:
+                    binary_op: AsmBinaryOp = self.generate_binary_op(node.binary_op)
+                    src1: AsmOperand = self.generate_operand(node.src1)
+                    src2: AsmOperand = self.generate_operand(node.src2)
+                    dst: AsmOperand = self.generate_operand(node.dst)
+                    instructions.append(AsmMov(src1, dst))
+                    instructions.append(AsmBinary(binary_op, src2, deepcopy(dst)))
             else:
 
                 raise AssemblyGeneratorError(
