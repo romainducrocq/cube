@@ -24,7 +24,7 @@ REGISTER_KIND: IotaEnum = IotaEnum(
 
 REGISTER_NODE: Dict[int, type(AsmReg)] = {
     REGISTER_KIND.AX: AsmAx,
-    REGISTER_KIND.DX: AsmDX,
+    REGISTER_KIND.DX: AsmDx,
     REGISTER_KIND.R10: AsmR10,
     REGISTER_KIND.R11: AsmR11
 }

@@ -55,6 +55,8 @@ class CodeEmitter:
         self.expect_next(node, AsmReg)
         if isinstance(node, AsmAx):
             return "eax"
+        if isinstance(node, AsmDx):
+            return "edx"
         if isinstance(node, AsmR10):
             return "r10d"
 
