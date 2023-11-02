@@ -6,18 +6,27 @@ from pycc.util.__ast import *
 __all__ = [
     'AsmReg',
     'AsmAx',
+    'AsmDX',
     'AsmR10',
+    'AsmR11',
     'AsmOperand',
     'AsmImm',
     'AsmRegister',
     'AsmPseudo',
     'AsmStack',
+    'AsmBinaryOp',
+    'AsmAdd',
+    'AsmSub',
+    'AsmMult',
     'AsmUnaryOp',
     'AsmNot',
     'AsmNeg',
     'AsmInstruction',
     'AsmMov',
     'AsmUnary',
+    'AsmBinary',
+    'AsmIdiv',
+    'AsmCdq',
     'AsmAllocStack',
     'AsmRet',
     'AsmFunctionDef',
@@ -29,7 +38,9 @@ __all__ = [
 class AsmReg(AST):
     """
     reg = AX
+        | DX
         | R10
+        | R11
     """
     pass
 
@@ -39,8 +50,18 @@ class AsmAx(AsmReg):
     pass
 
 
+class AsmDX(AsmReg):
+    """ DX """
+    pass
+
+
 class AsmR10(AsmReg):
     """ R10 """
+    pass
+
+
+class AsmR11(AsmReg):
+    """ R11 """
     pass
 
 
@@ -78,6 +99,29 @@ class AsmStack(AsmOperand):
     value: TInt = None
 
 
+class AsmBinaryOp(AST):
+    """ binary_operator = Add 
+                        | Sub 
+                        | Mult 
+    """
+    pass
+
+
+class AsmAdd(AsmBinaryOp):
+    """ Add """
+    pass
+
+
+class AsmSub(AsmBinaryOp):
+    """ Sub """
+    pass
+
+
+class AsmMult(AsmBinaryOp):
+    """ Mult """
+    pass
+
+
 class AsmUnaryOp(AST):
     """
     unary_operator = Not
@@ -100,6 +144,9 @@ class AsmInstruction(AST):
     """
     instruction = Mov(operand src, operand dst)
                 | Unary(unary_operator, operand)
+                | Binary(binary_operator, operand, operand)
+                | Idiv(operand)
+                | Cdq
                 | AllocateStack(int)
                 | Ret
     """
@@ -118,6 +165,25 @@ class AsmUnary(AsmInstruction):
     """ Unary(unary_operator unop, operand dst) """
     unary_op: AsmUnaryOp = None
     dst: AsmOperand = None
+
+
+@dataclass
+class AsmBinary(AsmInstruction):
+    """ Binary(binary_operator binop, operand src2, operand dst) """
+    binary_op: AsmBinaryOp = None
+    src2: AsmOperand = None
+    dst: AsmOperand = None
+
+
+@dataclass
+class AsmIdiv(AsmInstruction):
+    """ Idiv(operand src2) """
+    src2: AsmOperand = None
+
+
+class AsmCdq(AsmInstruction):
+    """ Cdq """
+    pass
 
 
 @dataclass
