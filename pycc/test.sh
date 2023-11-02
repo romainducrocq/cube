@@ -20,4 +20,5 @@ else
     test --chapter 3 --stage lex --latest-only
     test --chapter 3 --stage parse --latest-only
     test --chapter 3 --stage tacky --latest-only
+    test --chapter 3 --stage codegen --latest-only
 fi
