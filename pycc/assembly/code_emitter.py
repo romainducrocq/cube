@@ -106,6 +106,10 @@ class CodeEmitter:
             $ orl
         BitXor ->
             $ xorl
+        BitShiftLeft ->
+            $ shll
+        BitShiftRight ->
+            $ shrl
         """
         self.expect_next(node, AsmBinaryOp)
         if isinstance(node, AsmAdd):
@@ -120,6 +124,10 @@ class CodeEmitter:
             return "orl"
         if isinstance(node, AsmBitXor):
             return "xorl"
+        if isinstance(node, AsmBitShiftLeft):
+            return "shll"
+        if isinstance(node, AsmBitShiftRight):
+            return "shrl"
 
         raise CodeEmitterError(
             "An error occurred in code emission, not all nodes were visited")

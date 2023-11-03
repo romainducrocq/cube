@@ -67,7 +67,7 @@ class StackManager:
                         instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
                         child_node.instructions.insert(i - 1, AsmMov(src_dst, deepcopy(instruction.src)))
                     elif isinstance(instruction, AsmBinary):
-                        # add | sub | and | or | xor (addr, addr)
+                        # add | sub | and | or | xor | shl | shr (addr, addr)
                         if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)) and \
                                 isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
                             src_dst: AsmOperand = deepcopy(instruction.src)
