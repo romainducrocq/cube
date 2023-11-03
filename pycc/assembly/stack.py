@@ -63,20 +63,20 @@ class StackManager:
                     # mov (addr, addr)
                     if isinstance(instruction, AsmMov) and \
                             isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
-                        src_dst: AsmOperand = deepcopy(instruction.src)
+                        src_src: AsmOperand = deepcopy(instruction.src)
                         instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
-                        child_node.instructions.insert(i - 1, AsmMov(src_dst, deepcopy(instruction.src)))
+                        child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
                     elif isinstance(instruction, AsmBinary):
                         # add | sub | and | or | xor | shl | shr (addr, addr)
                         if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor,
                                                               AsmBitShiftLeft, AsmBitShiftRight)) and \
                                 isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
-                            src_dst: AsmOperand = deepcopy(instruction.src)
+                            src_src: AsmOperand = deepcopy(instruction.src)
                             if isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)):
                                 instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.CX))
                             else:
                                 instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
-                            child_node.instructions.insert(i - 1, AsmMov(src_dst, deepcopy(instruction.src)))
+                            child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
                         # mul (_, addr)
                         elif isinstance(instruction.binary_op, AsmMult) and \
                                 isinstance(instruction.dst, AsmStack):
