@@ -13,6 +13,11 @@ __all__ = [
     'TacMultiply',
     'TacDivide',
     'TacRemainder',
+    "TacBitAnd",
+    "TacBitOr",
+    "TacBitXor",
+    "TacBitShiftLeft",
+    "TacBitShiftRight",
     'TacValue',
     'TacConstant',
     'TacVariable',
@@ -51,6 +56,11 @@ class TacBinaryOp(AST):
                     | Multiply
                     | Divide
                     | Remainder
+                    | BitAnd
+                    | BitOr
+                    | BitXor
+                    | BitShiftLeft
+                    | BitShiftRight
     """
     pass
 
@@ -77,6 +87,31 @@ class TacDivide(TacBinaryOp):
 
 class TacRemainder(TacBinaryOp):
     """ Remainder """
+    pass
+
+
+class TacBitAnd(TacBinaryOp):
+    """ BitAnd """
+    pass
+
+
+class TacBitOr(TacBinaryOp):
+    """ BitOr """
+    pass
+
+
+class TacBitXor(TacBinaryOp):
+    """ BitXor """
+    pass
+
+
+class TacBitShiftLeft(TacBinaryOp):
+    """ BitShiftLeft """
+    pass
+
+
+class TacBitShiftRight(TacBinaryOp):
+    """ BitShiftRight """
     pass
 
 

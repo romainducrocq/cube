@@ -40,7 +40,8 @@ class ThreeAddressCodeGenerator:
         return TInt(deepcopy(node.int_t))
 
     def represent_binary_op(self, node: AST) -> TacBinaryOp:
-        """ binary_operator = Add | Subtract | Multiply | Divide | Remainder """
+        """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
+                            | BitShiftLeft | BitShiftRight"""
         self.expect_next(node, CBinaryOp)
         if isinstance(node, CAdd):
             return TacAdd()
@@ -52,6 +53,16 @@ class ThreeAddressCodeGenerator:
             return TacDivide()
         if isinstance(node, CRemainder):
             return TacRemainder()
+        if isinstance(node, CBitAnd):
+            return TacBitAnd()
+        if isinstance(node, CBitOr):
+            return TacBitOr()
+        if isinstance(node, CBitXor):
+            return TacBitXor()
+        if isinstance(node, CBitShiftLeft):
+            return TacBitShiftLeft()
+        if isinstance(node, CBitShiftRight):
+            return TacBitShiftRight()
 
         raise ThreeAddressCodeGeneratorError(
             "An error occurred in three address code representation, not all nodes were visited")
