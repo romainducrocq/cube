@@ -18,6 +18,11 @@ __all__ = [
     'AsmAdd',
     'AsmSub',
     'AsmMult',
+    "AsmBitAnd",
+    "AsmBitOr",
+    "AsmBitXor",
+    "AsmBitShiftLeft",
+    "AsmBitShiftRight",
     'AsmUnaryOp',
     'AsmNot',
     'AsmNeg',
@@ -104,6 +109,11 @@ class AsmBinaryOp(AST):
     binary_operator = Add
                     | Sub
                     | Mult
+                    | BitAnd
+                    | BitOr
+                    | BitXor
+                    | BitShiftLeft
+                    | BitShiftRight
     """
     pass
 
@@ -120,6 +130,31 @@ class AsmSub(AsmBinaryOp):
 
 class AsmMult(AsmBinaryOp):
     """ Mult """
+    pass
+
+
+class AsmBitAnd(AsmBinaryOp):
+    """ BitAnd """
+    pass
+
+
+class AsmBitOr(AsmBinaryOp):
+    """ BitOr """
+    pass
+
+
+class AsmBitXor(AsmBinaryOp):
+    """ BitXor """
+    pass
+
+
+class AsmBitShiftLeft(AsmBinaryOp):
+    """ BitShiftLeft """
+    pass
+
+
+class AsmBitShiftRight(AsmBinaryOp):
+    """ BitShiftRight """
     pass
 
 

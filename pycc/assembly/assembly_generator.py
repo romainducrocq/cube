@@ -59,7 +59,7 @@ class AssemblyGenerator:
             "An error occurred in assembly generation, not all nodes were visited")
 
     def generate_binary_op(self, node: AST) -> AsmBinaryOp:
-        """ binary_operator = Add | Sub | Mult  """
+        """ binary_operator = Add | Sub | Mult | BitAnd | BitOr | BitXor | BitShiftLeft | BitShiftRight"""
         self.expect_next(node, TacBinaryOp)
         if isinstance(node, TacAdd):
             return AsmAdd()
@@ -67,6 +67,16 @@ class AssemblyGenerator:
             return AsmSub()
         if isinstance(node, TacMultiply):
             return AsmMult()
+        if isinstance(node, TacBitAnd):
+            return AsmBitAnd()
+        if isinstance(node, TacBitOr):
+            return AsmBitOr()
+        if isinstance(node, TacBitXor):
+            return AsmBitXor()
+        if isinstance(node, TacBitShiftLeft):
+            return AsmBitShiftLeft()
+        if isinstance(node, TacBitShiftRight):
+            return AsmBitShiftRight()
 
         raise AssemblyGeneratorError(
             "An error occurred in assembly generation, not all nodes were visited")
