@@ -125,7 +125,12 @@ class Parser:
                                          TOKEN_KIND.binop_addition,
                                          TOKEN_KIND.binop_multiplication,
                                          TOKEN_KIND.binop_division,
-                                         TOKEN_KIND.binop_remainder):
+                                         TOKEN_KIND.binop_remainder,
+                                         TOKEN_KIND.binop_bitand,
+                                         TOKEN_KIND.binop_bitor,
+                                         TOKEN_KIND.binop_bitxor,
+                                         TOKEN_KIND.binop_bitshiftleft,
+                                         TOKEN_KIND.binop_bitshiftright):
             precedence: int = PrecedenceManager.\
                                parse_token_precedence(self.peek_token.token_kind)
             if precedence < min_precedence:

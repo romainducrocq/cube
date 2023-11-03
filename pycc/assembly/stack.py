@@ -60,27 +60,27 @@ class StackManager:
                 size = len(child_node.instructions)
                 for e, instruction in enumerate(reversed(child_node.instructions)):
                     i = size - e
-                    # mov addr, addr
+                    # mov (addr, addr)
                     if isinstance(instruction, AsmMov) and \
                             isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
                         src_dst: AsmOperand = deepcopy(instruction.src)
                         instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
                         child_node.instructions.insert(i - 1, AsmMov(src_dst, deepcopy(instruction.src)))
                     elif isinstance(instruction, AsmBinary):
-                        # add | sub addr, addr
-                        if isinstance(instruction.binary_op, (AsmAdd, AsmSub)) and \
+                        # add | sub | and | or | xor (addr, addr)
+                        if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)) and \
                                 isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
                             src_dst: AsmOperand = deepcopy(instruction.src)
                             instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
                             child_node.instructions.insert(i - 1, AsmMov(src_dst, deepcopy(instruction.src)))
-                        # mul _ addr
+                        # mul (_, addr)
                         elif isinstance(instruction.binary_op, AsmMult) and \
                                 isinstance(instruction.dst, AsmStack):
                             src_src: AsmOperand = deepcopy(instruction.dst)
                             instruction.dst = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R11))
                             child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.dst)))
                             child_node.instructions.insert(i + 1, AsmMov(deepcopy(instruction.dst), deepcopy(src_src)))
-                    # idiv imm
+                    # idiv (imm)
                     elif isinstance(instruction, AsmIdiv) and \
                             isinstance(instruction.src, AsmImm):
                         dst_src: AsmOperand = deepcopy(instruction.src)

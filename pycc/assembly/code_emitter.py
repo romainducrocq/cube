@@ -100,6 +100,12 @@ class CodeEmitter:
             $ subl
         Mult ->
             $ imull
+        BitAnd ->
+            $ andl
+        BitOr ->
+            $ orl
+        BitXor ->
+            $ xorl
         """
         self.expect_next(node, AsmBinaryOp)
         if isinstance(node, AsmAdd):
@@ -108,6 +114,12 @@ class CodeEmitter:
             return "subl"
         if isinstance(node, AsmMult):
             return "imull"
+        if isinstance(node, AsmBitAnd):
+            return "andl"
+        if isinstance(node, AsmBitOr):
+            return "orl"
+        if isinstance(node, AsmBitXor):
+            return "xorl"
 
         raise CodeEmitterError(
             "An error occurred in code emission, not all nodes were visited")
