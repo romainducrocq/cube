@@ -14,11 +14,16 @@ class PrecedenceManagerError(RuntimeError):
 
 
 TOKEN_PRECEDENCE: Dict[int, int] = {
-    TOKEN_KIND.unop_negation: 45,
-    TOKEN_KIND.binop_addition: 45,
     TOKEN_KIND.binop_multiplication: 50,
     TOKEN_KIND.binop_division: 50,
-    TOKEN_KIND.binop_remainder: 50
+    TOKEN_KIND.binop_remainder: 50,
+    TOKEN_KIND.unop_negation: 45,
+    TOKEN_KIND.binop_addition: 45,
+    TOKEN_KIND.binop_bitshiftleft: 40,
+    TOKEN_KIND.binop_bitshiftright: 40,
+    TOKEN_KIND.binop_bitand: 25,
+    TOKEN_KIND.binop_bitxor: 20,
+    TOKEN_KIND.binop_bitor: 15
 }
 
 

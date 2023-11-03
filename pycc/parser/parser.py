@@ -58,12 +58,17 @@ class Parser:
         return TInt(int(self.next_token.token))
 
     def parse_binary_op(self) -> CBinaryOp:
-        """ <binop> ::= "-" | "+" | "*" | "/" | "%" """
+        """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" """
         self.expect_next(self.next(), TOKEN_KIND.unop_negation,
                          TOKEN_KIND.binop_addition,
                          TOKEN_KIND.binop_multiplication,
                          TOKEN_KIND.binop_division,
-                         TOKEN_KIND.binop_remainder)
+                         TOKEN_KIND.binop_remainder,
+                         TOKEN_KIND.binop_bitand,
+                         TOKEN_KIND.binop_bitor,
+                         TOKEN_KIND.binop_bitxor,
+                         TOKEN_KIND.binop_bitshiftleft,
+                         TOKEN_KIND.binop_bitshiftright)
         if self.next_token.token_kind == TOKEN_KIND.unop_negation:
             return CSubtract()
         if self.next_token.token_kind == TOKEN_KIND.binop_addition:
@@ -74,6 +79,16 @@ class Parser:
             return CDivide()
         if self.next_token.token_kind == TOKEN_KIND.binop_remainder:
             return CRemainder()
+        if self.next_token.token_kind == TOKEN_KIND.binop_bitand:
+            return CBitAnd()
+        if self.next_token.token_kind == TOKEN_KIND.binop_bitor:
+            return CBitOr()
+        if self.next_token.token_kind == TOKEN_KIND.binop_bitxor:
+            return CBitXor()
+        if self.next_token.token_kind == TOKEN_KIND.binop_bitshiftleft:
+            return CBitShiftLeft()
+        if self.next_token.token_kind == TOKEN_KIND.binop_bitshiftright:
+            return CBitShiftRight()
 
     def parse_unary_op(self) -> CUnaryOp:
         """ <unop> ::= "-" | "~" """

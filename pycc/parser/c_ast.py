@@ -12,6 +12,11 @@ __all__ = [
     "CMultiply",
     "CDivide",
     "CRemainder",
+    "CBitAnd",
+    "CBitOr",
+    "CBitXor",
+    "CBitShiftLeft",
+    "CBitShiftRight",
     'CExp',
     'CConstant',
     'CUnary',
@@ -49,6 +54,11 @@ class CBinaryOp(AST):
                     | Multiply
                     | Divide
                     | Remainder
+                    | BitAnd
+                    | BitOr
+                    | BitXor
+                    | BitShiftLeft
+                    | BitShiftRight
     """
     pass
 
@@ -75,6 +85,31 @@ class CDivide(CBinaryOp):
 
 class CRemainder(CBinaryOp):
     """ Remainder """
+    pass
+
+
+class CBitAnd(CBinaryOp):
+    """ BitAnd """
+    pass
+
+
+class CBitOr(CBinaryOp):
+    """ BitOr """
+    pass
+
+
+class CBitXor(CBinaryOp):
+    """ BitXor """
+    pass
+
+
+class CBitShiftLeft(CBinaryOp):
+    """ BitShiftLeft """
+    pass
+
+
+class CBitShiftRight(CBinaryOp):
+    """ BitShiftRight """
     pass
 
 
