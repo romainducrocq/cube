@@ -46,6 +46,10 @@ function test_dir () {
 
     for SUBDIR in $(find ${DIR} -type d); do
         DIR=$(readlink -f ${SUBDIR})
+        if [[ ! "${SUBDIR: -1}" == "/" ]]; then
+            SUBDIR=${SUBDIR}'/'
+        fi
+
         for FILE in $(find ${DIR} -maxdepth 1 -name "*.c" -type f); do
             FILE=$(file ${FILE})
 
@@ -55,10 +59,10 @@ function test_dir () {
             RES=""
             FILE=$(echo "${FILE}" | rev | cut -d"/" -f1 | rev)'.c'
             if [[ "${RET_GCC}" == "${RET_PYCC}" ]]; then
-                RES="${LIGHT_GREEN}[y] ${SUBDIR}/${FILE}${NC}"
+                RES="${LIGHT_GREEN}[y] ${SUBDIR}${FILE}${NC}"
                 let PASS+=1
             else
-                RES="${LIGHT_RED}[n] ${SUBDIR}/${FILE}${NC}"
+                RES="${LIGHT_RED}[n] ${SUBDIR}${FILE}${NC}"
             fi
             echo -e "${RES} -> gcc: ${RET_GCC}, pycc: ${RET_PYCC}"
 
