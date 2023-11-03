@@ -17,5 +17,5 @@ if [ ${#} -ne 0 ]; then
 else
     test --chapter 1 --latest-only
     test --chapter 2 --latest-only
-    test --chapter 3 --latest-only
+    test --chapter 3 --latest-only --bitwise
 fi

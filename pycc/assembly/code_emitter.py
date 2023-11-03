@@ -49,6 +49,8 @@ class CodeEmitter:
         """
         Reg(AX) ->
             $ %eax
+        Reg(CX) ->
+            $ %ecx
         Reg(DX) ->
             $ %edx
         Reg(R10) ->
@@ -59,6 +61,8 @@ class CodeEmitter:
         self.expect_next(node, AsmReg)
         if isinstance(node, AsmAx):
             return "eax"
+        if isinstance(node, AsmCx):
+            return "ecx"
         if isinstance(node, AsmDx):
             return "edx"
         if isinstance(node, AsmR10):

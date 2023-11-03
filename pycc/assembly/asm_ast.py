@@ -6,6 +6,7 @@ from pycc.util.__ast import *
 __all__ = [
     'AsmReg',
     'AsmAx',
+    'AsmCx',
     'AsmDx',
     'AsmR10',
     'AsmR11',
@@ -43,6 +44,7 @@ __all__ = [
 class AsmReg(AST):
     """
     reg = AX
+        | CX
         | DX
         | R10
         | R11
@@ -52,6 +54,11 @@ class AsmReg(AST):
 
 class AsmAx(AsmReg):
     """ AX """
+    pass
+
+
+class AsmCx(AsmReg):
+    """ CX """
     pass
 
 

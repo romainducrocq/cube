@@ -17,6 +17,7 @@ class RegisterManagerError(RuntimeError):
 
 REGISTER_KIND: IotaEnum = IotaEnum(
     "AX",
+    "CX",
     "DX",
     "R10",
     "R11"
@@ -24,6 +25,7 @@ REGISTER_KIND: IotaEnum = IotaEnum(
 
 REGISTER_NODE: Dict[int, type(AsmReg)] = {
     REGISTER_KIND.AX: AsmAx,
+    REGISTER_KIND.CX: AsmCx,
     REGISTER_KIND.DX: AsmDx,
     REGISTER_KIND.R10: AsmR10,
     REGISTER_KIND.R11: AsmR11
