@@ -58,7 +58,8 @@ class Parser:
         return TInt(int(self.next_token.token))
 
     def parse_binary_op(self) -> CBinaryOp:
-        """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" """
+        """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
+                      | "<" | "<=" | ">" | ">=" """
         self.expect_next(self.next(), TOKEN_KIND.unop_negation,
                          TOKEN_KIND.binop_addition,
                          TOKEN_KIND.binop_multiplication,
@@ -68,7 +69,15 @@ class Parser:
                          TOKEN_KIND.binop_bitor,
                          TOKEN_KIND.binop_bitxor,
                          TOKEN_KIND.binop_bitshiftleft,
-                         TOKEN_KIND.binop_bitshiftright)
+                         TOKEN_KIND.binop_bitshiftright,
+                         TOKEN_KIND.binop_lessthan,
+                         TOKEN_KIND.binop_lessthanorequal,
+                         TOKEN_KIND.binop_greaterthan,
+                         TOKEN_KIND.binop_greaterthanorequal,
+                         TOKEN_KIND.binop_equalto,
+                         TOKEN_KIND.binop_notequal,
+                         TOKEN_KIND.binop_and,
+                         TOKEN_KIND.binop_or)
         if self.next_token.token_kind == TOKEN_KIND.unop_negation:
             return CSubtract()
         if self.next_token.token_kind == TOKEN_KIND.binop_addition:
@@ -89,24 +98,45 @@ class Parser:
             return CBitShiftLeft()
         if self.next_token.token_kind == TOKEN_KIND.binop_bitshiftright:
             return CBitShiftRight()
+        if self.next_token.token_kind == TOKEN_KIND.binop_and:
+            return CAnd()
+        if self.next_token.token_kind == TOKEN_KIND.binop_or:
+            return COr()
+        if self.next_token.token_kind == TOKEN_KIND.binop_equalto:
+            return CEqual()
+        if self.next_token.token_kind == TOKEN_KIND.binop_notequal:
+            return CNotEqual()
+        if self.next_token.token_kind == TOKEN_KIND.binop_lessthan:
+            return CLessThan()
+        if self.next_token.token_kind == TOKEN_KIND.binop_lessthanorequal:
+            return CLessOrEqual()
+        if self.next_token.token_kind == TOKEN_KIND.binop_greaterthan:
+            return CGreaterThan()
+        if self.next_token.token_kind == TOKEN_KIND.binop_greaterthanorequal:
+            return CGreaterOrEqual()
 
     def parse_unary_op(self) -> CUnaryOp:
-        """ <unop> ::= "-" | "~" """
+        """ <unop> ::= "-" | "~" | "!" """
         self.expect_next(self.next(), TOKEN_KIND.unop_complement,
-                         TOKEN_KIND.unop_negation)
+                         TOKEN_KIND.unop_negation,
+                         TOKEN_KIND.unop_not)
         if self.next_token.token_kind == TOKEN_KIND.unop_complement:
             return CComplement()
         if self.next_token.token_kind == TOKEN_KIND.unop_negation:
             return CNegate()
+        if self.next_token.token_kind == TOKEN_KIND.unop_not:
+            return CNot()
 
     def parse_factor(self) -> CExp:
         """ <factor> ::= <int> | <unop> <factor> | "(" <exp> ")" """
         self.expect_next(self.peek(), TOKEN_KIND.constant,
                          TOKEN_KIND.unop_complement,
                          TOKEN_KIND.unop_negation,
+                         TOKEN_KIND.unop_not,
                          TOKEN_KIND.parenthesis_open)
         if self.peek_token.token_kind in (TOKEN_KIND.unop_complement,
-                                          TOKEN_KIND.unop_negation):
+                                          TOKEN_KIND.unop_negation,
+                                          TOKEN_KIND.unop_not):
             unary_op: CUnaryOp = self.parse_unary_op()
             inner_exp: CExp = self.parse_factor()
             return CUnary(unary_op, inner_exp)
