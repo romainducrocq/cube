@@ -21,9 +21,17 @@ TOKEN_PRECEDENCE: Dict[int, int] = {
     TOKEN_KIND.binop_addition: 45,
     TOKEN_KIND.binop_bitshiftleft: 40,
     TOKEN_KIND.binop_bitshiftright: 40,
+    TOKEN_KIND.binop_lessthan: 35,
+    TOKEN_KIND.binop_lessthanorequal: 35,
+    TOKEN_KIND.binop_greaterthan: 35,
+    TOKEN_KIND.binop_greaterthanorequal: 35,
+    TOKEN_KIND.binop_equalto: 30,
+    TOKEN_KIND.binop_notequal: 30,
     TOKEN_KIND.binop_bitand: 25,
     TOKEN_KIND.binop_bitxor: 20,
-    TOKEN_KIND.binop_bitor: 15
+    TOKEN_KIND.binop_bitor: 15,
+    TOKEN_KIND.binop_and: 10,
+    TOKEN_KIND.binop_or: 5
 }
 
 

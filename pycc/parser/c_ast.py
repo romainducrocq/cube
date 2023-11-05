@@ -6,17 +6,26 @@ __all__ = [
     'CUnaryOp',
     'CComplement',
     'CNegate',
+    'CNot'
     'CBinaryOp',
-    "CAdd",
-    "CSubtract",
-    "CMultiply",
-    "CDivide",
-    "CRemainder",
-    "CBitAnd",
-    "CBitOr",
-    "CBitXor",
-    "CBitShiftLeft",
-    "CBitShiftRight",
+    'CAdd',
+    'CSubtract',
+    'CMultiply',
+    'CDivide',
+    'CRemainder',
+    'CBitAnd',
+    'CBitOr',
+    'CBitXor',
+    'CBitShiftLeft',
+    'CBitShiftRight',
+    'CAnd',
+    'COr',
+    'CEqual',
+    'CNotEqual',
+    'CLessThan',
+    'CLessOrEqual',
+    'CGreaterThan',
+    'CGreaterOrEqual',
     'CExp',
     'CConstant',
     'CUnary',
@@ -33,6 +42,7 @@ class CUnaryOp(AST):
     """
     unary_operator = Complement
                    | Negate
+                   | Not
     """
     pass
 
@@ -44,6 +54,11 @@ class CComplement(CUnaryOp):
 
 class CNegate(CUnaryOp):
     """ Negate """
+    pass
+
+
+class CNot(CUnaryOp):
+    """ Not """
     pass
 
 
@@ -59,6 +74,14 @@ class CBinaryOp(AST):
                     | BitXor
                     | BitShiftLeft
                     | BitShiftRight
+                    | And
+                    | Or
+                    | Equal
+                    | NotEqual
+                    | LessThan
+                    | LessOrEqual
+                    | GreaterThan
+                    | GreaterOrEqual
     """
     pass
 
@@ -110,6 +133,46 @@ class CBitShiftLeft(CBinaryOp):
 
 class CBitShiftRight(CBinaryOp):
     """ BitShiftRight """
+    pass
+
+
+class CAnd(CBinaryOp):
+    """ And """
+    pass
+
+
+class COr(CBinaryOp):
+    """ Or """
+    pass
+
+
+class CEqual(CBinaryOp):
+    """ Equal """
+    pass
+
+
+class CNotEqual(CBinaryOp):
+    """ NotEqual """
+    pass
+
+
+class CLessThan(CBinaryOp):
+    """ LessThan """
+    pass
+
+
+class CLessOrEqual(CBinaryOp):
+    """ LessOrEqual """
+    pass
+
+
+class CGreaterThan(CBinaryOp):
+    """ GreaterThan """
+    pass
+
+
+class CGreaterOrEqual(CBinaryOp):
+    """ GreaterOrEqual """
     pass
 
 
