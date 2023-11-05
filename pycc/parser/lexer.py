@@ -18,9 +18,16 @@ class LexerError(RuntimeError):
 
 
 TOKEN_KIND: IotaEnum = IotaEnum(
-    "key_int",
-    "key_void",
-    "key_return",
+    "unop_decrement",
+    "binop_bitshiftleft",
+    "binop_bitshiftright",
+    "binop_and",
+    "binop_or",
+    "binop_equalto",
+    "binop_notequal",
+    "binop_lessthanorequal",
+    "binop_greaterthanorequal",
+
     "parenthesis_open",
     "parenthesis_close",
     "brace_open",
@@ -28,7 +35,7 @@ TOKEN_KIND: IotaEnum = IotaEnum(
     "semicolon",
     "unop_complement",
     "unop_negation",
-    "unop_decrement",
+    "unop_not",
     "binop_addition",
     "binop_multiplication",
     "binop_division",
@@ -36,18 +43,31 @@ TOKEN_KIND: IotaEnum = IotaEnum(
     "binop_bitand",
     "binop_bitor",
     "binop_bitxor",
-    "binop_bitshiftleft",
-    "binop_bitshiftright",
+    "binop_lessthan",
+    "binop_greaterthan",
+
+    "key_int",
+    "key_void",
+    "key_return",
     "identifier",
     "constant",
+
     "skip",
     "error"
 )
 
+
 TOKEN_REGEX: Dict[int, str] = {
-    TOKEN_KIND.key_int: r"int\b",
-    TOKEN_KIND.key_void: r"void\b",
-    TOKEN_KIND.key_return: r"return\b",
+    TOKEN_KIND.unop_decrement: r"--",
+    TOKEN_KIND.binop_bitshiftleft: r"<<",
+    TOKEN_KIND.binop_bitshiftright: r">>",
+    TOKEN_KIND.binop_and: r"&&",
+    TOKEN_KIND.binop_or: r"\|\|",
+    TOKEN_KIND.binop_equalto: r"==",
+    TOKEN_KIND.binop_notequal: r"!=",
+    TOKEN_KIND.binop_lessthanorequal: r"<=",
+    TOKEN_KIND.binop_greaterthanorequal: r">=",
+
     TOKEN_KIND.parenthesis_open: r"\(",
     TOKEN_KIND.parenthesis_close: r"\)",
     TOKEN_KIND.brace_open: r"{",
@@ -55,7 +75,7 @@ TOKEN_REGEX: Dict[int, str] = {
     TOKEN_KIND.semicolon: r";",
     TOKEN_KIND.unop_complement: r"~",
     TOKEN_KIND.unop_negation: r"-",
-    TOKEN_KIND.unop_decrement: r"--",
+    TOKEN_KIND.unop_not: r"!",
     TOKEN_KIND.binop_addition: r"\+",
     TOKEN_KIND.binop_multiplication: r"\*",
     TOKEN_KIND.binop_division: r"/",
@@ -63,10 +83,15 @@ TOKEN_REGEX: Dict[int, str] = {
     TOKEN_KIND.binop_bitand: r"&",
     TOKEN_KIND.binop_bitor: r"\|",
     TOKEN_KIND.binop_bitxor: r"\^",
-    TOKEN_KIND.binop_bitshiftleft: r"<<",
-    TOKEN_KIND.binop_bitshiftright: r">>",
+    TOKEN_KIND.binop_lessthan: r"<",
+    TOKEN_KIND.binop_greaterthan: r">",
+
+    TOKEN_KIND.key_int: r"int\b",
+    TOKEN_KIND.key_void: r"void\b",
+    TOKEN_KIND.key_return: r"return\b",
     TOKEN_KIND.identifier: r"[a-zA-Z_]\w*\b",
     TOKEN_KIND.constant: r"[0-9]+\b",
+
     TOKEN_KIND.skip: r"[ \n\r\t\f\v]",
     TOKEN_KIND.error: r"."
 }
