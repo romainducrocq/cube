@@ -6,7 +6,7 @@ __all__ = [
     'CUnaryOp',
     'CComplement',
     'CNegate',
-    'CNot'
+    'CNot',
     'CBinaryOp',
     'CAdd',
     'CSubtract',
