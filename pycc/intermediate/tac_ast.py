@@ -7,6 +7,7 @@ __all__ = [
     'TacUnaryOp',
     'TacComplement',
     'TacNegate',
+    'TacNot',
     'TacBinaryOp',
     'TacAdd',
     'TacSubtract',
@@ -18,6 +19,12 @@ __all__ = [
     'TacBitXor',
     'TacBitShiftLeft',
     'TacBitShiftRight',
+    'TacEqual',
+    'TacNotEqual',
+    'TacLessThan',
+    'TacLessOrEqual',
+    'TacGreaterThan',
+    'TacGreaterOrEqual',
     'TacValue',
     'TacConstant',
     'TacVariable',
@@ -25,6 +32,11 @@ __all__ = [
     'TacReturn',
     'TacUnary',
     'TacBinary',
+    'TacCopy',
+    'TacJump',
+    'TacJumpIfZero',
+    'TacJumpIfNotZero',
+    'TacLabel',
     'TacFunctionDef',
     'TacFunction',
     'TacProgram'
@@ -35,6 +47,7 @@ class TacUnaryOp(AST):
     """
     unary_operator = Complement
                    | Negate
+                   | Not
     """
     pass
 
@@ -46,6 +59,11 @@ class TacComplement(TacUnaryOp):
 
 class TacNegate(TacUnaryOp):
     """ Negate """
+    pass
+
+
+class TacNot(TacUnaryOp):
+    """ Not """
     pass
 
 
@@ -61,6 +79,12 @@ class TacBinaryOp(AST):
                     | BitXor
                     | BitShiftLeft
                     | BitShiftRight
+                    | Equal
+                    | NotEqual
+                    | LessThan
+                    | LessOrEqual
+                    | GreaterThan
+                    | GreaterOrEqual
     """
     pass
 
@@ -115,6 +139,36 @@ class TacBitShiftRight(TacBinaryOp):
     pass
 
 
+class TacEqual(TacBinaryOp):
+    """ Equal """
+    pass
+
+
+class TacNotEqual(TacBinaryOp):
+    """ NotEqual """
+    pass
+
+
+class TacLessThan(TacBinaryOp):
+    """ LessThan """
+    pass
+
+
+class TacLessOrEqual(TacBinaryOp):
+    """ LessOrEqual """
+    pass
+
+
+class TacGreaterThan(TacBinaryOp):
+    """ GreaterThan """
+    pass
+
+
+class TacGreaterOrEqual(TacBinaryOp):
+    """ GreaterOrEqual """
+    pass
+
+
 class TacValue(AST):
     """
     val = Constant(int)
@@ -140,6 +194,11 @@ class TacInstruction(AST):
     instruction = Return(val)
                 | Unary(unary_operator, val src, val dst)
                 | Binary(binary_operator, val src1, val src2, val dst)
+                | Copy(val src, val dst)
+                | Jump(identifier target)
+                | JumpIfZero(val condition, identifier target)
+                | JumpIfNotZero(val condition, identifier target)
+                | Label(identifier name)
     """
     pass
 
@@ -165,6 +224,39 @@ class TacBinary(TacInstruction):
     src1: TacValue = None
     src2: TacValue = None
     dst: TacValue = None
+
+
+@dataclass
+class TacCopy(TacInstruction):
+    """ Copy(val src, val dst) """
+    src: TacValue = None
+    dst: TacValue = None
+
+
+@dataclass
+class TacJump(TacInstruction):
+    """ Jump(identifier target) """
+    target: TIdentifier = None
+
+
+@dataclass
+class TacJumpIfZero(TacInstruction):
+    """ JumpIfZero(val condition, identifier target) """
+    condition: TacValue = None
+    target: TIdentifier = None
+
+
+@dataclass
+class TacJumpIfNotZero(TacInstruction):
+    """ JumpIfNotZero(val condition, identifier target) """
+    condition: TacValue = None
+    target: TIdentifier = None
+
+
+@dataclass
+class TacLabel(TacInstruction):
+    """ Label(identifier name) """
+    name: TIdentifier = None
 
 
 class TacFunctionDef(AST):
