@@ -10,6 +10,13 @@ __all__ = [
     'AsmDx',
     'AsmR10',
     'AsmR11',
+    'AsmCondCode',
+    'AsmE',
+    'AsmNE',
+    'AsmG',
+    'AsmGE',
+    'AsmL',
+    'AsmLE',
     'AsmOperand',
     'AsmImm',
     'AsmRegister',
@@ -31,8 +38,13 @@ __all__ = [
     'AsmMov',
     'AsmUnary',
     'AsmBinary',
+    'AsmCmp',
     'AsmIdiv',
     'AsmCdq',
+    'AsmJmp',
+    'AsmJmpCC',
+    'AsmSetCC',
+    'AsmLabel',
     'AsmAllocStack',
     'AsmRet',
     'AsmFunctionDef',
@@ -74,6 +86,48 @@ class AsmR10(AsmReg):
 
 class AsmR11(AsmReg):
     """ R11 """
+    pass
+
+
+class AsmCondCode(AST):
+    """
+    cond_code = E
+              | NE
+              | G
+              | GE
+              | L
+              | LE
+    """
+    pass
+
+
+class AsmE(AsmCondCode):
+    """ E """
+    pass
+
+
+class AsmNE(AsmCondCode):
+    """ NE """
+    pass
+
+
+class AsmG(AsmCondCode):
+    """ G """
+    pass
+
+
+class AsmGE(AsmCondCode):
+    """ GE """
+    pass
+
+
+class AsmL(AsmCondCode):
+    """ L """
+    pass
+
+
+class AsmLE(AsmCondCode):
+    """ LE """
     pass
 
 
@@ -188,8 +242,13 @@ class AsmInstruction(AST):
     instruction = Mov(operand src, operand dst)
                 | Unary(unary_operator, operand)
                 | Binary(binary_operator, operand, operand)
+                | Cmp(operand, operand)
                 | Idiv(operand)
                 | Cdq
+                | Jmp(identifier)
+                | JmpCC(cond_code, identifier)
+                | SetCC(cond_code, operand)
+                | Label(identifier)
                 | AllocateStack(int)
                 | Ret
     """
@@ -212,21 +271,54 @@ class AsmUnary(AsmInstruction):
 
 @dataclass
 class AsmBinary(AsmInstruction):
-    """ Binary(binary_operator binop, operand src2, operand dst) """
+    """ Binary(binary_operator binop, operand src, operand dst) """
     binary_op: AsmBinaryOp = None
     src: AsmOperand = None
     dst: AsmOperand = None
 
 
 @dataclass
+class AsmCmp(AsmInstruction):
+    """ Cmp(operand src, operand dst) """
+    src: AsmOperand = None
+    dst: AsmOperand = None
+
+
+@dataclass
 class AsmIdiv(AsmInstruction):
-    """ Idiv(operand src2) """
+    """ Idiv(operand src) """
     src: AsmOperand = None
 
 
 class AsmCdq(AsmInstruction):
     """ Cdq """
     pass
+
+
+@dataclass
+class AsmJmp(AsmInstruction):
+    """ Jmp(identifier target) """
+    target: TIdentifier = None
+
+
+@dataclass
+class AsmJmpCC(AsmInstruction):
+    """ JmpCC(cond_code cond_code, identifier target) """
+    cond_code: AsmCondCode = None
+    target: TIdentifier = None
+
+
+@dataclass
+class AsmSetCC(AsmInstruction):
+    """ SetCC(cond_code cond_code, operand dst) """
+    cond_code: AsmCondCode = None
+    dst: AsmOperand = None
+
+
+@dataclass
+class AsmLabel(AsmInstruction):
+    """ Label(identifier name) """
+    name: TIdentifier = None
 
 
 @dataclass
