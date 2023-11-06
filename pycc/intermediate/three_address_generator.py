@@ -4,7 +4,7 @@ from copy import deepcopy
 from pycc.util.__ast import *
 from pycc.parser.c_ast import *
 from pycc.intermediate.tac_ast import *
-from pycc.intermediate.variable import VariableManager
+from pycc.intermediate.name import NameManager
 
 __all__ = [
     'three_address_code_representation'
@@ -41,7 +41,8 @@ class ThreeAddressCodeGenerator:
 
     def represent_binary_op(self, node: AST) -> TacBinaryOp:
         """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
-                            | BitShiftLeft | BitShiftRight"""
+                            | BitShiftLeft | BitShiftRight | Equal | NotEqual | LessThan | LessOrEqual
+                            | GreaterThan | GreaterOrEqual """
         self.expect_next(node, CBinaryOp)
         if isinstance(node, CAdd):
             return TacAdd()
@@ -63,17 +64,31 @@ class ThreeAddressCodeGenerator:
             return TacBitShiftLeft()
         if isinstance(node, CBitShiftRight):
             return TacBitShiftRight()
+        if isinstance(node, CEqual):
+            return TacEqual()
+        if isinstance(node, CNotEqual):
+            return TacNotEqual()
+        if isinstance(node, CLessThan):
+            return TacLessThan()
+        if isinstance(node, CLessOrEqual):
+            return TacLessOrEqual()
+        if isinstance(node, CGreaterThan):
+            return TacGreaterThan()
+        if isinstance(node, CGreaterOrEqual):
+            return TacGreaterOrEqual()
 
         raise ThreeAddressCodeGeneratorError(
             "An error occurred in three address code representation, not all nodes were visited")
 
     def represent_unary_op(self, node: AST) -> TacUnaryOp:
-        """ unary_operator = Complement | Negate """
+        """ unary_operator = Complement | Negate | Not """
         self.expect_next(node, CUnaryOp)
         if isinstance(node, CComplement):
             return TacComplement()
         if isinstance(node, CNegate):
             return TacNegate()
+        if isinstance(node, CNot):
+            return TacNot()
 
         raise ThreeAddressCodeGeneratorError(
             "An error occurred in three address code representation, not all nodes were visited")
@@ -89,7 +104,7 @@ class ThreeAddressCodeGenerator:
             raise ThreeAddressCodeGeneratorError(
                 "An error occurred in three address code representation, not all nodes were visited")
 
-        identifier: TIdentifier = VariableManager.represent_variable_identifier(node)
+        identifier: TIdentifier = NameManager.represent_variable_identifier(node)
         return TacVariable(identifier)
 
     def represent_instruction(self, node: AST, instructions: List[TacInstruction]) -> Optional[TacValue]:
@@ -111,12 +126,45 @@ class ThreeAddressCodeGenerator:
             instructions.append(TacUnary(unary_op, src, dst))
             return deepcopy(dst)
         if isinstance(node, CBinary):
-            src1: TacValue = self.represent_instruction(node.exp_left, instructions)
-            src2: TacValue = self.represent_instruction(node.exp_right, instructions)
-            dst: TacValue = self.represent_value(node.exp_left, outer=False)
-            binary_op: TacBinaryOp = self.represent_binary_op(node.binary_op)
-            instructions.append(TacBinary(binary_op, src1, src2, dst))
-            return deepcopy(dst)
+            if isinstance(node.binary_op, CAnd):
+                is_true: TacValue = TacConstant(TInt(1))
+                is_false: TacValue = TacConstant(TInt(0))
+                label_true: TIdentifier = NameManager.represent_label_identifier("and_true")
+                label_false: TIdentifier = NameManager.represent_label_identifier("and_false")
+                src1: TacValue = self.represent_instruction(node.exp_left, instructions)
+                instructions.append(TacJumpIfZero(src1, label_false))
+                src2: TacValue = self.represent_instruction(node.exp_right, instructions)
+                instructions.append(TacJumpIfZero(src2, deepcopy(label_false)))
+                dst: TacValue = self.represent_value(node.exp_left, outer=False)
+                instructions.append(TacCopy(is_true, dst))
+                instructions.append(TacJump(label_true))
+                instructions.append(TacLabel(deepcopy(label_false)))
+                instructions.append(TacCopy(is_false, deepcopy(dst)))
+                instructions.append(TacLabel(deepcopy(label_true)))
+                return deepcopy(dst)
+            elif isinstance(node.binary_op, COr):
+                is_true: TacValue = TacConstant(TInt(1))
+                is_false: TacValue = TacConstant(TInt(0))
+                label_true: TIdentifier = NameManager.represent_label_identifier("or_true")
+                label_false: TIdentifier = NameManager.represent_label_identifier("or_false")
+                src1: TacValue = self.represent_instruction(node.exp_left, instructions)
+                instructions.append(TacJumpIfNotZero(src1, label_true))
+                src2: TacValue = self.represent_instruction(node.exp_right, instructions)
+                instructions.append(TacJumpIfNotZero(src2, deepcopy(label_true)))
+                dst: TacValue = self.represent_value(node.exp_left, outer=False)
+                instructions.append(TacCopy(is_false, dst))
+                instructions.append(TacJump(label_false))
+                instructions.append(TacLabel(deepcopy(label_true)))
+                instructions.append(TacCopy(is_true, deepcopy(dst)))
+                instructions.append(TacLabel(deepcopy(label_false)))
+                return deepcopy(dst)
+            else:
+                src1: TacValue = self.represent_instruction(node.exp_left, instructions)
+                src2: TacValue = self.represent_instruction(node.exp_right, instructions)
+                dst: TacValue = self.represent_value(node.exp_left, outer=False)
+                binary_op: TacBinaryOp = self.represent_binary_op(node.binary_op)
+                instructions.append(TacBinary(binary_op, src1, src2, dst))
+                return deepcopy(dst)
 
         raise ThreeAddressCodeGeneratorError(
             "An error occurred in three address code representation, not all nodes were visited")

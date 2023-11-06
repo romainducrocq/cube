@@ -1,0 +1,55 @@
+from typing import Dict
+
+from pycc.util.__ast import *
+from pycc.parser.c_ast import *
+
+__all__ = [
+    'NameManager'
+]
+
+
+class NameManagerError(RuntimeError):
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super(NameManagerError, self).__init__(message)
+
+
+label_counter: int = 0
+variable_counter: int = 0
+
+VARIABLE_NAME: Dict[type, str] = {
+    CConstant: "constant",
+    CUnary: "unary",
+    CBinary: "binary"
+}
+
+
+class NameManager:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def represent_label_identifier(label: str) -> TIdentifier:
+        global label_counter
+
+        label_counter += 1
+        name: str = f"{label}.{label_counter - 1}"
+
+        return TIdentifier(name)
+
+    @staticmethod
+    def represent_variable_identifier(node: AST) -> TIdentifier:
+        global variable_counter
+
+        try:
+            variable: str = VARIABLE_NAME[type(node)]
+        except KeyError:
+
+            raise NameManagerError(
+                f"An error occurred in name management, unmanaged type {type(node)}")
+
+        variable_counter += 1
+        name: str = f"{variable}.{variable_counter - 1}"
+
+        return TIdentifier(name)
