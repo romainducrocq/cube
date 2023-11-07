@@ -28,10 +28,19 @@ __all__ = [
     'CGreaterOrEqual',
     'CExp',
     'CConstant',
+    'CVar',
     'CUnary',
     'CBinary',
+    'CAssignment',
     'CStatement',
     'CReturn',
+    'CExpression',
+    'CNull',
+    'CDeclaration',
+    'CDecl',
+    'CBlockItem',
+    'CS',
+    'CD',
     'CFunctionDef',
     'CFunction',
     'CProgram'
@@ -179,8 +188,10 @@ class CGreaterOrEqual(CBinaryOp):
 class CExp(AST):
     """
     exp = Constant(int value)
+        | Var(identifier)
         | Unary(unary_operator, exp)
         | Binary(binary_operator, exp, exp)
+        | Assignment(exp, exp)
     """
     pass
 
@@ -189,6 +200,12 @@ class CExp(AST):
 class CConstant(CExp):
     """ Constant(int value) """
     value: TInt = None
+
+
+@dataclass
+class CVar(CExp):
+    """ Var(identifier name) """
+    name: TIdentifier = None
 
 
 @dataclass
@@ -206,9 +223,18 @@ class CBinary(CExp):
     exp_right: CExp = None
 
 
+@dataclass
+class CAssignment(CExp):
+    """ Assignment(exp, exp) """
+    exp_left: CExp = None
+    exp_right: CExp = None
+
+
 class CStatement(AST):
     """
     statement = Return(exp)
+              | Expression(exp)
+              | Null
     """
     pass
 
@@ -219,18 +245,63 @@ class CReturn(CStatement):
     exp: CExp = None
 
 
+@dataclass
+class CExpression(CStatement):
+    """ Expression(exp) """
+    exp: CExp = None
+
+
+class CNull(CStatement):
+    """ Null """
+    pass
+
+
+class CDeclaration(AST):
+    """
+    declaration = Declaration(identifier, exp?)
+    """
+    pass
+
+
+@dataclass
+class CDecl(CDeclaration):
+    """ Declaration(identifier name, exp? init) """
+    name: TIdentifier = None
+    init: CExp = None
+
+
+class CBlockItem(AST):
+    """
+    block_item = S(statement)
+               | D(declaration)
+    """
+    pass
+
+
+@dataclass
+class CS(CBlockItem):
+    """ S(statement) """
+    statement: CStatement = None
+
+
+@dataclass
+class CD(CBlockItem):
+    """ D(declaration) """
+    declaration: CDeclaration = None
+
+
 class CFunctionDef(AST):
     """
-    function_definition = Function(identifier name, statement body)
+    function_definition = Function(identifier, block_item*)
     """
     pass
 
 
 @dataclass
 class CFunction(CFunctionDef):
-    """ Function(identifier name, statement body) """
+    """ Function(identifier name, block_item* body) """
     name: TIdentifier = None
-    body: CStatement = None
+    body: CBlockItem = None
 
 
 @dataclass
