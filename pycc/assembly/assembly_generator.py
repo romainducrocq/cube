@@ -196,15 +196,25 @@ class AssemblyGenerator:
             elif isinstance(node, TacBinary):
                 generate_binary_instructions(node)
             elif isinstance(node, TacJump):
-                pass  # TODO
-            elif isinstance(node, TacJumpIfZero):
-                pass  # TODO
-            elif isinstance(node, TacJumpIfNotZero):
-                pass  # TODO
+                target: TIdentifier = self.generate_identifier(node.target)
+                instructions.append(AsmJmp(target))
+            elif isinstance(node, (TacJumpIfZero, TacJumpIfNotZero)):
+                imm_zero: AsmOperand = AsmImm(TInt(0))
+                if isinstance(node, TacJumpIfZero):
+                    cond_code: AsmCondCode = self.generate_condition_code(TacEqual())
+                else:
+                    cond_code: AsmCondCode = self.generate_condition_code(TacNotEqual())
+                target: TIdentifier = self.generate_identifier(node.target)
+                condition: AsmOperand = self.generate_operand(node.condition)
+                instructions.append(AsmCmp(imm_zero, condition))
+                instructions.append(AsmJmpCC(cond_code, target))
             elif isinstance(node, TacCopy):
-                pass  # TODO
+                src: AsmOperand = self.generate_operand(node.src)
+                dst: AsmOperand = self.generate_operand(node.dst)
+                instructions.append(AsmMov(src, dst))
             elif isinstance(node, TacLabel):
-                pass  # TODO
+                name: TIdentifier = self.generate_identifier(node.name)
+                instructions.append(AsmLabel(name))
             else:
 
                 raise AssemblyGeneratorError(
