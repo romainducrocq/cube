@@ -60,11 +60,11 @@ class StackManager:
                 size = len(child_node.instructions)
                 for e, instruction in enumerate(reversed(child_node.instructions)):
                     i = size - e
-                    # mov (addr, addr)
+                    # mov | cmp (addr, addr)
                     # $ movl addr1, addr2 ->
                     #     $ movl addr1, reg
                     #     $ movl reg  , addr2
-                    if isinstance(instruction, AsmMov) and \
+                    if isinstance(instruction, (AsmMov, AsmCmp)) and \
                             isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
                         src_src: AsmOperand = deepcopy(instruction.src)
                         instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
@@ -100,10 +100,17 @@ class StackManager:
                     #     $ idivl reg
                     elif isinstance(instruction, AsmIdiv) and \
                             isinstance(instruction.src, AsmImm):
-                        dst_src: AsmOperand = deepcopy(instruction.src)
+                        src_src: AsmOperand = deepcopy(instruction.src)
                         instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
-                        child_node.instructions.insert(i - 1, AsmMov(dst_src, deepcopy(instruction.src)))
-
+                        child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
+                    # $ cmpl reg1, imm ->
+                    #     $ movl imm , reg2
+                    #     $ cmpl reg1, reg2
+                    elif isinstance(instruction, AsmCmp) and \
+                            isinstance(instruction.dst, AsmImm):
+                        src_src: AsmOperand = deepcopy(instruction.dst)
+                        instruction.dst = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R11))
+                        child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.dst)))
             else:
                 self.correct_instructions(child_node)
 
