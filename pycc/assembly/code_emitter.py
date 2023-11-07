@@ -45,7 +45,35 @@ class CodeEmitter:
         self.expect_next(node, TInt)
         return str(node.int_t)
 
-    def emit_register(self, node: AST) -> str:
+    def emit_register_1byte(self, node: AST) -> str:
+        """
+        Reg(AX) ->
+            $ %al
+        Reg(CX) ->
+            $ %cl
+        Reg(DX) ->
+            $ %dl
+        Reg(R10) ->
+            $ %r10b
+        Reg(R11) ->
+            $ %r11b
+        """
+        self.expect_next(node, AsmReg)
+        if isinstance(node, AsmAx):
+            return "al"
+        if isinstance(node, AsmCx):
+            return "cl"
+        if isinstance(node, AsmDx):
+            return "dl"
+        if isinstance(node, AsmR10):
+            return "r10b"
+        if isinstance(node, AsmR11):
+            return "r11b"
+
+        raise CodeEmitterError(
+            "An error occurred in code emission, not all nodes were visited")
+
+    def emit_register_4byte(self, node: AST) -> str:
         """
         Reg(AX) ->
             $ %eax
@@ -73,7 +101,39 @@ class CodeEmitter:
         raise CodeEmitterError(
             "An error occurred in code emission, not all nodes were visited")
 
-    def emit_operand(self, node: AST) -> str:
+    def emit_condition_code(self, node: AST) -> str:
+        """
+        E ->
+            $ e
+        NE ->
+            $ ne
+        L ->
+            $ l
+        LE ->
+            $ le
+        G ->
+            $ g
+        GE ->
+            $ ge
+        """
+        self.expect_next(node, AsmCondCode)
+        if isinstance(node, AsmE):
+            return "e"
+        if isinstance(node, AsmNE):
+            return "ne"
+        if isinstance(node, AsmL):
+            return "l"
+        if isinstance(node, AsmLE):
+            return "le"
+        if isinstance(node, AsmG):
+            return "g"
+        if isinstance(node, AsmGE):
+            return "ge"
+
+        raise CodeEmitterError(
+            "An error occurred in code emission, not all nodes were visited")
+
+    def emit_operand(self, node: AST, byte: int = 4) -> str:
         """
         Imm(int) ->
             $ $<int>
@@ -87,7 +147,15 @@ class CodeEmitter:
             value: str = self.emit_int(node.value)
             return "$" + value
         if isinstance(node, AsmRegister):
-            register: str = self.emit_register(node.register)
+            if byte == 1:
+                register: str = self.emit_register_1byte(node.register)
+            elif byte == 4:
+                register: str = self.emit_register_4byte(node.register)
+            else:
+
+                raise CodeEmitterError(
+                    "An error occurred in code emission, unmanaged register byte size")
+
             return "%" + register
         if isinstance(node, AsmStack):
             value: str = self.emit_int(node.value)
@@ -170,11 +238,21 @@ class CodeEmitter:
             $ cdq
         AllocateStack(int) ->
             $ subq $<int>, %rsp
+        Cmp(operand, operand) ->
+            $ cmpl <operand>, <operand>
+        Jmp(label) ->
+            $ jmp .L<label>
+        JmpCC(cond_code, label) ->
+            $ j<cond_code> .L<label>
+        SetCC(cond_code, operand) ->
+            $ set<cond_code> <operand>
+        Label(label) ->
+            $ .L<label>:
         """
         self.expect_next(node, AsmInstruction)
         if isinstance(node, AsmMov):
-            src: str = self.emit_operand(node.src)
-            dst: str = self.emit_operand(node.dst)
+            src: str = self.emit_operand(node.src, byte=4)
+            dst: str = self.emit_operand(node.dst, byte=4)
             self.emit(f"movl {src}, {dst}", t=1)
         elif isinstance(node, AsmRet):
             self.emit("movq %rbp, %rsp", t=1)
@@ -182,21 +260,39 @@ class CodeEmitter:
             self.emit("ret", t=1)
         elif isinstance(node, AsmUnary):
             unary_op: str = self.emit_unary_op(node.unary_op)
-            dst: str = self.emit_operand(node.dst)
+            dst: str = self.emit_operand(node.dst, byte=4)
             self.emit(f"{unary_op} {dst}", t=1)
         elif isinstance(node, AsmBinary):
             binary_op: str = self.emit_binary_op(node.binary_op)
-            src: str = self.emit_operand(node.src)
-            dst: str = self.emit_operand(node.dst)
+            src: str = self.emit_operand(node.src, byte=4)
+            dst: str = self.emit_operand(node.dst, byte=4)
             self.emit(f"{binary_op} {src}, {dst}", t=1)
         elif isinstance(node, AsmIdiv):
-            src: str = self.emit_operand(node.src)
+            src: str = self.emit_operand(node.src, byte=4)
             self.emit(f"idivl {src}", t=1)
         elif isinstance(node, AsmCdq):
             self.emit("cdq", t=1)
         elif isinstance(node, AsmAllocStack):
             value: str = self.emit_int(node.value)
             self.emit(f"subq ${value}, %rsp", t=1)
+        elif isinstance(node, AsmCmp):
+            src: str = self.emit_operand(node.src, byte=4)
+            dst: str = self.emit_operand(node.dst, byte=4)
+            self.emit(f"cmpl {src}, {dst}", t=1)
+        elif isinstance(node, AsmJmp):
+            label: str = self.emit_identifier(node.target)
+            self.emit(f"jmp .L{label}", t=1)
+        elif isinstance(node, AsmJmpCC):
+            cond_code: str = self.emit_condition_code(node.cond_code)
+            label: str = self.emit_identifier(node.target)
+            self.emit(f"j{cond_code} .L{label}", t=1)
+        elif isinstance(node, AsmSetCC):
+            cond_code: str = self.emit_condition_code(node.cond_code)
+            dst: str = self.emit_operand(node.dst, byte=1)
+            self.emit(f"set{cond_code} {dst}")
+        elif isinstance(node, AsmLabel):
+            label: str = self.emit_identifier(node.name)
+            self.emit(f".L{label}:")
         else:
 
             raise CodeEmitterError(
