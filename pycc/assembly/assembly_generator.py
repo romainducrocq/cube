@@ -41,6 +41,23 @@ class AssemblyGenerator:
         self.expect_next(node, TInt)
         return TInt(deepcopy(node.int_t))
 
+    def generate_operand(self, node: Union[AST, int]) -> AsmOperand:
+        """ operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int) """
+        self.expect_next(node, TacValue,
+                         int)
+        if isinstance(node, TacConstant):
+            value: TInt = self.generate_int(node.value)
+            return AsmImm(value)
+        if isinstance(node, TacVariable):
+            identifier: TIdentifier = self.generate_identifier(node.name)
+            return AsmPseudo(identifier)
+        if isinstance(node, int):
+            register: AsmReg = RegisterManager.generate_register(node)
+            return AsmRegister(register)
+
+        raise AssemblyGeneratorError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
     def generate_condition_code(self, node: AST) -> AsmCondCode:
         self.expect_next(node, TacEqual,
                          TacNotEqual,
@@ -61,26 +78,16 @@ class AssemblyGenerator:
         if isinstance(node, TacGreaterOrEqual):
             return AsmGE()
 
-    def generate_operand(self, node: Union[AST, int]) -> AsmOperand:
-        """ operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int) """
-        self.expect_next(node, TacValue,
-                         int)
-        if isinstance(node, TacConstant):
-            value: TInt = self.generate_int(node.value)
-            return AsmImm(value)
-        if isinstance(node, TacVariable):
-            identifier: TIdentifier = self.generate_identifier(node.name)
-            return AsmPseudo(identifier)
-        if isinstance(node, int):
-            register: AsmReg = RegisterManager.generate_register(node)
-            return AsmRegister(register)
-
-        raise AssemblyGeneratorError(
-            "An error occurred in assembly generation, not all nodes were visited")
-
     def generate_binary_op(self, node: AST) -> AsmBinaryOp:
         """ binary_operator = Add | Sub | Mult | BitAnd | BitOr | BitXor | BitShiftLeft | BitShiftRight"""
-        self.expect_next(node, TacBinaryOp)
+        self.expect_next(node, TacAdd,
+                         TacSubtract,
+                         TacMultiply,
+                         TacBitAnd,
+                         TacBitOr,
+                         TacBitXor,
+                         TacBitShiftLeft,
+                         TacBitShiftRight)
         if isinstance(node, TacAdd):
             return AsmAdd()
         if isinstance(node, TacSubtract):
@@ -122,7 +129,13 @@ class AssemblyGenerator:
 
         def generate_unary_instructions(node: TacUnary):
             if isinstance(node.unary_op, TacNot):
-                pass  # TODO
+                imm_zero: AsmOperand = AsmImm(TInt(0))
+                cond_code: AsmCondCode = self.generate_condition_code(TacEqual())
+                src: AsmOperand = self.generate_operand(node.src)
+                cmp_dst: AsmOperand = self.generate_operand(node.dst)
+                instructions.append(AsmCmp(imm_zero, src))
+                instructions.append(AsmMov(deepcopy(imm_zero), cmp_dst))
+                instructions.append(AsmSetCC(cond_code, deepcopy(cmp_dst)))
             elif isinstance(node.unary_op, (TacComplement, TacNegate)):
                 unary_op: AsmUnaryOp = self.generate_unary_op(node.unary_op)
                 src: AsmOperand = self.generate_operand(node.src)
@@ -158,17 +171,14 @@ class AssemblyGenerator:
                 instructions.append(AsmMov(dst_src, dst))
             elif isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual, TacGreaterThan,
                                              TacGreaterOrEqual)):
-                pass  # TODO
-            elif isinstance(node.binary_op, TacJump):
-                pass  # TODO
-            elif isinstance(node.binary_op, TacJumpIfZero):
-                pass  # TODO
-            elif isinstance(node.binary_op, TacJumpIfNotZero):
-                pass  # TODO
-            elif isinstance(node.binary_op, TacCopy):
-                pass  # TODO
-            elif isinstance(node.binary_op, TacLabel):
-                pass  # TODO
+                imm_zero: AsmOperand = AsmImm(TInt(0))
+                cond_code: AsmCondCode = self.generate_condition_code(node.binary_op)
+                src1: AsmOperand = self.generate_operand(node.src1)
+                src2: AsmOperand = self.generate_operand(node.src2)
+                cmp_dst: AsmOperand = self.generate_operand(node.dst)
+                instructions.append(AsmCmp(src2, src1))
+                instructions.append(AsmMov(imm_zero, cmp_dst))
+                instructions.append(AsmSetCC(cond_code, deepcopy(cmp_dst)))
             else:
 
                 raise AssemblyGeneratorError(
@@ -185,6 +195,16 @@ class AssemblyGenerator:
                 generate_unary_instructions(node)
             elif isinstance(node, TacBinary):
                 generate_binary_instructions(node)
+            elif isinstance(node, TacJump):
+                pass  # TODO
+            elif isinstance(node, TacJumpIfZero):
+                pass  # TODO
+            elif isinstance(node, TacJumpIfNotZero):
+                pass  # TODO
+            elif isinstance(node, TacCopy):
+                pass  # TODO
+            elif isinstance(node, TacLabel):
+                pass  # TODO
             else:
 
                 raise AssemblyGeneratorError(
