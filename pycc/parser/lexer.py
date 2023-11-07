@@ -45,6 +45,7 @@ TOKEN_KIND: IotaEnum = IotaEnum(
     "binop_bitxor",
     "binop_lessthan",
     "binop_greaterthan",
+    "operator_assignment",
 
     "key_int",
     "key_void",
@@ -85,6 +86,7 @@ TOKEN_REGEX: Dict[int, str] = {
     TOKEN_KIND.binop_bitxor: r"\^",
     TOKEN_KIND.binop_lessthan: r"<",
     TOKEN_KIND.binop_greaterthan: r">",
+    TOKEN_KIND.operator_assignment: r"=",
 
     TOKEN_KIND.key_int: r"int\b",
     TOKEN_KIND.key_void: r"void\b",
