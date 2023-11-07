@@ -39,6 +39,7 @@ class RegisterManager:
 
     @staticmethod
     def generate_register(register_kind: int) -> AsmReg:
+        """ reg = AX | CX | DX | R10 | R11 """
 
         try:
             return REGISTER_NODE[register_kind]()

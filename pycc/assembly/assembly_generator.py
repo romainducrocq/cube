@@ -41,6 +41,26 @@ class AssemblyGenerator:
         self.expect_next(node, TInt)
         return TInt(deepcopy(node.int_t))
 
+    def generate_condition_code(self, node: AST) -> AsmCondCode:
+        self.expect_next(node, TacEqual,
+                         TacNotEqual,
+                         TacLessThan,
+                         TacLessOrEqual,
+                         TacGreaterThan,
+                         TacGreaterOrEqual)
+        if isinstance(node, TacEqual):
+            return AsmE()
+        if isinstance(node, TacNotEqual):
+            return AsmNE()
+        if isinstance(node, TacLessThan):
+            return AsmL()
+        if isinstance(node, TacLessOrEqual):
+            return AsmLE()
+        if isinstance(node, TacGreaterThan):
+            return AsmG()
+        if isinstance(node, TacGreaterOrEqual):
+            return AsmGE()
+
     def generate_operand(self, node: Union[AST, int]) -> AsmOperand:
         """ operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int) """
         self.expect_next(node, TacValue,
@@ -93,12 +113,68 @@ class AssemblyGenerator:
             "An error occurred in assembly generation, not all nodes were visited")
 
     def generate_instructions(self, list_node: list) -> List[AsmInstruction]:
-        """ instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | AllocateStack(int) | Ret """
+        """ instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | Cmp(operand, operand)
+                        | Idiv(operand) | Cdq | Jmp(identifier) | JmpCC(cond_code, identifier)
+                        | SetCC(cond_code, operand) | Label(identifier) | AllocateStack(int) | Ret """
         self.expect_next(list_node, list)
 
         instructions: List[AsmInstruction] = []
 
-        def generate_instruction(node: AST) -> None:
+        def generate_unary_instructions(node: TacUnary):
+            if isinstance(node.unary_op, TacNot):
+                pass  # TODO
+            elif isinstance(node.unary_op, (TacComplement, TacNegate)):
+                unary_op: AsmUnaryOp = self.generate_unary_op(node.unary_op)
+                src: AsmOperand = self.generate_operand(node.src)
+                src_dst: AsmOperand = self.generate_operand(node.dst)
+                instructions.append(AsmMov(src, src_dst))
+                instructions.append(AsmUnary(unary_op, deepcopy(src_dst)))
+            else:
+
+                raise AssemblyGeneratorError(
+                    "An error occurred in assembly generation, not all nodes were visited")
+
+        def generate_binary_instructions(node: TacBinary):
+            if isinstance(node.binary_op, (TacAdd, TacSubtract, TacMultiply, TacBitAnd, TacBitOr, TacBitXor,
+                                           TacBitShiftLeft, TacBitShiftRight)):
+                binary_op: AsmBinaryOp = self.generate_binary_op(node.binary_op)
+                src1: AsmOperand = self.generate_operand(node.src1)
+                src2: AsmOperand = self.generate_operand(node.src2)
+                src1_dst: AsmOperand = self.generate_operand(node.dst)
+                instructions.append(AsmMov(src1, src1_dst))
+                instructions.append(AsmBinary(binary_op, src2, deepcopy(src1_dst)))
+            elif isinstance(node.binary_op, (TacDivide, TacRemainder)):
+                src1: AsmOperand = self.generate_operand(node.src1)
+                src2: AsmOperand = self.generate_operand(node.src2)
+                dst: AsmOperand = self.generate_operand(node.dst)
+                src1_dst: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
+                if isinstance(node.binary_op, TacDivide):
+                    dst_src: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
+                else:
+                    dst_src: AsmOperand = self.generate_operand(REGISTER_KIND.DX)
+                instructions.append(AsmMov(src1, src1_dst))
+                instructions.append(AsmCdq())
+                instructions.append(AsmIdiv(src2))
+                instructions.append(AsmMov(dst_src, dst))
+            elif isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual, TacGreaterThan,
+                                             TacGreaterOrEqual)):
+                pass  # TODO
+            elif isinstance(node.binary_op, TacJump):
+                pass  # TODO
+            elif isinstance(node.binary_op, TacJumpIfZero):
+                pass  # TODO
+            elif isinstance(node.binary_op, TacJumpIfNotZero):
+                pass  # TODO
+            elif isinstance(node.binary_op, TacCopy):
+                pass  # TODO
+            elif isinstance(node.binary_op, TacLabel):
+                pass  # TODO
+            else:
+
+                raise AssemblyGeneratorError(
+                    "An error occurred in assembly generation, not all nodes were visited")
+
+        def generate_node_instructions(node: AST) -> None:
             self.expect_next(node, TacInstruction)
             if isinstance(node, TacReturn):
                 src: AsmOperand = self.generate_operand(node.val)
@@ -106,39 +182,16 @@ class AssemblyGenerator:
                 instructions.append(AsmMov(src, dst))
                 instructions.append(AsmRet())
             elif isinstance(node, TacUnary):
-                unary_op: AsmUnaryOp = self.generate_unary_op(node.unary_op)
-                src: AsmOperand = self.generate_operand(node.src)
-                src_dst: AsmOperand = self.generate_operand(node.dst)
-                instructions.append(AsmMov(src, src_dst))
-                instructions.append(AsmUnary(unary_op, deepcopy(src_dst)))
+                generate_unary_instructions(node)
             elif isinstance(node, TacBinary):
-                if isinstance(node.binary_op, (TacDivide, TacRemainder)):
-                    src1: AsmOperand = self.generate_operand(node.src1)
-                    src2: AsmOperand = self.generate_operand(node.src2)
-                    dst: AsmOperand = self.generate_operand(node.dst)
-                    src1_dst: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
-                    if isinstance(node.binary_op, TacDivide):
-                        dst_src: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
-                    else:
-                        dst_src: AsmOperand = self.generate_operand(REGISTER_KIND.DX)
-                    instructions.append(AsmMov(src1, src1_dst))
-                    instructions.append(AsmCdq())
-                    instructions.append(AsmIdiv(src2))
-                    instructions.append(AsmMov(dst_src, dst))
-                else:
-                    binary_op: AsmBinaryOp = self.generate_binary_op(node.binary_op)
-                    src1: AsmOperand = self.generate_operand(node.src1)
-                    src2: AsmOperand = self.generate_operand(node.src2)
-                    src1_dst: AsmOperand = self.generate_operand(node.dst)
-                    instructions.append(AsmMov(src1, src1_dst))
-                    instructions.append(AsmBinary(binary_op, src2, deepcopy(src1_dst)))
+                generate_binary_instructions(node)
             else:
 
                 raise AssemblyGeneratorError(
                     "An error occurred in assembly generation, not all nodes were visited")
 
         for item_node in list_node:
-            generate_instruction(item_node)
+            generate_node_instructions(item_node)
 
         return instructions
 
