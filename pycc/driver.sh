@@ -50,7 +50,7 @@ function compile () {
     FILE=${1}
     ARGV=${@:2}
 
-    if [ ! -d "./pycc/" ]; then
+    if [ ! -d "$HOME/.python/pycc/pycc/" ]; then
         if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]]; then
             export PYTHONPATH="$PYTHONPATH:$HOME/.python"
         fi
