@@ -54,8 +54,6 @@ function install () {
     sed -e 's/pycc/cycc/g' ./test-suite.sh > ../cycc/test-suite.sh
 }
 
-clean
-
 setup
 compile
 install
