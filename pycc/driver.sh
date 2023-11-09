@@ -50,12 +50,14 @@ function compile () {
     FILE=${1}
     ARGV=${@:2}
 
-    if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]] ; then
-        export PYTHONPATH="$PYTHONPATH:$HOME/.python"
+    if [ ! -d "./pycc/" ]; then
+        if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]]; then
+            export PYTHONPATH="$PYTHONPATH:$HOME/.python"
+        fi
     fi
 
     echo "Compile    -> ${FILE}.i"
-    python3 -c "from pycc.compiler import main; main()" ${FILE}.i ${ARGV}
+    python3.9 -c "from pycc.compiler import main; main()" ${FILE}.i ${ARGV}
     if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
 }
 
