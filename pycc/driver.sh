@@ -50,10 +50,8 @@ function compile () {
     FILE=${1}
     ARGV=${@:2}
 
-    if [ ! -d "$HOME/.python/pycc/pycc/" ]; then
-        if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]]; then
-            export PYTHONPATH="$PYTHONPATH:$HOME/.python"
-        fi
+    if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]] ; then
+        export PYTHONPATH="$PYTHONPATH:$HOME/.python"
     fi
 
     echo "Compile    -> ${FILE}.i"
@@ -85,4 +83,5 @@ preprocess ${FILE}
 compile ${FILE} ${ARGV}
 link ${FILE} ${ARGV}
 
-clean ${FILE} && exit 0
+clean ${FILE}
+exit 0

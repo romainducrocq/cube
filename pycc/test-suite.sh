@@ -21,3 +21,5 @@ else
     test --chapter 4 --latest-only --bitwise
     test --chapter 5 --stage parse --latest-only --bitwise
 fi
+
+exit 0

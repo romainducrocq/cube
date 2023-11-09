@@ -88,3 +88,5 @@ fi
 if [ -d ${1} ]; then
     test_dir ${1}
 fi
+
+exit 0

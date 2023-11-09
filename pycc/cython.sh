@@ -5,9 +5,7 @@ function clean () {
     for FILE in $(find . -type f -name "*.pyx"); do rm ${FILE}; done
     if [ -f "./setup.py" ]; then rm ./setup.py; fi
     if [ -d "./build/" ]; then rm -r ./build/; fi
-    if [[ "${1}" == "-y" ]]; then
-        if [ -d "./cycc/" ]; then rm -r ./cycc/; fi
-    fi
+    if [ -d "./cycc/" ]; then rm -r ./cycc/; fi
 }
 
 function setup () {
@@ -44,10 +42,23 @@ function compile () {
     fi
 
     python3.9 setup.py build_ext --inplace 2> /dev/null
-    if [ ${?} -ne 0 ]; then clean -y && exit 1; fi
+    if [ ${?} -ne 0 ]; then clean && exit 1; fi
 }
 
-clean -y
+function install () {
+    if [ -d "../cycc/" ]; then rm -r ../cycc/; fi
+    cp -r ./cycc/ ../
+
+    sed -e 's/pycc/cycc/g' ./driver.sh > ../cycc/driver.sh
+    sed -e 's/pycc/cycc/g' ./test.sh > ../cycc/test.sh
+    sed -e 's/pycc/cycc/g' ./test-suite.sh > ../cycc/test-suite.sh
+}
+
+clean
+
 setup
 compile
-clean && exit 0
+install
+
+clean
+exit 0
