@@ -1,3 +1,4 @@
+from typing import List, Optional
 from dataclasses import dataclass
 
 from pycc.util.__ast import *
@@ -267,7 +268,7 @@ class CDeclaration(AST):
 class CDecl(CDeclaration):
     """ Declaration(identifier name, exp? init) """
     name: TIdentifier = None
-    init: CExp = None
+    init: Optional[CExp] = None
 
 
 class CBlockItem(AST):
@@ -301,7 +302,7 @@ class CFunctionDef(AST):
 class CFunction(CFunctionDef):
     """ Function(identifier name, block_item* body) """
     name: TIdentifier = None
-    body: CBlockItem = None
+    body: List[CBlockItem] = None
 
 
 @dataclass

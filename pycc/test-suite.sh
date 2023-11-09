@@ -19,5 +19,5 @@ else
     test --chapter 2 --latest-only
     test --chapter 3 --latest-only --bitwise
     test --chapter 4 --latest-only --bitwise
-    test --chapter 5 --stage lex --latest-only --bitwise
+    test --chapter 5 --stage parse --latest-only --bitwise
 fi
