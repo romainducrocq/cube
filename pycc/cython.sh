@@ -2,10 +2,11 @@
 
 function clean () {
     for FILE in $(find . -type f -name "*.c"); do rm ${FILE}; done
+    for FILE in $(find . -type f -name "*.pyx"); do rm ${FILE}; done
     if [ -f "./setup.py" ]; then rm ./setup.py; fi
     if [ -d "./build/" ]; then rm -r ./build/; fi
     if [[ "${1}" == "-y" ]]; then
-        if [ -d "./pycc/" ]; then rm -r ./pycc/; fi
+        if [ -d "./cycc/" ]; then rm -r ./cycc/; fi
     fi
 }
 
@@ -16,10 +17,11 @@ function setup () {
     echo 'from Cython.Distutils import build_ext' >> setup.py
     echo '' >> setup.py
     echo 'ext_modules = [' >> setup.py
-    for DIR in $(find . -iname "*.py" | grep --invert-match -e __init__.py -e setup.py)
+    for FILE in $(find . -iname "*.py" | grep --invert-match -e __init__.py -e setup.py)
     do
-        PKG=$(echo "pycc$(echo ${DIR} | rev | cut -d '.' -f2 | rev | tr '/' '.')")
-        echo '    Extension("'"${PKG}"'",  ["'"${DIR}"'"]),' >> setup.py
+        sed -e 's/pycc/cycc/g' ${FILE} > ${FILE}'x'
+        PKG=$(echo "cycc$(echo ${FILE}'x' | rev | cut -d '.' -f2 | rev | tr '/' '.')")
+        echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'x"]),' >> setup.py
     done
     echo ']' >> setup.py
     echo '' >> setup.py
@@ -27,7 +29,7 @@ function setup () {
     echo '    ext_module.cython_directives = {"language_level": "3"}' >> setup.py
     echo '' >> setup.py
     echo 'setup(' >> setup.py
-    echo '    name="pycc",' >> setup.py
+    echo '    name="cycc",' >> setup.py
     echo '    version="0.1",' >> setup.py
     echo '    license="MIT",' >> setup.py
     echo '    python_requires="==3.9",' >> setup.py
