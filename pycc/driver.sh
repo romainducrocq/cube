@@ -10,6 +10,7 @@ function usage () {
         echo "    --help       print help and exit"
         echo "    --lex        print lexing and exit"
         echo "    --parse      print parsing and exit"
+        echo "    --validate   print semantic analysis and exit"
         echo "    --tacky      print tac representation and exit"
         echo "    --codegen    print assembly generation and exit"
         echo "    --codeemit   print code emission and exit"
@@ -64,8 +65,8 @@ function link () {
     ARGV=${@:2}
 
     echo ${ARGV} |\
-        grep -q -e "--lex" -e "--parse" -e "--tacky" \
-                -e "--codegen" -e "--codeemit"
+        grep -q -e "--lex" -e "--parse" -e "--validate" \
+                -e "--tacky" -e "--codegen" -e "--codeemit"
     if [ ${?} -ne 0 ]; then
         echo "Link       -> ${FILE}.s"
         gcc ${FILE}.s -o ${FILE}

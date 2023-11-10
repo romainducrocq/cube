@@ -30,6 +30,7 @@ OPT: IotaEnum = IotaEnum(
     "none",
     "lex",
     "parse",
+    "validate",
     "tacky",
     "codegen",
     "codeemit",
@@ -57,6 +58,13 @@ def compile(filename: str, opt_exit: int, opt_s: int) -> None:
     print("-- Exit parsing: OK")
     if opt_exit == OPT.parse:
         debug(c_ast.pretty_string())
+        return
+
+    print("-- Start semantic analysis...")
+    pass  # TODO
+    print("-- Exit semantic analysis: OK")
+    if opt_exit == OPT.validate:
+        debug("TODO: semantic analysis")  # TODO
         return
 
     print("-- Start tac representation...")
@@ -121,6 +129,8 @@ def arg_parse(argv: List[str]) -> Tuple[str, int, int]:
         opt_exit = OPT.codegen
     elif "--tacky" in argv:
         opt_exit = OPT.tacky
+    elif "--validate" in argv:
+        opt_exit = OPT.validate
     elif "--parse" in argv:
         opt_exit = OPT.parse
     elif "--lex" in argv:
