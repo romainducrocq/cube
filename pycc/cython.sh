@@ -8,6 +8,11 @@ function clean () {
     if [ -d "./cycc/" ]; then rm -r ./cycc/; fi
 }
 
+function requirements () {
+    python3.9 -m pip install Cython==3.0.5
+    if [ ${?} -ne 0 ]; then clean && exit 1; fi
+}
+
 function setup () {
     echo -n '' > setup.py
     echo 'from distutils.core import setup' >> setup.py
@@ -15,7 +20,7 @@ function setup () {
     echo 'from Cython.Distutils import build_ext' >> setup.py
     echo '' >> setup.py
     echo 'ext_modules = [' >> setup.py
-    for FILE in $(find . -iname "*.py" | grep --invert-match -e __init__.py -e setup.py)
+    for FILE in $(find . -name "*.py" | grep --invert-match -e __init__.py -e setup.py)
     do
         sed -e 's/pycc/cycc/g' ${FILE} > ${FILE}'x'
         PKG=$(echo "cycc$(echo ${FILE}'x' | rev | cut -d '.' -f2 | rev | tr '/' '.')")
@@ -49,11 +54,13 @@ function install () {
     if [ -d "../cycc/" ]; then rm -r ../cycc/; fi
     cp -r ./cycc/ ../
 
+    sed -e 's/pycc/cycc/g' ./install.sh > ../cycc/install.sh
     sed -e 's/pycc/cycc/g' ./driver.sh > ../cycc/driver.sh
     sed -e 's/pycc/cycc/g' ./test.sh > ../cycc/test.sh
     sed -e 's/pycc/cycc/g' ./test-suite.sh > ../cycc/test-suite.sh
 }
 
+requirements
 setup
 compile
 install
