@@ -104,8 +104,8 @@ class ThreeAddressCodeGenerator:
             raise ThreeAddressCodeGeneratorError(
                 "An error occurred in three address code representation, not all nodes were visited")
 
-        identifier: TIdentifier = NameManager.represent_variable_identifier(node)
-        return TacVariable(identifier)
+        name: TIdentifier = NameManager.represent_variable_identifier(node)
+        return TacVariable(name)
 
     def represent_instruction(self, node: AST, instructions: List[TacInstruction]) -> Optional[TacValue]:
         """ instruction = Return(val) | Unary(unary_operator, val src, val dst) |

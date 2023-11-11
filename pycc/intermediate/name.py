@@ -30,6 +30,15 @@ class NameManager:
         pass
 
     @staticmethod
+    def resolve_variable_identifier(variable: TIdentifier) -> TIdentifier:
+        global variable_counter
+
+        variable_counter += 1
+        name: str = f"{variable.str_t}.{variable_counter - 1}"
+
+        return TIdentifier(name)
+
+    @staticmethod
     def represent_label_identifier(label: str) -> TIdentifier:
         global label_counter
 
