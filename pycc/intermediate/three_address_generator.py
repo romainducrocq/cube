@@ -110,83 +110,7 @@ class ThreeAddressCodeGenerator:
         name: TIdentifier = NameManager.represent_variable_identifier(node)
         return TacVariable(name)
 
-    def represent_instruction(self, node: AST, instructions: List[TacInstruction]) -> Optional[TacValue]:
-        self.expect_next(node, CDeclaration, CStatement,
-                         CExp)
-        if isinstance(node, CDecl):
-            if node.init:
-                src: TacValue = self.represent_instruction(node.init, instructions)
-                dst: TacValue = self.represent_value(CVar(node.name))
-                instructions.append(TacCopy(src, dst))
-            return None
-        if isinstance(node, CReturn):
-            val: TacValue = self.represent_instruction(node.exp, instructions)
-            instructions.append(TacReturn(val))
-            return None
-        if isinstance(node, CExpression):
-            _ = self.represent_instruction(node.exp, instructions)
-            return None
-        if isinstance(node, CNull):
-            return None
-        if isinstance(node, (CVar, CConstant)):
-            val: TacValue = self.represent_value(node)
-            return val
-        if isinstance(node, CUnary):
-            src: TacValue = self.represent_instruction(node.exp, instructions)
-            dst: TacValue = self.represent_value(node.exp, outer=False)
-            unary_op: TacUnaryOp = self.represent_unary_op(node.unary_op)
-            instructions.append(TacUnary(unary_op, src, dst))
-            return deepcopy(dst)
-        if isinstance(node, CBinary):
-            if isinstance(node.binary_op, CAnd):
-                is_true: TacValue = TacConstant(TInt(1))
-                is_false: TacValue = TacConstant(TInt(0))
-                label_true: TIdentifier = NameManager.represent_label_identifier("and_true")
-                label_false: TIdentifier = NameManager.represent_label_identifier("and_false")
-                src1: TacValue = self.represent_instruction(node.exp_left, instructions)
-                instructions.append(TacJumpIfZero(src1, label_false))
-                src2: TacValue = self.represent_instruction(node.exp_right, instructions)
-                instructions.append(TacJumpIfZero(src2, deepcopy(label_false)))
-                dst: TacValue = self.represent_value(node.exp_left, outer=False)
-                instructions.append(TacCopy(is_true, dst))
-                instructions.append(TacJump(label_true))
-                instructions.append(TacLabel(deepcopy(label_false)))
-                instructions.append(TacCopy(is_false, deepcopy(dst)))
-                instructions.append(TacLabel(deepcopy(label_true)))
-                return deepcopy(dst)
-            elif isinstance(node.binary_op, COr):
-                is_true: TacValue = TacConstant(TInt(1))
-                is_false: TacValue = TacConstant(TInt(0))
-                label_true: TIdentifier = NameManager.represent_label_identifier("or_true")
-                label_false: TIdentifier = NameManager.represent_label_identifier("or_false")
-                src1: TacValue = self.represent_instruction(node.exp_left, instructions)
-                instructions.append(TacJumpIfNotZero(src1, label_true))
-                src2: TacValue = self.represent_instruction(node.exp_right, instructions)
-                instructions.append(TacJumpIfNotZero(src2, deepcopy(label_true)))
-                dst: TacValue = self.represent_value(node.exp_left, outer=False)
-                instructions.append(TacCopy(is_false, dst))
-                instructions.append(TacJump(label_false))
-                instructions.append(TacLabel(deepcopy(label_true)))
-                instructions.append(TacCopy(is_true, deepcopy(dst)))
-                instructions.append(TacLabel(deepcopy(label_false)))
-                return deepcopy(dst)
-            else:
-                src1: TacValue = self.represent_instruction(node.exp_left, instructions)
-                src2: TacValue = self.represent_instruction(node.exp_right, instructions)
-                dst: TacValue = self.represent_value(node.exp_left, outer=False)
-                binary_op: TacBinaryOp = self.represent_binary_op(node.binary_op)
-                instructions.append(TacBinary(binary_op, src1, src2, dst))
-                return deepcopy(dst)
-        if isinstance(node, CAssignment):
-            src: TacValue = self.represent_instruction(node.exp_right, instructions)
-            dst: TacValue = self.represent_value(node.exp_left)
-            instructions.append(TacCopy(src, dst))
-            return deepcopy(dst)
-
-        raise ThreeAddressCodeGeneratorError(
-            "An error occurred in three address code representation, not all nodes were visited")
-
-    def represent_instructions(self, list_node: list) -> List[TacInstruction]:
+    def represent_list_instructions(self, list_node: list) -> List[TacInstruction]:
         """ instruction = Return(val) | Unary(unary_operator, val src, val dst)
                     | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
                     | Jump(identifier target) | JumpIfZero(val condition, identifier target)
@@ -195,19 +119,94 @@ class ThreeAddressCodeGenerator:
 
         instructions: List[TacInstruction] = []
 
+        def represent_instructions(node: AST) -> Optional[TacValue]:
+            self.expect_next(node, CDeclaration, CStatement,
+                             CExp)
+            if isinstance(node, CDecl):
+                if node.init:
+                    src: TacValue = represent_instructions(node.init)
+                    dst: TacValue = self.represent_value(CVar(node.name))
+                    instructions.append(TacCopy(src, dst))
+                return None
+            if isinstance(node, CReturn):
+                val: TacValue = represent_instructions(node.exp)
+                instructions.append(TacReturn(val))
+                return None
+            if isinstance(node, CExpression):
+                _ = represent_instructions(node.exp)
+                return None
+            if isinstance(node, CNull):
+                return None
+            if isinstance(node, (CVar, CConstant)):
+                val: TacValue = self.represent_value(node)
+                return val
+            if isinstance(node, CUnary):
+                src: TacValue = represent_instructions(node.exp)
+                dst: TacValue = self.represent_value(node.exp, outer=False)
+                unary_op: TacUnaryOp = self.represent_unary_op(node.unary_op)
+                instructions.append(TacUnary(unary_op, src, dst))
+                return deepcopy(dst)
+            if isinstance(node, CBinary):
+                if isinstance(node.binary_op, CAnd):
+                    is_true: TacValue = TacConstant(TInt(1))
+                    is_false: TacValue = TacConstant(TInt(0))
+                    label_true: TIdentifier = NameManager.represent_label_identifier("and_true")
+                    label_false: TIdentifier = NameManager.represent_label_identifier("and_false")
+                    src1: TacValue = represent_instructions(node.exp_left)
+                    instructions.append(TacJumpIfZero(src1, label_false))
+                    src2: TacValue = represent_instructions(node.exp_right)
+                    instructions.append(TacJumpIfZero(src2, deepcopy(label_false)))
+                    dst: TacValue = self.represent_value(node.exp_left, outer=False)
+                    instructions.append(TacCopy(is_true, dst))
+                    instructions.append(TacJump(label_true))
+                    instructions.append(TacLabel(deepcopy(label_false)))
+                    instructions.append(TacCopy(is_false, deepcopy(dst)))
+                    instructions.append(TacLabel(deepcopy(label_true)))
+                    return deepcopy(dst)
+                elif isinstance(node.binary_op, COr):
+                    is_true: TacValue = TacConstant(TInt(1))
+                    is_false: TacValue = TacConstant(TInt(0))
+                    label_true: TIdentifier = NameManager.represent_label_identifier("or_true")
+                    label_false: TIdentifier = NameManager.represent_label_identifier("or_false")
+                    src1: TacValue = represent_instructions(node.exp_left)
+                    instructions.append(TacJumpIfNotZero(src1, label_true))
+                    src2: TacValue = represent_instructions(node.exp_right)
+                    instructions.append(TacJumpIfNotZero(src2, deepcopy(label_true)))
+                    dst: TacValue = self.represent_value(node.exp_left, outer=False)
+                    instructions.append(TacCopy(is_false, dst))
+                    instructions.append(TacJump(label_false))
+                    instructions.append(TacLabel(deepcopy(label_true)))
+                    instructions.append(TacCopy(is_true, deepcopy(dst)))
+                    instructions.append(TacLabel(deepcopy(label_false)))
+                    return deepcopy(dst)
+                else:
+                    src1: TacValue = represent_instructions(node.exp_left)
+                    src2: TacValue = represent_instructions(node.exp_right)
+                    dst: TacValue = self.represent_value(node.exp_left, outer=False)
+                    binary_op: TacBinaryOp = self.represent_binary_op(node.binary_op)
+                    instructions.append(TacBinary(binary_op, src1, src2, dst))
+                    return deepcopy(dst)
+            if isinstance(node, CAssignment):
+                src: TacValue = represent_instructions(node.exp_right)
+                dst: TacValue = self.represent_value(node.exp_left)
+                instructions.append(TacCopy(src, dst))
+                return deepcopy(dst)
+
+            raise ThreeAddressCodeGeneratorError(
+                "An error occurred in three address code representation, not all nodes were visited")
+
         for item_node in list_node:
             self.expect_next(item_node, CBlockItem)
             if isinstance(item_node, CS):
-                self.represent_instruction(item_node.statement, instructions)
+                represent_instructions(item_node.statement)
             elif isinstance(item_node, CD):
-                self.represent_instruction(item_node.declaration, instructions)
+                represent_instructions(item_node.declaration)
             else:
 
                 raise ThreeAddressCodeGeneratorError(
                     "An error occurred in three address code representation, not all nodes were visited")
 
-        val: TacValue = TacConstant(TInt(0))
-        instructions.append(TacReturn(val))
+        instructions.append(TacReturn(TacConstant(TInt(0))))
         return instructions
 
     def represent_function_def(self, node: AST) -> TacFunctionDef:
@@ -215,7 +214,7 @@ class ThreeAddressCodeGenerator:
         self.expect_next(node, CFunctionDef)
         if isinstance(node, CFunction):
             name: TIdentifier = self.represent_identifier(node.name)
-            instructions: List[TacInstruction] = self.represent_instructions(node.body)
+            instructions: List[TacInstruction] = self.represent_list_instructions(node.body)
             return TacFunction(name, instructions)
 
         raise ThreeAddressCodeGeneratorError(
