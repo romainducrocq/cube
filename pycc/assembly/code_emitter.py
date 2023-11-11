@@ -289,7 +289,7 @@ class CodeEmitter:
         elif isinstance(node, AsmSetCC):
             cond_code: str = self.emit_condition_code(node.cond_code)
             dst: str = self.emit_operand(node.dst, byte=1)
-            self.emit(f"set{cond_code} {dst}")
+            self.emit(f"set{cond_code} {dst}", t=1)
         elif isinstance(node, AsmLabel):
             label: str = self.emit_identifier(node.name)
             self.emit(f".L{label}:")

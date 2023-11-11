@@ -115,7 +115,9 @@ class ThreeAddressCodeGenerator:
                          CExp)
         if isinstance(node, CDecl):
             if node.init:
-                _ = self.represent_instruction(node.init, instructions)
+                src: TacValue = self.represent_instruction(node.init, instructions)
+                dst: TacValue = self.represent_value(CVar(node.name))
+                instructions.append(TacCopy(src, dst))
             return None
         if isinstance(node, CReturn):
             val: TacValue = self.represent_instruction(node.exp, instructions)

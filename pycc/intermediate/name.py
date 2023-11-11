@@ -18,6 +18,7 @@ label_counter: int = 0
 variable_counter: int = 0
 
 VARIABLE_NAME: Dict[type, str] = {
+    CVar: "var",
     CConstant: "constant",
     CUnary: "unary",
     CBinary: "binary"
