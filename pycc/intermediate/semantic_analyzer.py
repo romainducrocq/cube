@@ -112,4 +112,3 @@ def semantic_analysis(c_ast: AST) -> None:
     semantic_analyzer = SemanticAnalyzer()
 
     semantic_analyzer.resolve_variable(c_ast)
-
