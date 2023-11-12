@@ -19,7 +19,7 @@ else
     test --chapter 2 --latest-only
     test --chapter 3 --latest-only --bitwise
     test --chapter 4 --latest-only --bitwise
-    test --chapter 5 --latest-only --bitwise --compound
+    test --chapter 5 --latest-only --extra-credit
 fi
 
 exit 0

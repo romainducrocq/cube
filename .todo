@@ -1,1 +1,3 @@
-- replace isinstance by AST.istype ?
+cython:
+- fopen: https://gist.github.com/pydemo/0b85bd5d1c017f6873422e02aeb9618a
+
