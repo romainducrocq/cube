@@ -8,6 +8,10 @@ function clean () {
     if [ -d "./ccc/" ]; then rm -r ./ccc/; fi
 }
 
+function clean2 () {
+    for FILE in $(find . -type f -name "*.pyx"); do rm ${FILE}; done
+}
+
 function requirements () {
     python3.9 -m pip install Cython==3.0.5
     if [ ${?} -ne 0 ]; then exit 1; fi
@@ -21,10 +25,11 @@ function setup () {
     echo 'from Cython.Distutils import build_ext' >> setup.py
     echo '' >> setup.py
     echo 'ext_modules = [' >> setup.py
-    for FILE in $(find . -name "*.py" | grep --invert-match -e __init__.py -e setup.py)
+    for FILE in $(find . -type f -name "*.py" | grep --invert-match -e __init__.py -e setup.py)
     do
+        cp ${FILE} ${FILE}'x'
         PKG=$(echo "ccc$(echo ${FILE} | rev | cut -d '.' -f2 | rev | tr '/' '.')")
-        echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'"]),' >> setup.py
+        echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'x"]),' >> setup.py
     done
     echo ']' >> setup.py
     echo '' >> setup.py
@@ -64,4 +69,5 @@ setup
 compile
 install
 
+clean2
 exit 0
