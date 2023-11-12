@@ -42,20 +42,20 @@ class StackManager:
             else:
                 self.replace_pseudo_registers(child_node)
 
+    def prepend_alloc_stack(self, instructions: List[AsmInstruction]) -> None:
+
+        if self.counter == -1:
+            raise StackManagerError(
+                "An error occurred in stack management, stack was not allocated")
+
+        value: TInt = TInt(-1 * self.counter)
+        instructions.insert(0, AsmAllocStack(value))
+
     def correct_instructions(self, node: AST) -> None:
-
-        def prepend_alloc_stack(instructions: List[AsmInstruction]) -> None:
-
-            if self.counter == -1:
-                raise StackManagerError(
-                    "An error occurred in stack management, stack was not allocated")
-
-            value: TInt = TInt(-1 * self.counter)
-            instructions.insert(0, AsmAllocStack(value))
 
         for child_node, _, _ in AST.iter_child_nodes(node):
             if isinstance(child_node, AsmFunction):
-                prepend_alloc_stack(child_node.instructions)
+                self.prepend_alloc_stack(child_node.instructions)
 
                 size = len(child_node.instructions)
                 for e, instruction in enumerate(reversed(child_node.instructions)):
