@@ -33,7 +33,16 @@ TOKEN_PRECEDENCE: Dict[int, int] = {
     TOKEN_KIND.binop_and: 10,
     TOKEN_KIND.binop_or: 5,
     TOKEN_KIND.assignment_simple: 1,
-    TOKEN_KIND.assignment_plus: 1
+    TOKEN_KIND.assignment_plus: 1,
+    TOKEN_KIND.assignment_difference: 1,
+    TOKEN_KIND.assignment_product: 1,
+    TOKEN_KIND.assignment_quotient: 1,
+    TOKEN_KIND.assignment_remainder: 1,
+    TOKEN_KIND.assignment_bitand: 1,
+    TOKEN_KIND.assignment_bitor: 1,
+    TOKEN_KIND.assignment_bitxor: 1,
+    TOKEN_KIND.assignment_bitshiftleft: 1,
+    TOKEN_KIND.assignment_bitshiftright: 1
 }
 
 

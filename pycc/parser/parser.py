@@ -79,27 +79,45 @@ class Parser:
                          TOKEN_KIND.binop_notequal,
                          TOKEN_KIND.binop_and,
                          TOKEN_KIND.binop_or,
-                         TOKEN_KIND.assignment_plus)
-        if self.next_token.token_kind == TOKEN_KIND.unop_negation:
+                         TOKEN_KIND.assignment_plus,
+                         TOKEN_KIND.assignment_difference,
+                         TOKEN_KIND.assignment_product,
+                         TOKEN_KIND.assignment_quotient,
+                         TOKEN_KIND.assignment_remainder,
+                         TOKEN_KIND.assignment_bitand,
+                         TOKEN_KIND.assignment_bitor,
+                         TOKEN_KIND.assignment_bitxor,
+                         TOKEN_KIND.assignment_bitshiftleft,
+                         TOKEN_KIND.assignment_bitshiftright)
+        if self.next_token.token_kind in (TOKEN_KIND.unop_negation,
+                                          TOKEN_KIND.assignment_difference):
             return CSubtract()
         if self.next_token.token_kind in (TOKEN_KIND.binop_addition,
                                           TOKEN_KIND.assignment_plus):
             return CAdd()
-        if self.next_token.token_kind == TOKEN_KIND.binop_multiplication:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_multiplication,
+                                          TOKEN_KIND.assignment_product):
             return CMultiply()
-        if self.next_token.token_kind == TOKEN_KIND.binop_division:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_division,
+                                          TOKEN_KIND.assignment_quotient):
             return CDivide()
-        if self.next_token.token_kind == TOKEN_KIND.binop_remainder:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_remainder,
+                                          TOKEN_KIND.assignment_remainder):
             return CRemainder()
-        if self.next_token.token_kind == TOKEN_KIND.binop_bitand:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_bitand,
+                                          TOKEN_KIND.assignment_bitand):
             return CBitAnd()
-        if self.next_token.token_kind == TOKEN_KIND.binop_bitor:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_bitor,
+                                          TOKEN_KIND.assignment_bitor):
             return CBitOr()
-        if self.next_token.token_kind == TOKEN_KIND.binop_bitxor:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_bitxor,
+                                          TOKEN_KIND.assignment_bitxor):
             return CBitXor()
-        if self.next_token.token_kind == TOKEN_KIND.binop_bitshiftleft:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_bitshiftleft,
+                                          TOKEN_KIND.assignment_bitshiftleft):
             return CBitShiftLeft()
-        if self.next_token.token_kind == TOKEN_KIND.binop_bitshiftright:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_bitshiftright,
+                                          TOKEN_KIND.assignment_bitshiftright):
             return CBitShiftRight()
         if self.next_token.token_kind == TOKEN_KIND.binop_and:
             return CAnd()
@@ -177,7 +195,16 @@ class Parser:
                                          TOKEN_KIND.binop_and,
                                          TOKEN_KIND.binop_or,
                                          TOKEN_KIND.assignment_simple,
-                                         TOKEN_KIND.assignment_plus):
+                                         TOKEN_KIND.assignment_plus,
+                                         TOKEN_KIND.assignment_difference,
+                                         TOKEN_KIND.assignment_product,
+                                         TOKEN_KIND.assignment_quotient,
+                                         TOKEN_KIND.assignment_remainder,
+                                         TOKEN_KIND.assignment_bitand,
+                                         TOKEN_KIND.assignment_bitor,
+                                         TOKEN_KIND.assignment_bitxor,
+                                         TOKEN_KIND.assignment_bitshiftleft,
+                                         TOKEN_KIND.assignment_bitshiftright):
             precedence: int = PrecedenceManager.\
                                parse_token_precedence(self.peek_token.token_kind)
             if precedence < min_precedence:
@@ -186,7 +213,16 @@ class Parser:
                 _ = self.next()
                 exp_right: CExp = self.parse_exp(precedence)
                 exp_left: CExp = CAssignment(exp_left, exp_right)
-            elif self.peek_token.token_kind == TOKEN_KIND.assignment_plus:
+            elif self.peek_token.token_kind in (TOKEN_KIND.assignment_plus,
+                                                TOKEN_KIND.assignment_difference,
+                                                TOKEN_KIND.assignment_product,
+                                                TOKEN_KIND.assignment_quotient,
+                                                TOKEN_KIND.assignment_remainder,
+                                                TOKEN_KIND.assignment_bitand,
+                                                TOKEN_KIND.assignment_bitor,
+                                                TOKEN_KIND.assignment_bitxor,
+                                                TOKEN_KIND.assignment_bitshiftleft,
+                                                TOKEN_KIND.assignment_bitshiftright):
                 binary_op: CBinaryOp = self.parse_binary_op()
                 exp_right: CExp = self.parse_exp(precedence)
                 exp_left: CExp = CAssignmentCompound(binary_op, exp_left, exp_right)

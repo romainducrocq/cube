@@ -18,6 +18,9 @@ class LexerError(RuntimeError):
 
 
 TOKEN_KIND: IotaEnum = IotaEnum(
+    "assignment_bitshiftleft",
+    "assignment_bitshiftright",
+
     "unop_decrement",
     "binop_bitshiftleft",
     "binop_bitshiftright",
@@ -28,6 +31,13 @@ TOKEN_KIND: IotaEnum = IotaEnum(
     "binop_lessthanorequal",
     "binop_greaterthanorequal",
     "assignment_plus",
+    "assignment_difference",
+    "assignment_product",
+    "assignment_quotient",
+    "assignment_remainder",
+    "assignment_bitand",
+    "assignment_bitor",
+    "assignment_bitxor",
 
     "parenthesis_open",
     "parenthesis_close",
@@ -60,6 +70,9 @@ TOKEN_KIND: IotaEnum = IotaEnum(
 
 
 TOKEN_REGEX: Dict[int, str] = {
+    TOKEN_KIND.assignment_bitshiftleft: r"<<=",
+    TOKEN_KIND.assignment_bitshiftright: r">>=",
+
     TOKEN_KIND.unop_decrement: r"--",
     TOKEN_KIND.binop_bitshiftleft: r"<<",
     TOKEN_KIND.binop_bitshiftright: r">>",
@@ -70,6 +83,13 @@ TOKEN_REGEX: Dict[int, str] = {
     TOKEN_KIND.binop_lessthanorequal: r"<=",
     TOKEN_KIND.binop_greaterthanorequal: r">=",
     TOKEN_KIND.assignment_plus: r"\+=",
+    TOKEN_KIND.assignment_difference: r"-=",
+    TOKEN_KIND.assignment_product: r"\*=",
+    TOKEN_KIND.assignment_quotient: r"/=",
+    TOKEN_KIND.assignment_remainder: r"%=",
+    TOKEN_KIND.assignment_bitand: r"&=",
+    TOKEN_KIND.assignment_bitor: r"\|=",
+    TOKEN_KIND.assignment_bitxor: r"\^=",
 
     TOKEN_KIND.parenthesis_open: r"\(",
     TOKEN_KIND.parenthesis_close: r"\)",
