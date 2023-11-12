@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exit -1
+
 function usage () {
     echo ${@} |\
        grep -q -e "--help"

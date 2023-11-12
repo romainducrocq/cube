@@ -54,8 +54,8 @@ function install () {
     if [ -d "../../ccc/" ]; then rm -r ../../ccc/; fi
     cp -r ./ccc/ ../../
 
-    cp ../bin/install.sh ../../ccc/
-    cp ../bin/driver.sh ../../ccc/
+    sed -e 's/exit -1//g' ../bin/driver.sh > ../../ccc/driver.sh
+    sed -e 's/exit -1//g' ../bin/install.sh > ../../ccc/install.sh
 }
 
 cd ccc/

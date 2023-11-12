@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exit -1
+
 if [ ! -d "$HOME/.python/" ]; then
     mkdir ~/.python/
 fi
