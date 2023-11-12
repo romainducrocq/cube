@@ -174,12 +174,12 @@ class Parser:
                                          TOKEN_KIND.binop_notequal,
                                          TOKEN_KIND.binop_and,
                                          TOKEN_KIND.binop_or,
-                                         TOKEN_KIND.operator_assignment):
+                                         TOKEN_KIND.assignment_simple):
             precedence: int = PrecedenceManager.\
                                parse_token_precedence(self.peek_token.token_kind)
             if precedence < min_precedence:
                 break
-            if self.peek_token.token_kind == TOKEN_KIND.operator_assignment:
+            if self.peek_token.token_kind == TOKEN_KIND.assignment_simple:
                 _ = self.next()
                 exp_right: CExp = self.parse_exp(precedence)
                 exp_left: CExp = CAssignment(exp_left, exp_right)
@@ -208,7 +208,7 @@ class Parser:
         """ <declaration> ::= "int" <identifier> [ "=" <exp> ] ";" """
         self.expect_next(self.next(), TOKEN_KIND.key_int)
         name: TIdentifier = self.parse_identifier()
-        if self.peek().token_kind == TOKEN_KIND.operator_assignment:
+        if self.peek().token_kind == TOKEN_KIND.assignment_simple:
             _ = self.next()
             init: Optional[CExp] = self.parse_exp()
         else:

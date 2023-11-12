@@ -32,7 +32,7 @@ TOKEN_PRECEDENCE: Dict[int, int] = {
     TOKEN_KIND.binop_bitor: 15,
     TOKEN_KIND.binop_and: 10,
     TOKEN_KIND.binop_or: 5,
-    TOKEN_KIND.operator_assignment: 1
+    TOKEN_KIND.assignment_simple: 1
 }
 
 
