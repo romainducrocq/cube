@@ -15,17 +15,10 @@ function setup () {
     echo 'ext_modules = [' >> setup.py
     for FILE in $(find . -type f -name "*.py" | grep --invert-match -e __init__.py -e setup.py)
     do
-        if [ -f ${FILE}x ]; then
-            diff -sq ${FILE} ${FILE}x |\
-                grep -q -e  "differ"
-            if [ ${?} -eq 0 ]; then
-                cp ${FILE} ${FILE}x
-            fi
-        else
-            cp ${FILE} ${FILE}x
-        fi
-        PKG=$(echo "ccc$(echo ${FILE} | rev | cut -d '.' -f2 | rev | tr '/' '.')")
-        echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'x"]),' >> setup.py
+        FILE=${FILE%.*}
+        mv ${FILE}.py ${FILE}.pyx
+        PKG=$(echo "ccc$(echo ${FILE}.pyx | rev | cut -d '.' -f2 | rev | tr '/' '.')")
+        echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'.pyx"]),' >> setup.py
     done
     echo ']' >> setup.py
     echo '' >> setup.py
@@ -48,7 +41,15 @@ function compile () {
     fi
 
     python3.9 setup.py build_ext --inplace
-    if [ ${?} -ne 0 ]; then exit 1; fi
+    RET=${?}
+
+    for FILE in $(find . -type f -name "*.pyx")
+    do
+         FILE=${FILE%.*}
+         mv ${FILE}.pyx ${FILE}.py
+    done
+
+    if [ ${RET} -ne 0 ]; then exit 1; fi
 }
 
 function install () {
