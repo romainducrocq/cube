@@ -58,8 +58,8 @@ function install () {
     cp ../bin/driver.sh ../../ccc/
 }
 
+cd ccc/
 requirements
-
 setup
 compile
 install

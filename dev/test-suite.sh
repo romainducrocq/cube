@@ -8,7 +8,7 @@ function test () {
     if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
-cd ../../../writing-a-c-compiler-tests/
+cd ../../writing-a-c-compiler-tests/
 find . -maxdepth 1 -type l -delete
 ln -s ../MOOC-NoStarch-Writing_a_C_Compiler/ccc/* .
 
