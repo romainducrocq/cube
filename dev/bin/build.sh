@@ -1,12 +1,5 @@
 #!/bin/bash
 
-function clean () { # TODO test if rm even on failure ?
-    for FILE in $(find . -type f -name "*.c"); do rm ${FILE}; done
-    if [ -f "./setup.py" ]; then rm ./setup.py; fi
-    if [ -d "./build/" ]; then rm -r ./build/; fi
-    if [ -d "./ccc/" ]; then rm -r ./ccc/; fi
-}
-
 function requirements () {
     python3.9 -m pip install Cython==3.0.5
     if [ ${?} -ne 0 ]; then exit 1; fi
@@ -55,18 +48,21 @@ function compile () {
     fi
 
     python3.9 setup.py build_ext --inplace
-    if [ ${?} -ne 0 ]; then clean && exit 1; fi
+    if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
 function install () {
-    if [ -d "../../ccc/" ]; then rm -r ../../ccc/; fi
-    cp -r ./ccc/ ../../
+    cp ../../ccc/driver.sh ./ccc/
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    cp ../../ccc/install.sh ./ccc/
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    rm -r ../../ccc/
+    if [ ${?} -ne 0 ]; then exit 1; fi
 
-    sed -e 's/exit -1//g' ../bin/driver.sh > ../../ccc/driver.sh
-    sed -e 's/exit -1//g' ../bin/install.sh > ../../ccc/install.sh
+    cp -r ./ccc/ ../../
 }
 
-cd ccc/
+cd ../ccc/
 requirements
 setup
 compile
