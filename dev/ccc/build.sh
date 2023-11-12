@@ -10,10 +10,11 @@ function clean () {
 
 function requirements () {
     python3.9 -m pip install Cython==3.0.5
-    if [ ${?} -ne 0 ]; then clean && exit 1; fi
+    if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
 function setup () {
+    echo -n '' > __init__.py
     echo -n '' > setup.py
     echo 'from distutils.core import setup' >> setup.py
     echo 'from distutils.extension import Extension' >> setup.py
@@ -45,7 +46,7 @@ function compile () {
         export PYTHONPATH="$PYTHONPATH:$HOME/.python"
     fi
 
-    python3.9 setup.py build_ext --inplace 2> /dev/null
+    python3.9 setup.py build_ext --inplace
     if [ ${?} -ne 0 ]; then clean && exit 1; fi
 }
 
@@ -53,14 +54,14 @@ function install () {
     if [ -d "../../ccc/" ]; then rm -r ../../ccc/; fi
     cp -r ./ccc/ ../../
 
-    cp ./install.sh ../../ccc/
-    cp ./driver.sh ../../ccc/
+    cp ../bin/install.sh ../../ccc/
+    cp ../bin/driver.sh ../../ccc/
 }
 
 requirements
+
 setup
 compile
 install
 
-clean
 exit 0

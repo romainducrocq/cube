@@ -9,3 +9,5 @@ __pycache__/
 /ccc/
 /dev/ccc/ccc/
 /dev/ccc/build/
+/dev/ccc/__init__.py
+/dev/ccc/setup.py
