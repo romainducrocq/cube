@@ -33,6 +33,7 @@ __all__ = [
     'CUnary',
     'CBinary',
     'CAssignment',
+    'CAssignmentCompound',
     'CStatement',
     'CReturn',
     'CExpression',
@@ -193,6 +194,7 @@ class CExp(AST):
         | Unary(unary_operator, exp)
         | Binary(binary_operator, exp, exp)
         | Assignment(exp, exp)
+        | AssignmentCompound(binary_operator, exp, exp)
     """
     pass
 
@@ -227,6 +229,14 @@ class CBinary(CExp):
 @dataclass
 class CAssignment(CExp):
     """ Assignment(exp, exp) """
+    exp_left: CExp = None
+    exp_right: CExp = None
+
+
+@dataclass
+class CAssignmentCompound(CExp):
+    """ AssignmentCompound(binary_operator, exp, exp) """
+    binary_op: CBinaryOp = None
     exp_left: CExp = None
     exp_right: CExp = None
 

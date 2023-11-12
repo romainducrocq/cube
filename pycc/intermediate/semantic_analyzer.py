@@ -74,7 +74,7 @@ class SemanticAnalyzer:
         elif isinstance(node, CBinary):
             self.resolve_expression(node.exp_left)
             self.resolve_expression(node.exp_right)
-        elif isinstance(node, CAssignment):
+        elif isinstance(node, (CAssignment, CAssignmentCompound)):
             if not isinstance(node.exp_left, CVar):
 
                 raise SemanticAnalyzerError(

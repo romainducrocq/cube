@@ -191,6 +191,15 @@ class ThreeAddressCodeGenerator:
                 dst: TacValue = self.represent_value(node.exp_left)
                 instructions.append(TacCopy(src, dst))
                 return deepcopy(dst)
+            if isinstance(node, CAssignmentCompound):
+                src1: TacValue = represent_instructions(node.exp_left)
+                src2: TacValue = represent_instructions(node.exp_right)
+                dst_src: TacValue = self.represent_value(node.exp_left, outer=False)
+                binary_op: TacBinaryOp = self.represent_binary_op(node.binary_op)
+                instructions.append(TacBinary(binary_op, src1, src2, dst_src))
+                dst: TacValue = self.represent_value(node.exp_left)
+                instructions.append(TacCopy(deepcopy(dst_src), dst))
+                return deepcopy(dst)
 
             raise ThreeAddressCodeGeneratorError(
                 "An error occurred in three address code representation, not all nodes were visited")

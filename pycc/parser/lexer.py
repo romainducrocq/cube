@@ -27,6 +27,7 @@ TOKEN_KIND: IotaEnum = IotaEnum(
     "binop_notequal",
     "binop_lessthanorequal",
     "binop_greaterthanorequal",
+    "assignment_plus",
 
     "parenthesis_open",
     "parenthesis_close",
@@ -68,6 +69,7 @@ TOKEN_REGEX: Dict[int, str] = {
     TOKEN_KIND.binop_notequal: r"!=",
     TOKEN_KIND.binop_lessthanorequal: r"<=",
     TOKEN_KIND.binop_greaterthanorequal: r">=",
+    TOKEN_KIND.assignment_plus: r"\+=",
 
     TOKEN_KIND.parenthesis_open: r"\(",
     TOKEN_KIND.parenthesis_close: r"\)",

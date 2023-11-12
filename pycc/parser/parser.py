@@ -78,10 +78,12 @@ class Parser:
                          TOKEN_KIND.binop_equalto,
                          TOKEN_KIND.binop_notequal,
                          TOKEN_KIND.binop_and,
-                         TOKEN_KIND.binop_or)
+                         TOKEN_KIND.binop_or,
+                         TOKEN_KIND.assignment_plus)
         if self.next_token.token_kind == TOKEN_KIND.unop_negation:
             return CSubtract()
-        if self.next_token.token_kind == TOKEN_KIND.binop_addition:
+        if self.next_token.token_kind in (TOKEN_KIND.binop_addition,
+                                          TOKEN_KIND.assignment_plus):
             return CAdd()
         if self.next_token.token_kind == TOKEN_KIND.binop_multiplication:
             return CMultiply()
@@ -174,7 +176,8 @@ class Parser:
                                          TOKEN_KIND.binop_notequal,
                                          TOKEN_KIND.binop_and,
                                          TOKEN_KIND.binop_or,
-                                         TOKEN_KIND.assignment_simple):
+                                         TOKEN_KIND.assignment_simple,
+                                         TOKEN_KIND.assignment_plus):
             precedence: int = PrecedenceManager.\
                                parse_token_precedence(self.peek_token.token_kind)
             if precedence < min_precedence:
@@ -183,6 +186,10 @@ class Parser:
                 _ = self.next()
                 exp_right: CExp = self.parse_exp(precedence)
                 exp_left: CExp = CAssignment(exp_left, exp_right)
+            elif self.peek_token.token_kind == TOKEN_KIND.assignment_plus:
+                binary_op: CBinaryOp = self.parse_binary_op()
+                exp_right: CExp = self.parse_exp(precedence)
+                exp_left: CExp = CAssignmentCompound(binary_op, exp_left, exp_right)
             else:
                 binary_op: CBinaryOp = self.parse_binary_op()
                 exp_right: CExp = self.parse_exp(precedence + 1)
