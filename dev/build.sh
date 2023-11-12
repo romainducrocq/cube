@@ -1,15 +1,10 @@
 #!/bin/bash
 
-function clean () {
+function clean () { # TODO test if rm even on failure ?
     for FILE in $(find . -type f -name "*.c"); do rm ${FILE}; done
-    for FILE in $(find . -type f -name "*.pyx"); do rm ${FILE}; done
     if [ -f "./setup.py" ]; then rm ./setup.py; fi
     if [ -d "./build/" ]; then rm -r ./build/; fi
     if [ -d "./ccc/" ]; then rm -r ./ccc/; fi
-}
-
-function clean2 () {
-    for FILE in $(find . -type f -name "*.pyx"); do rm ${FILE}; done
 }
 
 function requirements () {
@@ -27,7 +22,15 @@ function setup () {
     echo 'ext_modules = [' >> setup.py
     for FILE in $(find . -type f -name "*.py" | grep --invert-match -e __init__.py -e setup.py)
     do
-        cp ${FILE} ${FILE}'x'
+        if [ -f ${FILE}x ]; then
+            diff -sq ${FILE} ${FILE}x |\
+                grep -q -e  "differ"
+            if [ ${?} -eq 0 ]; then
+                cp ${FILE} ${FILE}x
+            fi
+        else
+            cp ${FILE} ${FILE}x
+        fi
         PKG=$(echo "ccc$(echo ${FILE} | rev | cut -d '.' -f2 | rev | tr '/' '.')")
         echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'x"]),' >> setup.py
     done
@@ -69,5 +72,4 @@ setup
 compile
 install
 
-clean2
 exit 0
