@@ -1,7 +1,7 @@
 from typing import Dict
 
-from pycc.util.__ast import *
-from pycc.parser.c_ast import *
+from ccc.util.__ast import *
+from ccc.parser.c_ast import *
 
 __all__ = [
     'NameManager'

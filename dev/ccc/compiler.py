@@ -4,14 +4,14 @@ import os
 
 from typing import Tuple, List
 
-from pycc.util.iota_enum import IotaEnum
-from pycc.util.__ast import AST
-from pycc.parser.lexer import lexing, Token
-from pycc.parser.parser import parsing
-from pycc.intermediate.semantic_analyzer import semantic_analysis
-from pycc.intermediate.three_address_generator import three_address_code_representation
-from pycc.assembly.assembly_generator import assembly_generation
-from pycc.assembly.code_emitter import code_emission
+from ccc.util.iota_enum import IotaEnum
+from ccc.util.__ast import AST
+from ccc.parser.lexer import lexing, Token
+from ccc.parser.parser import parsing
+from ccc.intermediate.semantic_analyzer import semantic_analysis
+from ccc.intermediate.three_address_generator import three_address_code_representation
+from ccc.assembly.assembly_generator import assembly_generation
+from ccc.assembly.code_emitter import code_emission
 
 __all__ = [
     'main'

@@ -16,9 +16,9 @@ function ret_gcc () {
     echo "${?}"
 }
 
-function ret_pycc () {
+function ret_ccc () {
     FILE=${1}
-    pycc ${FILE}.c > /dev/null 2>&1 && ${1}
+    ccc ${FILE}.c > /dev/null 2>&1 && ${1}
     echo "${?}"
 }
 
@@ -27,16 +27,16 @@ function test_file () {
     FILE=$(file ${FILE})
 
     RET_GCC=$(ret_gcc ${FILE})
-    RET_PYCC=$(ret_pycc ${FILE})
+    RET_CCC=$(ret_ccc ${FILE})
 
     RES=""
     FILE=$(echo "${FILE}" | rev | cut -d"/" -f1 | rev)'.c'
-    if [[ "${RET_GCC}" == "${RET_PYCC}" ]]; then
+    if [[ "${RET_GCC}" == "${RET_CCC}" ]]; then
         RES="${LIGHT_GREEN}[y] ${FILE}${NC}"
     else
         RES="${LIGHT_RED}[n] ${FILE}${NC}"
     fi
-    echo -e "${RES} -> gcc: ${RET_GCC}, pycc: ${RET_PYCC}"
+    echo -e "${RES} -> gcc: ${RET_GCC}, ccc: ${RET_CCC}"
 }
 
 function test_dir () {
@@ -54,17 +54,17 @@ function test_dir () {
             FILE=$(file ${FILE})
 
             RET_GCC=$(ret_gcc ${FILE})
-            RET_PYCC=$(ret_pycc ${FILE})
+            RET_CCC=$(ret_ccc ${FILE})
 
             RES=""
             FILE=$(echo "${FILE}" | rev | cut -d"/" -f1 | rev)'.c'
-            if [[ "${RET_GCC}" == "${RET_PYCC}" ]]; then
+            if [[ "${RET_GCC}" == "${RET_CCC}" ]]; then
                 RES="${LIGHT_GREEN}[y] ${SUBDIR}${FILE}${NC}"
                 let PASS+=1
             else
                 RES="${LIGHT_RED}[n] ${SUBDIR}${FILE}${NC}"
             fi
-            echo -e "${RES} -> gcc: ${RET_GCC}, pycc: ${RET_PYCC}"
+            echo -e "${RES} -> gcc: ${RET_GCC}, ccc: ${RET_CCC}"
 
             let TOTAL+=1
         done

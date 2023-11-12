@@ -1,7 +1,7 @@
 from typing import Dict
 
-from pycc.assembly.asm_ast import *
-from pycc.util.iota_enum import IotaEnum
+from ccc.assembly.asm_ast import *
+from ccc.util.iota_enum import IotaEnum
 
 __all__ = [
     'REGISTER_KIND',

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from dataclasses import dataclass
 
-from pycc.util.__ast import *
+from ccc.util.__ast import *
 
 __all__ = [
     'CUnaryOp',

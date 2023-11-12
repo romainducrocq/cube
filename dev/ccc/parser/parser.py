@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from pycc.util.__ast import *
-from pycc.parser.c_ast import *
-from pycc.parser.lexer import TOKEN_KIND, Token
-from pycc.parser.precedence import PrecedenceManager
+from ccc.util.__ast import *
+from ccc.parser.c_ast import *
+from ccc.parser.lexer import TOKEN_KIND, Token
+from ccc.parser.precedence import PrecedenceManager
 
 __all__ = [
     'parsing'

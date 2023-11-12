@@ -1,8 +1,8 @@
 from typing import Dict
 
-from pycc.util.__ast import *
-from pycc.parser.c_ast import *
-from pycc.intermediate.name import NameManager
+from ccc.util.__ast import *
+from ccc.parser.c_ast import *
+from ccc.intermediate.name import NameManager
 
 __all__ = [
     'semantic_analysis'

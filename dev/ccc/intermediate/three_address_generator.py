@@ -1,10 +1,10 @@
 from typing import List, Optional
 from copy import deepcopy
 
-from pycc.util.__ast import *
-from pycc.parser.c_ast import *
-from pycc.intermediate.tac_ast import *
-from pycc.intermediate.name import NameManager
+from ccc.util.__ast import *
+from ccc.parser.c_ast import *
+from ccc.intermediate.tac_ast import *
+from ccc.intermediate.name import NameManager
 
 __all__ = [
     'three_address_code_representation'

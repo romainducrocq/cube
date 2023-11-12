@@ -1,11 +1,11 @@
 from typing import List, Union
 from copy import deepcopy
 
-from pycc.util.__ast import *
-from pycc.intermediate.tac_ast import *
-from pycc.assembly.asm_ast import *
-from pycc.assembly.register import REGISTER_KIND, RegisterManager
-from pycc.assembly.stack import StackManager
+from ccc.util.__ast import *
+from ccc.intermediate.tac_ast import *
+from ccc.assembly.asm_ast import *
+from ccc.assembly.register import REGISTER_KIND, RegisterManager
+from ccc.assembly.stack import StackManager
 
 __all__ = [
     'assembly_generation'

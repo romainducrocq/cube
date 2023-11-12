@@ -1,9 +1,9 @@
 from typing import Dict, List
 from copy import deepcopy
 
-from pycc.util.__ast import *
-from pycc.assembly.asm_ast import *
-from pycc.assembly.register import REGISTER_KIND, RegisterManager
+from ccc.util.__ast import *
+from ccc.assembly.asm_ast import *
+from ccc.assembly.register import REGISTER_KIND, RegisterManager
 
 __all__ = [
     'StackManager'

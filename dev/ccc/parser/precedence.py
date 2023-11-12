@@ -1,6 +1,6 @@
 from typing import Dict
 
-from pycc.parser.lexer import TOKEN_KIND
+from ccc.parser.lexer import TOKEN_KIND
 
 __all__ = [
     'PrecedenceManager'

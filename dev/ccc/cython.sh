@@ -5,7 +5,7 @@ function clean () {
     for FILE in $(find . -type f -name "*.pyx"); do rm ${FILE}; done
     if [ -f "./setup.py" ]; then rm ./setup.py; fi
     if [ -d "./build/" ]; then rm -r ./build/; fi
-    if [ -d "./cycc/" ]; then rm -r ./cycc/; fi
+    if [ -d "./ccc/" ]; then rm -r ./ccc/; fi
 }
 
 function requirements () {
@@ -22,9 +22,8 @@ function setup () {
     echo 'ext_modules = [' >> setup.py
     for FILE in $(find . -name "*.py" | grep --invert-match -e __init__.py -e setup.py)
     do
-        sed -e 's/pycc/cycc/g' ${FILE} > ${FILE}'x'
-        PKG=$(echo "cycc$(echo ${FILE}'x' | rev | cut -d '.' -f2 | rev | tr '/' '.')")
-        echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'x"]),' >> setup.py
+        PKG=$(echo "ccc$(echo ${FILE} | rev | cut -d '.' -f2 | rev | tr '/' '.')")
+        echo '    Extension("'"${PKG}"'",  ["'"${FILE}"'"]),' >> setup.py
     done
     echo ']' >> setup.py
     echo '' >> setup.py
@@ -32,7 +31,7 @@ function setup () {
     echo '    ext_module.cython_directives = {"language_level": "3"}' >> setup.py
     echo '' >> setup.py
     echo 'setup(' >> setup.py
-    echo '    name="cycc",' >> setup.py
+    echo '    name="ccc",' >> setup.py
     echo '    version="0.1",' >> setup.py
     echo '    license="MIT",' >> setup.py
     echo '    python_requires="==3.9",' >> setup.py
@@ -51,13 +50,11 @@ function compile () {
 }
 
 function install () {
-    if [ -d "../cycc/" ]; then rm -r ../cycc/; fi
-    cp -r ./cycc/ ../
+    if [ -d "../../ccc/" ]; then rm -r ../../ccc/; fi
+    cp -r ./ccc/ ../../
 
-    sed -e 's/pycc/cycc/g' ./install.sh > ../cycc/install.sh
-    sed -e 's/pycc/cycc/g' ./driver.sh > ../cycc/driver.sh
-    sed -e 's/pycc/cycc/g' ./test.sh > ../cycc/test.sh
-    sed -e 's/pycc/cycc/g' ./test-suite.sh > ../cycc/test-suite.sh
+    cp ./install.sh ../../ccc/
+    cp ./driver.sh ../../ccc/
 }
 
 requirements
