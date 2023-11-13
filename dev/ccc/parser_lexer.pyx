@@ -15,6 +15,7 @@ cdef class Token:
         self.token = token
         self.token_kind = token_kind
 
+
 TOKEN_KIND = IotaEnum((
     "assignment_bitshiftleft",
     "assignment_bitshiftright",
@@ -120,7 +121,6 @@ TOKEN_REGEX = {
 }
 
 
-# TOKEN_PATTERN: re.Pattern = re.compile(
 cdef object TOKEN_PATTERN
 TOKEN_PATTERN = re.compile(
     "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND.get(tk)]})" for tk in TOKEN_KIND.iter())
