@@ -1,11 +1,4 @@
-__all__ = [
-    'IotaEnum'
-]
-
-
 cdef class IotaEnum:
-    cdef int iota_counter
-    cdef dict[unicode, int] iota_enum
 
     def __init__(self, tuple[unicode] names):
         cdef unicode name

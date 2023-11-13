@@ -5,7 +5,6 @@ __pycache__/
 /tests/
 *.c
 *.so
-*.pyx
 /ccc/
 /dev/ccc/ccc/
 /dev/ccc/build/

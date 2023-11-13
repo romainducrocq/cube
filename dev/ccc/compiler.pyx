@@ -2,7 +2,7 @@ import platform
 import sys
 import os
 
-from ccc.util.iota_enum cimport IotaEnum
+from ccc.util_iota_enum cimport IotaEnum
 # from ccc.util.__ast import AST
 # from ccc.parser.lexer import lexing, Token
 # from ccc.parser.parser import parsing
