@@ -12,13 +12,10 @@ cdef class AST:
     """
     AST node
     """
-    cdef public tuple[str] _fields
-
+    pass
 
 cdef class TIdentifier(AST):
     """ identifier str_t """
-    cdef public str str_t
-
     def __cinit__(self):
         self._fields = ('str_t',)
 
@@ -28,8 +25,6 @@ cdef class TIdentifier(AST):
 
 cdef class TInt(AST):
     """ int int_t """
-    cdef public int int_t
-
     def __cinit__(self):
         self._fields = ('int_t',)
 
