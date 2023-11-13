@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Generator
+from typing import Dict, List
 
 from ccc.util.iota_enum import IotaEnum
 
@@ -14,6 +14,15 @@ class LexerError(RuntimeError):
     def __init__(self, message: str) -> None:
         self.message = message
         super(LexerError, self).__init__(message)
+
+
+class Token:
+    token: str
+    token_kind: int
+
+    def __init__(self, token: str, token_kind: int):
+        self.token = token
+        self.token_kind = token_kind
 
 
 TOKEN_KIND: IotaEnum = IotaEnum(
@@ -120,15 +129,6 @@ TOKEN_REGEX: Dict[int, str] = {
 }
 
 
-class Token:
-    token: str
-    token_kind: int
-
-    def __init__(self, token: str, token_kind: int):
-        self.token = token
-        self.token_kind = token_kind
-
-
 TOKEN_PATTERN: re.Pattern = re.compile(
     "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND[tk]]})" for tk in TOKEN_KIND)
 )
@@ -136,23 +136,23 @@ TOKEN_PATTERN: re.Pattern = re.compile(
 
 def lexing(filename: str) -> List[Token]:
 
-    def tokenize() -> Generator[Token, None, None]:
+    tokens: List[Token] = []
 
-        with open(filename, "r", encoding="utf-8") as input_file:
-            for line in input_file:
+    with open(filename, "r", encoding="utf-8") as input_file:
+        for line in input_file:
 
-                for match in re.finditer(TOKEN_PATTERN, line):
-                    if match.lastgroup is None:
-                        raise LexerError(
-                            f"No token found in line:\n    {line}")
+            for match in re.finditer(TOKEN_PATTERN, line):
+                if match.lastgroup is None:
+                    raise LexerError(
+                        f"No token found in line:\n    {line}")
 
-                    if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.error:
-                        raise LexerError(
-                            f"Invalid token \"{match.group()}\" found in line:\n    {line}")
+                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.error:
+                    raise LexerError(
+                        f"Invalid token \"{match.group()}\" found in line:\n    {line}")
 
-                    if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.skip:
-                        continue
+                if TOKEN_KIND[match.lastgroup] == TOKEN_KIND.skip:
+                    continue
 
-                    yield Token(token=match.group(), token_kind=TOKEN_KIND[match.lastgroup])
+                tokens.append(Token(token=match.group(), token_kind=TOKEN_KIND[match.lastgroup]))
 
-    return list(tokenize())
+    return tokens
