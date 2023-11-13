@@ -3,13 +3,6 @@ import re
 from ccc.util_iota_enum cimport IotaEnum
 
 
-__all__ = [
-    'TOKEN_KIND',
-    'Token',
-    'lexing'
-]
-
-
 class LexerError(RuntimeError):
     def __init__(self, message: str) -> None:
         self.message = message
