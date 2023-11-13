@@ -4,16 +4,12 @@ import os
 
 from ccc.util_iota_enum cimport IotaEnum
 # from ccc.util.__ast import AST
-# from ccc.parser.lexer import lexing, Token
+from ccc.parser_lexer cimport lexing, Token
 # from ccc.parser.parser import parsing
 # from ccc.intermediate.semantic_analyzer import semantic_analysis
 # from ccc.intermediate.three_address_generator import three_address_code_representation
 # from ccc.assembly.assembly_generator import assembly_generation
 # from ccc.assembly.code_emitter import code_emission
-
-__all__ = [
-    'main'
-]
 
 
 cdef bint DEBUG = True
@@ -44,17 +40,17 @@ cpdef void debug(str string = "", str end="\n"):
 
 
 cpdef void compile(str filename, int opt_exit, int opt_s):
-    debug(filename)
-    debug(str(opt_exit))
-    debug(str(opt_s))
 
-    # print("-- Start lexing...")
-    # tokens: List[Token] = lexing(filename)
-    # print("-- Exit lexing: OK")
-    # if opt_exit == OPT.lex:
-    #     for e, token in enumerate(tokens):
-    #         debug(str(e) + ': ("' + token.token + '", ' + str(token.token_kind) + ')')
-    #     return
+    cdef int e
+    cdef Token token
+    cdef list[Token] tokens
+    print("-- Start lexing...")
+    tokens = lexing(filename)
+    print("-- Exit lexing: OK")
+    if opt_exit == OPT.get('lex'):
+        for e, token in enumerate(tokens):
+            debug(str(e) + ': ("' + token.token + '", ' + str(token.token_kind) + ')')
+        return
 
     # print("-- Start parsing...")
     # c_ast: AST = parsing(tokens)

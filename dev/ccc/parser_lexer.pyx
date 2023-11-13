@@ -17,14 +17,11 @@ class LexerError(RuntimeError):
 
 
 cdef class Token:
-    cdef str token
-    cdef int token_kind
 
     def __init__(self, token: str, token_kind: int):
         self.token = token
         self.token_kind = token_kind
 
-cdef IotaEnum TOKEN_KIND
 TOKEN_KIND = IotaEnum((
     "assignment_bitshiftleft",
     "assignment_bitshiftright",
@@ -133,7 +130,7 @@ TOKEN_REGEX = {
 # TOKEN_PATTERN: re.Pattern = re.compile(
 cdef object TOKEN_PATTERN
 TOKEN_PATTERN = re.compile(
-    "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND[tk]]})" for tk in TOKEN_KIND)
+    "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND.get(tk)]})" for tk in TOKEN_KIND.iter())
 )
 
 

@@ -56,7 +56,7 @@ function compile () {
     fi
 
     echo "Compile    -> ${FILE}.i"
-    python3.9 -c "from ccc.compiler import main; main()" ${FILE}.i ${ARGV}
+    python3.9 -c "from ccc.__compiler import main; main()" ${FILE}.i ${ARGV}
     if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
 }
 

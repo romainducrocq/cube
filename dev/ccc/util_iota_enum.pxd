@@ -1,5 +1,6 @@
 cdef class IotaEnum:
     cdef int iota_counter
-    cdef dict[unicode, int] iota_enum
+    cdef dict[str, int] iota_enum
 
-    cpdef int get(self, unicode key)
+    cpdef int get(self, str key)
+    cpdef dict[str, int] iter(self)

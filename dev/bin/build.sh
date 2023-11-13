@@ -8,7 +8,7 @@ function requirements () {
 function setup () {
     echo -n '' > __init__.py
     echo -n '' > __init__.pyx
-    # echo -n '' > __init__.pxd
+    echo -n '' > __init__.pxd
 
 #    echo -n '' > setup.py
 #    echo 'from distutils.core import setup' >> setup.py
