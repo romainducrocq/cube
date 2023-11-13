@@ -16,6 +16,16 @@ class ParserError(RuntimeError):
         super(ParserError, self).__init__(message)
 
 
+def expect_next(next_token: Token, *expected_tokens: int) -> None:
+    if next_token.token_kind not in expected_tokens:
+        raise ParserError(
+            f"""Expected token in kinds { tuple([
+                list(TOKEN_KIND.keys())[
+                       list(TOKEN_KIND.values()).index(expected_token)
+                ] for expected_token in expected_tokens])
+            } but found \"{next_token.token}\"""")
+
+
 class Parser:
     c_ast: AST = None
     next_token: Token = None
@@ -38,30 +48,20 @@ class Parser:
         except IndexError:
             raise StopIteration
 
-    @staticmethod
-    def expect_next(next_token: Token, *expected_tokens: int) -> None:
-        if next_token.token_kind not in expected_tokens:
-            raise ParserError(
-                f"""Expected token in kinds { tuple([
-                    list(TOKEN_KIND.keys())[
-                           list(TOKEN_KIND.values()).index(expected_token)
-                    ] for expected_token in expected_tokens])
-                } but found \"{next_token.token}\"""")
-
     def parse_identifier(self) -> TIdentifier:
         """ <identifier> ::= ? An identifier token ? """
-        self.expect_next(self.next(), TOKEN_KIND.identifier)
+        expect_next(self.next(), TOKEN_KIND.identifier)
         return TIdentifier(self.next_token.token)
 
     def parse_int(self) -> TInt:
         """ <int> ::= ? A constant token ? """
-        self.expect_next(self.next(), TOKEN_KIND.constant)
+        expect_next(self.next(), TOKEN_KIND.constant)
         return TInt(int(self.next_token.token))
 
     def parse_binary_op(self) -> CBinaryOp:
         """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
                       | "<" | "<=" | ">" | ">=" """
-        self.expect_next(self.next(), TOKEN_KIND.unop_negation,
+        expect_next(self.next(), TOKEN_KIND.unop_negation,
                          TOKEN_KIND.binop_addition,
                          TOKEN_KIND.binop_multiplication,
                          TOKEN_KIND.binop_division,
@@ -138,7 +138,7 @@ class Parser:
 
     def parse_unary_op(self) -> CUnaryOp:
         """ <unop> ::= "-" | "~" | "!" """
-        self.expect_next(self.next(), TOKEN_KIND.unop_complement,
+        expect_next(self.next(), TOKEN_KIND.unop_complement,
                          TOKEN_KIND.unop_negation,
                          TOKEN_KIND.unop_not)
         if self.next_token.token_kind == TOKEN_KIND.unop_complement:
@@ -150,7 +150,7 @@ class Parser:
 
     def parse_factor(self) -> CExp:
         """ <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" """
-        self.expect_next(self.peek(), TOKEN_KIND.constant,
+        expect_next(self.peek(), TOKEN_KIND.constant,
                          TOKEN_KIND.identifier,
                          TOKEN_KIND.unop_complement,
                          TOKEN_KIND.unop_negation,
@@ -170,7 +170,7 @@ class Parser:
             return CVar(name)
         if self.next().token_kind == TOKEN_KIND.parenthesis_open:
             inner_exp: CExp = self.parse_exp()
-            self.expect_next(self.next(), TOKEN_KIND.parenthesis_close)
+            expect_next(self.next(), TOKEN_KIND.parenthesis_close)
             return inner_exp
 
     def parse_exp(self, min_precedence: int = 0) -> CExp:
@@ -240,23 +240,23 @@ class Parser:
         if self.peek_token.token_kind == TOKEN_KIND.key_return:
             _ = self.next()
             return_exp: CExp = self.parse_exp()
-            self.expect_next(self.next(), TOKEN_KIND.semicolon)
+            expect_next(self.next(), TOKEN_KIND.semicolon)
             return CReturn(return_exp)
         if True:
             return_exp: CExp = self.parse_exp()
-            self.expect_next(self.next(), TOKEN_KIND.semicolon)
+            expect_next(self.next(), TOKEN_KIND.semicolon)
             return CExpression(return_exp)
 
     def parse_declaration(self) -> CDeclaration:
         """ <declaration> ::= "int" <identifier> [ "=" <exp> ] ";" """
-        self.expect_next(self.next(), TOKEN_KIND.key_int)
+        expect_next(self.next(), TOKEN_KIND.key_int)
         name: TIdentifier = self.parse_identifier()
         if self.peek().token_kind == TOKEN_KIND.assignment_simple:
             _ = self.next()
             init: Optional[CExp] = self.parse_exp()
         else:
             init: Optional[CExp] = None
-        self.expect_next(self.next(), TOKEN_KIND.semicolon)
+        expect_next(self.next(), TOKEN_KIND.semicolon)
         return CDecl(name, init)
 
     def parse_block_item(self) -> CBlockItem:
@@ -270,17 +270,17 @@ class Parser:
 
     def parse_function_def(self) -> CFunctionDef:
         """ <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}" """
-        self.expect_next(self.next(), TOKEN_KIND.key_int)
+        expect_next(self.next(), TOKEN_KIND.key_int)
         name: TIdentifier = self.parse_identifier()
-        self.expect_next(self.next(), TOKEN_KIND.parenthesis_open)
-        self.expect_next(self.next(), TOKEN_KIND.key_void)
-        self.expect_next(self.next(), TOKEN_KIND.parenthesis_close)
-        self.expect_next(self.next(), TOKEN_KIND.brace_open)
+        expect_next(self.next(), TOKEN_KIND.parenthesis_open)
+        expect_next(self.next(), TOKEN_KIND.key_void)
+        expect_next(self.next(), TOKEN_KIND.parenthesis_close)
+        expect_next(self.next(), TOKEN_KIND.brace_open)
         body: List[CBlockItem] = []
         while self.peek().token_kind != TOKEN_KIND.brace_close:
             block_item: CBlockItem = self.parse_block_item()
             body.append(block_item)
-        self.expect_next(self.next(), TOKEN_KIND.brace_close)
+        expect_next(self.next(), TOKEN_KIND.brace_close)
         return CFunction(name, body)
 
     def parse_program(self) -> None:

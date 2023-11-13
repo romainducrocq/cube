@@ -17,33 +17,33 @@ class ThreeAddressCodeGeneratorError(RuntimeError):
         super(ThreeAddressCodeGeneratorError, self).__init__(message)
 
 
+def expect_next(next_node, *expected_nodes: type) -> None:
+    if not isinstance(next_node, expected_nodes):
+        raise ThreeAddressCodeGeneratorError(
+            f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
+
+
 class ThreeAddressCodeGenerator:
     tac_ast: AST = None
 
     def __init__(self):
         pass
 
-    @staticmethod
-    def expect_next(next_node, *expected_nodes: type) -> None:
-        if not isinstance(next_node, expected_nodes):
-            raise ThreeAddressCodeGeneratorError(
-                f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
-
     def represent_identifier(self, node: AST) -> TIdentifier:
         """ <identifier> = Built-in identifier type """
-        self.expect_next(node, TIdentifier)
+        expect_next(node, TIdentifier)
         return TIdentifier(deepcopy(node.str_t))
 
     def represent_int(self, node: AST) -> TInt:
         """ <int> = Built-in int type """
-        self.expect_next(node, TInt)
+        expect_next(node, TInt)
         return TInt(deepcopy(node.int_t))
 
     def represent_binary_op(self, node: AST) -> TacBinaryOp:
         """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
                             | BitShiftLeft | BitShiftRight | Equal | NotEqual | LessThan | LessOrEqual
                             | GreaterThan | GreaterOrEqual """
-        self.expect_next(node, CBinaryOp)
+        expect_next(node, CBinaryOp)
         if isinstance(node, CAdd):
             return TacAdd()
         if isinstance(node, CSubtract):
@@ -82,7 +82,7 @@ class ThreeAddressCodeGenerator:
 
     def represent_unary_op(self, node: AST) -> TacUnaryOp:
         """ unary_operator = Complement | Negate | Not """
-        self.expect_next(node, CUnaryOp)
+        expect_next(node, CUnaryOp)
         if isinstance(node, CComplement):
             return TacComplement()
         if isinstance(node, CNegate):
@@ -95,7 +95,7 @@ class ThreeAddressCodeGenerator:
 
     def represent_value(self, node: AST, outer: bool = True) -> TacValue:
         """ val = Constant(int) | Var(identifier) """
-        self.expect_next(node, CExp)
+        expect_next(node, CExp)
         if outer:
             if isinstance(node, CConstant):
                 value: TInt = self.represent_int(node.value)
@@ -115,12 +115,12 @@ class ThreeAddressCodeGenerator:
                     | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
                     | Jump(identifier target) | JumpIfZero(val condition, identifier target)
                     | JumpIfNotZero(val condition, identifier target) | Label(identifier name) """
-        self.expect_next(list_node, list)
+        expect_next(list_node, list)
 
         instructions: List[TacInstruction] = []
 
         def represent_instructions(node: AST) -> Optional[TacValue]:
-            self.expect_next(node, CDeclaration, CStatement,
+            expect_next(node, CDeclaration, CStatement,
                              CExp)
             if isinstance(node, CDecl):
                 if node.init:
@@ -205,7 +205,7 @@ class ThreeAddressCodeGenerator:
                 "An error occurred in three address code representation, not all nodes were visited")
 
         for item_node in list_node:
-            self.expect_next(item_node, CBlockItem)
+            expect_next(item_node, CBlockItem)
             if isinstance(item_node, CS):
                 represent_instructions(item_node.statement)
             elif isinstance(item_node, CD):
@@ -220,7 +220,7 @@ class ThreeAddressCodeGenerator:
 
     def represent_function_def(self, node: AST) -> TacFunctionDef:
         """ function_definition = Function(identifier, instruction* body) """
-        self.expect_next(node, CFunctionDef)
+        expect_next(node, CFunctionDef)
         if isinstance(node, CFunction):
             name: TIdentifier = self.represent_identifier(node.name)
             instructions: List[TacInstruction] = self.represent_list_instructions(node.body)
@@ -231,7 +231,7 @@ class ThreeAddressCodeGenerator:
 
     def represent_program(self, node: AST) -> None:
         """ AST = Program(function_definition) """
-        self.expect_next(node, AST)
+        expect_next(node, AST)
         if isinstance(node, CProgram):
             function_def: TacFunctionDef = self.represent_function_def(node.function_def)
             self.tac_ast = TacProgram(function_def)

@@ -15,20 +15,20 @@ class SemanticAnalyzerError(RuntimeError):
         super(SemanticAnalyzerError, self).__init__(message)
 
 
+def expect_next(next_node, *expected_nodes: type) -> None:
+    if not isinstance(next_node, expected_nodes):
+        raise SemanticAnalyzerError(
+            f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
+
+
 class SemanticAnalyzer:
     variable_map: Dict[str, str] = {}
 
     def __init__(self):
         pass
 
-    @staticmethod
-    def expect_next(next_node, *expected_nodes: type) -> None:
-        if not isinstance(next_node, expected_nodes):
-            raise SemanticAnalyzerError(
-                f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
-
     def resolve_statement(self, node: AST) -> None:
-        self.expect_next(node, CStatement)
+        expect_next(node, CStatement)
         if isinstance(node, (CReturn, CExpression)):
             self.resolve_expression(node.exp)
         elif isinstance(node, CNull):
@@ -39,7 +39,7 @@ class SemanticAnalyzer:
                 "An error occurred in semantic analysis, not all nodes were visited")
 
     def resolve_declaration(self, node: AST) -> None:
-        self.expect_next(node, CDeclaration)
+        expect_next(node, CDeclaration)
         if isinstance(node, CDecl):
             if node.name.str_t in self.variable_map:
 
@@ -57,7 +57,7 @@ class SemanticAnalyzer:
                 "An error occurred in semantic analysis, not all nodes were visited")
 
     def resolve_expression(self, node: AST) -> None:
-        self.expect_next(node, CExp)
+        expect_next(node, CExp)
         if isinstance(node, CConstant):
             pass
         elif isinstance(node, CVar):

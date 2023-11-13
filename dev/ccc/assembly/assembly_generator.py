@@ -18,32 +18,32 @@ class AssemblyGeneratorError(RuntimeError):
         super(AssemblyGeneratorError, self).__init__(message)
 
 
+def expect_next(next_node, *expected_nodes: type) -> None:
+    if not isinstance(next_node, expected_nodes):
+        raise AssemblyGeneratorError(
+            f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
+
+
 class AssemblyGenerator:
     asm_ast: AST = None
     stack_mngr: StackManager = StackManager()
 
     def __init__(self):
         pass
-
-    @staticmethod
-    def expect_next(next_node, *expected_nodes: type) -> None:
-        if not isinstance(next_node, expected_nodes):
-            raise AssemblyGeneratorError(
-                f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
-
+    
     def generate_identifier(self, node: AST) -> TIdentifier:
         """ <identifier> = Built-in identifier type """
-        self.expect_next(node, TIdentifier)
+        expect_next(node, TIdentifier)
         return TIdentifier(deepcopy(node.str_t))
 
     def generate_int(self, node: AST) -> TInt:
         """ <int> = Built-in int type """
-        self.expect_next(node, TInt)
+        expect_next(node, TInt)
         return TInt(deepcopy(node.int_t))
 
     def generate_operand(self, node: Union[AST, int]) -> AsmOperand:
         """ operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int) """
-        self.expect_next(node, TacValue,
+        expect_next(node, TacValue,
                          int)
         if isinstance(node, TacConstant):
             value: TInt = self.generate_int(node.value)
@@ -59,7 +59,7 @@ class AssemblyGenerator:
             "An error occurred in assembly generation, not all nodes were visited")
 
     def generate_condition_code(self, node: AST) -> AsmCondCode:
-        self.expect_next(node, TacEqual,
+        expect_next(node, TacEqual,
                          TacNotEqual,
                          TacLessThan,
                          TacLessOrEqual,
@@ -80,7 +80,7 @@ class AssemblyGenerator:
 
     def generate_binary_op(self, node: AST) -> AsmBinaryOp:
         """ binary_operator = Add | Sub | Mult | BitAnd | BitOr | BitXor | BitShiftLeft | BitShiftRight"""
-        self.expect_next(node, TacAdd,
+        expect_next(node, TacAdd,
                          TacSubtract,
                          TacMultiply,
                          TacBitAnd,
@@ -110,7 +110,7 @@ class AssemblyGenerator:
 
     def generate_unary_op(self, node: AST) -> AsmUnaryOp:
         """ unary_operator = Not | Neg """
-        self.expect_next(node, TacUnaryOp)
+        expect_next(node, TacUnaryOp)
         if isinstance(node, TacComplement):
             return AsmNot()
         if isinstance(node, TacNegate):
@@ -123,12 +123,12 @@ class AssemblyGenerator:
         """ instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | Cmp(operand, operand)
                         | Idiv(operand) | Cdq | Jmp(identifier) | JmpCC(cond_code, identifier)
                         | SetCC(cond_code, operand) | Label(identifier) | AllocateStack(int) | Ret """
-        self.expect_next(list_node, list)
+        expect_next(list_node, list)
 
         instructions: List[AsmInstruction] = []
 
         def generate_instructions(node: AST) -> None:
-            self.expect_next(node, TacInstruction)
+            expect_next(node, TacInstruction)
             if isinstance(node, TacReturn):
                 src: AsmOperand = self.generate_operand(node.val)
                 dst: AsmOperand = self.generate_operand(REGISTER_KIND.AX)
@@ -213,7 +213,7 @@ class AssemblyGenerator:
 
     def generate_function_def(self, node: AST) -> AsmFunctionDef:
         """ function_definition = Function(identifier name, instruction* instructions) """
-        self.expect_next(node, TacFunctionDef)
+        expect_next(node, TacFunctionDef)
         if isinstance(node, TacFunction):
             name: TIdentifier = self.generate_identifier(node.name)
             instructions: List[AsmInstruction] = self.generate_list_instructions(node.body)
@@ -224,7 +224,7 @@ class AssemblyGenerator:
 
     def generate_program(self, node: AST) -> None:
         """ program = Program(function_definition) """
-        self.expect_next(node, AST)
+        expect_next(node, AST)
         if isinstance(node, TacProgram):
             function_def: AsmFunctionDef = self.generate_function_def(node.function_def)
             self.asm_ast = AsmProgram(function_def)

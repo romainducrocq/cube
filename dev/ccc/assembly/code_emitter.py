@@ -14,6 +14,12 @@ class CodeEmitterError(RuntimeError):
         super(CodeEmitterError, self).__init__(message)
 
 
+def expect_next(next_node, *expected_nodes: type) -> None:
+    if not isinstance(next_node, expected_nodes):
+        raise CodeEmitterError(
+            f"Expected node of types ({expected_nodes}) but found \"{type(next_node)}\"")
+
+
 class CodeEmitter:
     asm_code: List[str] = []
 
@@ -23,18 +29,12 @@ class CodeEmitter:
     def emit(self, line: str, t=0) -> None:
         self.asm_code.append("    " * t + line + "\n")
 
-    @staticmethod
-    def expect_next(next_node, *expected_nodes: type) -> None:
-        if not isinstance(next_node, expected_nodes):
-            raise CodeEmitterError(
-                f"Expected node of types ({expected_nodes}) but found \"{type(next_node)}\"")
-
     def emit_identifier(self, node: AST) -> str:
         """
         identifier ->
             $ identifier
         """
-        self.expect_next(node, TIdentifier)
+        expect_next(node, TIdentifier)
         return node.str_t
 
     def emit_int(self, node: AST) -> str:
@@ -42,7 +42,7 @@ class CodeEmitter:
         int ->
             $ int
         """
-        self.expect_next(node, TInt)
+        expect_next(node, TInt)
         return str(node.int_t)
 
     def emit_register_1byte(self, node: AST) -> str:
@@ -58,7 +58,7 @@ class CodeEmitter:
         Reg(R11) ->
             $ %r11b
         """
-        self.expect_next(node, AsmReg)
+        expect_next(node, AsmReg)
         if isinstance(node, AsmAx):
             return "al"
         if isinstance(node, AsmCx):
@@ -86,7 +86,7 @@ class CodeEmitter:
         Reg(R11) ->
             $ %r11d
         """
-        self.expect_next(node, AsmReg)
+        expect_next(node, AsmReg)
         if isinstance(node, AsmAx):
             return "eax"
         if isinstance(node, AsmCx):
@@ -116,7 +116,7 @@ class CodeEmitter:
         GE ->
             $ ge
         """
-        self.expect_next(node, AsmCondCode)
+        expect_next(node, AsmCondCode)
         if isinstance(node, AsmE):
             return "e"
         if isinstance(node, AsmNE):
@@ -142,7 +142,7 @@ class CodeEmitter:
         Stack(int) ->
             $ <int>(%rbp)
         """
-        self.expect_next(node, AsmOperand)
+        expect_next(node, AsmOperand)
         if isinstance(node, AsmImm):
             value: str = self.emit_int(node.value)
             return "$" + value
@@ -183,7 +183,7 @@ class CodeEmitter:
         BitShiftRight ->
             $ shrl
         """
-        self.expect_next(node, AsmBinaryOp)
+        expect_next(node, AsmBinaryOp)
         if isinstance(node, AsmAdd):
             return "addl"
         if isinstance(node, AsmSub):
@@ -211,7 +211,7 @@ class CodeEmitter:
         Not ->
             $ notl
         """
-        self.expect_next(node, AsmUnaryOp)
+        expect_next(node, AsmUnaryOp)
         if isinstance(node, AsmNeg):
             return "negl"
         if isinstance(node, AsmNot):
@@ -249,7 +249,7 @@ class CodeEmitter:
         Label(label) ->
             $ .L<label>:
         """
-        self.expect_next(node, AsmInstruction)
+        expect_next(node, AsmInstruction)
         if isinstance(node, AsmMov):
             src: str = self.emit_operand(node.src, byte=4)
             dst: str = self.emit_operand(node.dst, byte=4)
@@ -307,7 +307,7 @@ class CodeEmitter:
             $     movq %rsp, %rbp
             $     <instructions>
         """
-        self.expect_next(node, AsmFunctionDef)
+        expect_next(node, AsmFunctionDef)
         if isinstance(node, AsmFunction):
             name: str = self.emit_identifier(node.name)
             self.emit(f".globl {name}", t=1)
@@ -327,7 +327,7 @@ class CodeEmitter:
             $ <function_definition>
             $     .section .note.GNU-stack,"",@progbits
         """
-        self.expect_next(node, AST)
+        expect_next(node, AST)
         if isinstance(node, AsmProgram):
             self.emit_function_def(node.function_def)
             self.emit(".section .note.GNU-stack,\"\",@progbits", t=1)
