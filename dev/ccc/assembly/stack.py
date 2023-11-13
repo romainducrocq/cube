@@ -30,14 +30,14 @@ class StackManager:
         if self.counter == -1:
             self.counter = 0
 
-        for child_node, attr, e in AST.iter_child_nodes(node):
+        for child_node, attr, e in ast_iter_child_nodes(node):
             if isinstance(child_node, AsmPseudo):
                 if child_node.name.str_t not in self.pseudo_map:
                     self.counter += self.offset
                     self.pseudo_map[child_node.name.str_t] = self.counter
 
                 value: TInt = TInt(self.pseudo_map[child_node.name.str_t])
-                AST.set_child_node(node, attr, e, AsmStack(value))
+                ast_set_child_node(node, attr, e, AsmStack(value))
 
             else:
                 self.replace_pseudo_registers(child_node)
@@ -53,7 +53,7 @@ class StackManager:
 
     def correct_instructions(self, node: AST) -> None:
 
-        for child_node, _, _ in AST.iter_child_nodes(node):
+        for child_node, _, _ in ast_iter_child_nodes(node):
             if isinstance(child_node, AsmFunction):
                 self.prepend_alloc_stack(child_node.instructions)
 

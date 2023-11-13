@@ -90,7 +90,7 @@ class SemanticAnalyzer:
 
     def resolve_variable(self, node: AST) -> None:
 
-        for child_node, _, _ in AST.iter_child_nodes(node):
+        for child_node, _, _ in ast_iter_child_nodes(node):
             if isinstance(child_node, CFunction):
 
                 for e, block_item in enumerate(child_node.body):
