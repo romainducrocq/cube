@@ -10,4 +10,6 @@ __pycache__/
 /dev/ccc/ccc/
 /dev/ccc/build/
 /dev/ccc/__init__.py
+/dev/ccc/__init__.pyx
+/dev/ccc/__init__.pxd
 /dev/ccc/setup.py
