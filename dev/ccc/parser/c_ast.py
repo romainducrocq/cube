@@ -1,5 +1,4 @@
 from typing import List, Optional
-from dataclasses import dataclass
 
 from ccc.util.__ast import *
 
@@ -55,22 +54,22 @@ class CUnaryOp(AST):
                    | Negate
                    | Not
     """
-    pass
+    _fields = ()
 
 
 class CComplement(CUnaryOp):
     """ Complement """
-    pass
+    _fields = ()
 
 
 class CNegate(CUnaryOp):
     """ Negate """
-    pass
+    _fields = ()
 
 
 class CNot(CUnaryOp):
     """ Not """
-    pass
+    _fields = ()
 
 
 class CBinaryOp(AST):
@@ -94,97 +93,97 @@ class CBinaryOp(AST):
                     | GreaterThan
                     | GreaterOrEqual
     """
-    pass
+    _fields = ()
 
 
 class CAdd(CBinaryOp):
     """ Add """
-    pass
+    _fields = ()
 
 
 class CSubtract(CBinaryOp):
     """ Subtract """
-    pass
+    _fields = ()
 
 
 class CMultiply(CBinaryOp):
     """ Multiply """
-    pass
+    _fields = ()
 
 
 class CDivide(CBinaryOp):
     """ Divide """
-    pass
+    _fields = ()
 
 
 class CRemainder(CBinaryOp):
     """ Remainder """
-    pass
+    _fields = ()
 
 
 class CBitAnd(CBinaryOp):
     """ BitAnd """
-    pass
+    _fields = ()
 
 
 class CBitOr(CBinaryOp):
     """ BitOr """
-    pass
+    _fields = ()
 
 
 class CBitXor(CBinaryOp):
     """ BitXor """
-    pass
+    _fields = ()
 
 
 class CBitShiftLeft(CBinaryOp):
     """ BitShiftLeft """
-    pass
+    _fields = ()
 
 
 class CBitShiftRight(CBinaryOp):
     """ BitShiftRight """
-    pass
+    _fields = ()
 
 
 class CAnd(CBinaryOp):
     """ And """
-    pass
+    _fields = ()
 
 
 class COr(CBinaryOp):
     """ Or """
-    pass
+    _fields = ()
 
 
 class CEqual(CBinaryOp):
     """ Equal """
-    pass
+    _fields = ()
 
 
 class CNotEqual(CBinaryOp):
     """ NotEqual """
-    pass
+    _fields = ()
 
 
 class CLessThan(CBinaryOp):
     """ LessThan """
-    pass
+    _fields = ()
 
 
 class CLessOrEqual(CBinaryOp):
     """ LessOrEqual """
-    pass
+    _fields = ()
 
 
 class CGreaterThan(CBinaryOp):
     """ GreaterThan """
-    pass
+    _fields = ()
 
 
 class CGreaterOrEqual(CBinaryOp):
     """ GreaterOrEqual """
-    pass
+    _fields = ()
 
 
 class CExp(AST):
@@ -196,49 +195,73 @@ class CExp(AST):
         | Assignment(exp, exp)
         | AssignmentCompound(binary_operator, exp, exp)
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class CConstant(CExp):
     """ Constant(int value) """
     value: TInt = None
+    _fields = ('value',)
+
+    def __init__(self, value: TInt):
+        self.value = value
 
 
-@dataclass
 class CVar(CExp):
     """ Var(identifier name) """
     name: TIdentifier = None
+    _fields = ('name',)
+
+    def __init__(self, name: TIdentifier):
+        self.name = name
 
 
-@dataclass
 class CUnary(CExp):
     """ Unary(unary_operator, exp) """
     unary_op: CUnaryOp = None
     exp: CExp = None
+    _fields = ('unary_op', 'exp')
+
+    def __init__(self, unary_op: CUnaryOp, exp: CExp):
+        self.unary_op = unary_op
+        self.exp = exp
 
 
-@dataclass
 class CBinary(CExp):
     """ Binary(binary_operator, exp, exp) """
     binary_op: CBinaryOp = None
     exp_left: CExp = None
     exp_right: CExp = None
+    _fields = ('binary_op', 'exp_left', 'exp_right')
+
+    def __init__(self, binary_op: CBinaryOp, exp_left: CExp, exp_right: CExp):
+        self.binary_op = binary_op
+        self.exp_left = exp_left
+        self.exp_right = exp_right
 
 
-@dataclass
 class CAssignment(CExp):
     """ Assignment(exp, exp) """
     exp_left: CExp = None
     exp_right: CExp = None
+    _fields = ('exp_left', 'exp_right')
+
+    def __init__(self, exp_left: CExp, exp_right: CExp):
+        self.exp_left = exp_left
+        self.exp_right = exp_right
 
 
-@dataclass
 class CAssignmentCompound(CExp):
     """ AssignmentCompound(binary_operator, exp, exp) """
     binary_op: CBinaryOp = None
     exp_left: CExp = None
     exp_right: CExp = None
+    _fields = ('binary_op', 'exp_left', 'exp_right')
+
+    def __init__(self, binary_op: CBinaryOp, exp_left: CExp, exp_right: CExp):
+        self.binary_op = binary_op
+        self.exp_left = exp_left
+        self.exp_right = exp_right
 
 
 class CStatement(AST):
@@ -247,38 +270,48 @@ class CStatement(AST):
               | Expression(exp)
               | Null
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class CReturn(CStatement):
     """ Return(exp) """
     exp: CExp = None
+    _fields = ('exp',)
+
+    def __init__(self, exp: CExp):
+        self.exp = exp
 
 
-@dataclass
 class CExpression(CStatement):
     """ Expression(exp) """
     exp: CExp = None
+    _fields = ('exp',)
+
+    def __init__(self, exp: CExp):
+        self.exp = exp
 
 
 class CNull(CStatement):
     """ Null """
-    pass
+    _fields = ()
 
 
 class CDeclaration(AST):
     """
     declaration = Declaration(identifier, exp?)
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class CDecl(CDeclaration):
     """ Declaration(identifier name, exp? init) """
     name: TIdentifier = None
     init: Optional[CExp] = None
+    _fields = ('name', 'init')
+
+    def __init__(self, name: TIdentifier, init: Optional[CExp]):
+        self.name = name
+        self.init = init
 
 
 class CBlockItem(AST):
@@ -286,36 +319,49 @@ class CBlockItem(AST):
     block_item = S(statement)
                | D(declaration)
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class CS(CBlockItem):
     """ S(statement) """
     statement: CStatement = None
+    _fields = ('statement',)
+
+    def __init__(self, statement: CStatement):
+        self.statement = statement
 
 
-@dataclass
 class CD(CBlockItem):
     """ D(declaration) """
     declaration: CDeclaration = None
+    _fields = ('declaration',)
+
+    def __init__(self, declaration: CDeclaration):
+        self.declaration = declaration
 
 
 class CFunctionDef(AST):
     """
     function_definition = Function(identifier, block_item*)
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class CFunction(CFunctionDef):
     """ Function(identifier name, block_item* body) """
     name: TIdentifier = None
     body: List[CBlockItem] = None
+    _fields = ('name', 'body')
+
+    def __init__(self, name: TIdentifier, body: List[CBlockItem]):
+        self.name = name
+        self.body = body
 
 
-@dataclass
 class CProgram(AST):
     """ AST = Program(function_definition) """
     function_def: CFunctionDef = None
+    _fields = ('function_def',)
+
+    def __init__(self, function_def: CFunctionDef):
+        self.function_def = function_def

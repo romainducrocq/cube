@@ -1,5 +1,4 @@
 from typing import Any, Tuple, Generator
-from dataclasses import dataclass
 
 __all__ = [
     'AST',
@@ -12,6 +11,7 @@ class AST:
     """
     AST node
     """
+    _fields = ()
 
     @staticmethod
     def istype(node: Any, *expected_types: type):
@@ -77,13 +77,20 @@ class AST:
         return string[:-1]
 
 
-@dataclass
 class TIdentifier(AST):
     """ identifier str_t """
     str_t: str = None
+    _fields = ('str_t',)
+
+    def __init__(self, str_t: str):
+        self.str_t = str_t
 
 
-@dataclass
 class TInt(AST):
     """ int int_t """
     int_t: int = None
+
+    _fields = ('int_t',)
+
+    def __init__(self, int_t: int):
+        self.int_t = int_t
