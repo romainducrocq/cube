@@ -15,100 +15,102 @@ class SemanticAnalyzerError(RuntimeError):
         super(SemanticAnalyzerError, self).__init__(message)
 
 
+variable_map: Dict[str, str] = {}
+
+
 def expect_next(next_node, *expected_nodes: type) -> None:
     if not isinstance(next_node, expected_nodes):
         raise SemanticAnalyzerError(
             f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
 
 
-class SemanticAnalyzer:
-    variable_map: Dict[str, str] = {}
-
-    def __init__(self):
+def resolve_statement(node: AST) -> None:
+    expect_next(node, CStatement)
+    if isinstance(node, (CReturn, CExpression)):
+        resolve_expression(node.exp)
+    elif isinstance(node, CNull):
         pass
+    else:
 
-    def resolve_statement(self, node: AST) -> None:
-        expect_next(node, CStatement)
-        if isinstance(node, (CReturn, CExpression)):
-            self.resolve_expression(node.exp)
-        elif isinstance(node, CNull):
-            pass
-        else:
+        raise SemanticAnalyzerError(
+            "An error occurred in semantic analysis, not all nodes were visited")
+
+
+def resolve_declaration(node: AST) -> None:
+    global variable_map
+
+    expect_next(node, CDeclaration)
+    if isinstance(node, CDecl):
+        if node.name.str_t in variable_map:
 
             raise SemanticAnalyzerError(
-                "An error occurred in semantic analysis, not all nodes were visited")
+                f"Variable {node.name.str_t} was already declared in this scope")
 
-    def resolve_declaration(self, node: AST) -> None:
-        expect_next(node, CDeclaration)
-        if isinstance(node, CDecl):
-            if node.name.str_t in self.variable_map:
+        name: TIdentifier = resolve_variable_identifier(node.name)
+        variable_map[node.name.str_t] = name.str_t
+        node.name = name
+        if node.init:
+            resolve_expression(node.init)
+    else:
 
-                raise SemanticAnalyzerError(
-                    f"Variable {node.name.str_t} was already declared in this scope")
+        raise SemanticAnalyzerError(
+            "An error occurred in semantic analysis, not all nodes were visited")
 
-            name: TIdentifier = resolve_variable_identifier(node.name)
-            self.variable_map[node.name.str_t] = name.str_t
+
+def resolve_expression(node: AST) -> None:
+    expect_next(node, CExp)
+    if isinstance(node, CConstant):
+        pass
+    elif isinstance(node, CVar):
+        if node.name.str_t in variable_map:
+            name: TIdentifier = TIdentifier(variable_map[node.name.str_t])
             node.name = name
-            if node.init:
-                self.resolve_expression(node.init)
         else:
 
             raise SemanticAnalyzerError(
-                "An error occurred in semantic analysis, not all nodes were visited")
+                f"Variable {node.name.str_t} was not declared in this scope")
 
-    def resolve_expression(self, node: AST) -> None:
-        expect_next(node, CExp)
-        if isinstance(node, CConstant):
-            pass
-        elif isinstance(node, CVar):
-            if node.name.str_t in self.variable_map:
-                name: TIdentifier = TIdentifier(self.variable_map[node.name.str_t])
-                node.name = name
-            else:
-
-                raise SemanticAnalyzerError(
-                    f"Variable {node.name.str_t} was not declared in this scope")
-
-        elif isinstance(node, CUnary):
-            self.resolve_expression(node.exp)
-        elif isinstance(node, CBinary):
-            self.resolve_expression(node.exp_left)
-            self.resolve_expression(node.exp_right)
-        elif isinstance(node, (CAssignment, CAssignmentCompound)):
-            if not isinstance(node.exp_left, CVar):
-
-                raise SemanticAnalyzerError(
-                    f"Left expression {type(node.exp_left)} is an invalid lvalue")
-
-            self.resolve_expression(node.exp_left)
-            self.resolve_expression(node.exp_right)
-
-        else:
+    elif isinstance(node, CUnary):
+        resolve_expression(node.exp)
+    elif isinstance(node, CBinary):
+        resolve_expression(node.exp_left)
+        resolve_expression(node.exp_right)
+    elif isinstance(node, (CAssignment, CAssignmentCompound)):
+        if not isinstance(node.exp_left, CVar):
 
             raise SemanticAnalyzerError(
-                "An error occurred in semantic analysis, not all nodes were visited")
+                f"Left expression {type(node.exp_left)} is an invalid lvalue")
 
-    def resolve_variable(self, node: AST) -> None:
+        resolve_expression(node.exp_left)
+        resolve_expression(node.exp_right)
 
-        for child_node, _, _ in ast_iter_child_nodes(node):
-            if isinstance(child_node, CFunction):
+    else:
 
-                for e, block_item in enumerate(child_node.body):
-                    if isinstance(block_item, CS):
-                        self.resolve_statement(block_item.statement)
-                    elif isinstance(block_item, CD):
-                        self.resolve_declaration(block_item.declaration)
-                    else:
+        raise SemanticAnalyzerError(
+            "An error occurred in semantic analysis, not all nodes were visited")
 
-                        raise SemanticAnalyzerError(
-                            "An error occurred in semantic analysis, not all nodes were visited")
 
-            else:
-                self.resolve_variable(child_node)
+def resolve_variable(node: AST) -> None:
+
+    for child_node, _, _ in ast_iter_child_nodes(node):
+        if isinstance(child_node, CFunction):
+
+            for e, block_item in enumerate(child_node.body):
+                if isinstance(block_item, CS):
+                    resolve_statement(block_item.statement)
+                elif isinstance(block_item, CD):
+                    resolve_declaration(block_item.declaration)
+                else:
+
+                    raise SemanticAnalyzerError(
+                        "An error occurred in semantic analysis, not all nodes were visited")
+
+        else:
+            resolve_variable(child_node)
 
 
 def semantic_analysis(c_ast: AST) -> None:
+    global variable_map
 
-    semantic_analyzer = SemanticAnalyzer()
-
-    semantic_analyzer.resolve_variable(c_ast)
+    variable_map = {}
+    resolve_variable(c_ast)

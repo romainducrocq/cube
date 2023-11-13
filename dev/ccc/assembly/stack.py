@@ -119,8 +119,8 @@ def generate_stack(node: AST) -> None:
     global counter
     global pseudo_map
 
-    counter: int = -1
-    pseudo_map: Dict[str, int] = {}
+    counter = -1
+    pseudo_map = {}
 
     replace_pseudo_registers(node)
 
