@@ -3,7 +3,7 @@ from typing import Dict
 from ccc.parser.lexer import TOKEN_KIND
 
 __all__ = [
-    'PrecedenceManager'
+    'parse_token_precedence'
 ]
 
 
@@ -46,19 +46,13 @@ TOKEN_PRECEDENCE: Dict[int, int] = {
 }
 
 
-class PrecedenceManager:
+def parse_token_precedence(token_kind: int) -> int:
+    try:
+        precedence = TOKEN_PRECEDENCE[token_kind]
+    except KeyError:
 
-    def __init__(self):
-        pass
+        raise PrecedenceManagerError(
+            f"""An error occurred in precedence management, unmanaged token {
+                list(TOKEN_KIND.keys())[list(TOKEN_KIND.values()).index(token_kind)]}""")
 
-    @staticmethod
-    def parse_token_precedence(token_kind: int) -> int:
-        try:
-            precedence = TOKEN_PRECEDENCE[token_kind]
-        except KeyError:
-
-            raise PrecedenceManagerError(
-                f"""An error occurred in precedence management, unmanaged token {
-                    list(TOKEN_KIND.keys())[list(TOKEN_KIND.values()).index(token_kind)]}""")
-
-        return precedence
+    return precedence

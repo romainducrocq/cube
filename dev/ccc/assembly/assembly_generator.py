@@ -4,7 +4,7 @@ from copy import deepcopy
 from ccc.util.__ast import *
 from ccc.intermediate.tac_ast import *
 from ccc.assembly.asm_ast import *
-from ccc.assembly.register import REGISTER_KIND, RegisterManager
+from ccc.assembly.register import REGISTER_KIND, generate_register
 from ccc.assembly.stack import StackManager
 
 __all__ = [
@@ -52,7 +52,7 @@ class AssemblyGenerator:
             identifier: TIdentifier = self.generate_identifier(node.name)
             return AsmPseudo(identifier)
         if isinstance(node, int):
-            register: AsmReg = RegisterManager.generate_register(node)
+            register: AsmReg = generate_register(node)
             return AsmRegister(register)
 
         raise AssemblyGeneratorError(

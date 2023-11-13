@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from ccc.util.__ast import *
 from ccc.assembly.asm_ast import *
-from ccc.assembly.register import REGISTER_KIND, RegisterManager
+from ccc.assembly.register import REGISTER_KIND, generate_register
 
 __all__ = [
     'StackManager'
@@ -67,7 +67,7 @@ class StackManager:
                     if isinstance(instruction, (AsmMov, AsmCmp)) and \
                             isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
                         src_src: AsmOperand = deepcopy(instruction.src)
-                        instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
+                        instruction.src = AsmRegister(generate_register(REGISTER_KIND.R10))
                         child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
                     elif isinstance(instruction, AsmBinary):
                         # add | sub | and | or | xor | shl | shr (addr, addr)
@@ -79,9 +79,9 @@ class StackManager:
                                 isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
                             src_src: AsmOperand = deepcopy(instruction.src)
                             if isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)):
-                                instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.CX))
+                                instruction.src = AsmRegister(generate_register(REGISTER_KIND.CX))
                             else:
-                                instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
+                                instruction.src = AsmRegister(generate_register(REGISTER_KIND.R10))
                             child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
                         # mul (_, addr)
                         # $ imull imm, addr ->
@@ -91,7 +91,7 @@ class StackManager:
                         elif isinstance(instruction.binary_op, AsmMult) and \
                                 isinstance(instruction.dst, AsmStack):
                             src_src: AsmOperand = deepcopy(instruction.dst)
-                            instruction.dst = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R11))
+                            instruction.dst = AsmRegister(generate_register(REGISTER_KIND.R11))
                             child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.dst)))
                             child_node.instructions.insert(i + 1, AsmMov(deepcopy(instruction.dst), deepcopy(src_src)))
                     # idiv (imm)
@@ -101,7 +101,7 @@ class StackManager:
                     elif isinstance(instruction, AsmIdiv) and \
                             isinstance(instruction.src, AsmImm):
                         src_src: AsmOperand = deepcopy(instruction.src)
-                        instruction.src = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R10))
+                        instruction.src = AsmRegister(generate_register(REGISTER_KIND.R10))
                         child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
                     # $ cmpl reg1, imm ->
                     #     $ movl imm , reg2
@@ -109,7 +109,7 @@ class StackManager:
                     elif isinstance(instruction, AsmCmp) and \
                             isinstance(instruction.dst, AsmImm):
                         src_src: AsmOperand = deepcopy(instruction.dst)
-                        instruction.dst = AsmRegister(RegisterManager.generate_register(REGISTER_KIND.R11))
+                        instruction.dst = AsmRegister(generate_register(REGISTER_KIND.R11))
                         child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.dst)))
             else:
                 self.correct_instructions(child_node)

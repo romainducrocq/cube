@@ -3,7 +3,7 @@ from typing import List, Optional
 from ccc.util.__ast import *
 from ccc.parser.c_ast import *
 from ccc.parser.lexer import TOKEN_KIND, Token
-from ccc.parser.precedence import PrecedenceManager
+from ccc.parser.precedence import parse_token_precedence
 
 __all__ = [
     'parsing'
@@ -205,8 +205,7 @@ class Parser:
                                          TOKEN_KIND.assignment_bitxor,
                                          TOKEN_KIND.assignment_bitshiftleft,
                                          TOKEN_KIND.assignment_bitshiftright):
-            precedence: int = PrecedenceManager.\
-                               parse_token_precedence(self.peek_token.token_kind)
+            precedence: int = parse_token_precedence(self.peek_token.token_kind)
             if precedence < min_precedence:
                 break
             if self.peek_token.token_kind == TOKEN_KIND.assignment_simple:

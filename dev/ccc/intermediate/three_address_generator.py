@@ -4,7 +4,7 @@ from copy import deepcopy
 from ccc.util.__ast import *
 from ccc.parser.c_ast import *
 from ccc.intermediate.tac_ast import *
-from ccc.intermediate.name import NameManager
+from ccc.intermediate.name import represent_label_identifier, represent_variable_identifier
 
 __all__ = [
     'three_address_code_representation'
@@ -107,7 +107,7 @@ class ThreeAddressCodeGenerator:
             raise ThreeAddressCodeGeneratorError(
                 "An error occurred in three address code representation, not all nodes were visited")
 
-        name: TIdentifier = NameManager.represent_variable_identifier(node)
+        name: TIdentifier = represent_variable_identifier(node)
         return TacVariable(name)
 
     def represent_list_instructions(self, list_node: list) -> List[TacInstruction]:
@@ -150,8 +150,8 @@ class ThreeAddressCodeGenerator:
                 if isinstance(node.binary_op, CAnd):
                     is_true: TacValue = TacConstant(TInt(1))
                     is_false: TacValue = TacConstant(TInt(0))
-                    label_true: TIdentifier = NameManager.represent_label_identifier("and_true")
-                    label_false: TIdentifier = NameManager.represent_label_identifier("and_false")
+                    label_true: TIdentifier = represent_label_identifier("and_true")
+                    label_false: TIdentifier = represent_label_identifier("and_false")
                     src1: TacValue = represent_instructions(node.exp_left)
                     instructions.append(TacJumpIfZero(src1, label_false))
                     src2: TacValue = represent_instructions(node.exp_right)
@@ -166,8 +166,8 @@ class ThreeAddressCodeGenerator:
                 elif isinstance(node.binary_op, COr):
                     is_true: TacValue = TacConstant(TInt(1))
                     is_false: TacValue = TacConstant(TInt(0))
-                    label_true: TIdentifier = NameManager.represent_label_identifier("or_true")
-                    label_false: TIdentifier = NameManager.represent_label_identifier("or_false")
+                    label_true: TIdentifier = represent_label_identifier("or_true")
+                    label_false: TIdentifier = represent_label_identifier("or_false")
                     src1: TacValue = represent_instructions(node.exp_left)
                     instructions.append(TacJumpIfNotZero(src1, label_true))
                     src2: TacValue = represent_instructions(node.exp_right)

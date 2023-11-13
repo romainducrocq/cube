@@ -5,7 +5,7 @@ from ccc.util.iota_enum import IotaEnum
 
 __all__ = [
     'REGISTER_KIND',
-    'RegisterManager'
+    'generate_register'
 ]
 
 
@@ -32,18 +32,12 @@ REGISTER_NODE: Dict[int, type(AsmReg)] = {
 }
 
 
-class RegisterManager:
+def generate_register(register_kind: int) -> AsmReg:
+    """ reg = AX | CX | DX | R10 | R11 """
 
-    def __init__(self):
-        pass
+    try:
+        return REGISTER_NODE[register_kind]()
+    except KeyError:
 
-    @staticmethod
-    def generate_register(register_kind: int) -> AsmReg:
-        """ reg = AX | CX | DX | R10 | R11 """
-
-        try:
-            return REGISTER_NODE[register_kind]()
-        except KeyError:
-
-            raise RegisterManagerError(
-                f"An error occurred in register management, unmanaged register {REGISTER_NODE[register_kind]}")
+        raise RegisterManagerError(
+            f"An error occurred in register management, unmanaged register {REGISTER_NODE[register_kind]}")

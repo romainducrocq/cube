@@ -4,7 +4,9 @@ from ccc.util.__ast import *
 from ccc.parser.c_ast import *
 
 __all__ = [
-    'NameManager'
+    'resolve_variable_identifier',
+    'represent_label_identifier',
+    'represent_variable_identifier'
 ]
 
 
@@ -25,41 +27,35 @@ VARIABLE_NAME: Dict[type, str] = {
 }
 
 
-class NameManager:
+def resolve_variable_identifier(variable: TIdentifier) -> TIdentifier:
+    global variable_counter
 
-    def __init__(self):
-        pass
+    variable_counter += 1
+    name: str = f"{variable.str_t}.{variable_counter - 1}"
 
-    @staticmethod
-    def resolve_variable_identifier(variable: TIdentifier) -> TIdentifier:
-        global variable_counter
+    return TIdentifier(name)
 
-        variable_counter += 1
-        name: str = f"{variable.str_t}.{variable_counter - 1}"
 
-        return TIdentifier(name)
+def represent_label_identifier(label: str) -> TIdentifier:
+    global label_counter
 
-    @staticmethod
-    def represent_label_identifier(label: str) -> TIdentifier:
-        global label_counter
+    label_counter += 1
+    name: str = f"{label}.{label_counter - 1}"
 
-        label_counter += 1
-        name: str = f"{label}.{label_counter - 1}"
+    return TIdentifier(name)
 
-        return TIdentifier(name)
 
-    @staticmethod
-    def represent_variable_identifier(node: AST) -> TIdentifier:
-        global variable_counter
+def represent_variable_identifier(node: AST) -> TIdentifier:
+    global variable_counter
 
-        try:
-            variable: str = VARIABLE_NAME[type(node)]
-        except KeyError:
+    try:
+        variable: str = VARIABLE_NAME[type(node)]
+    except KeyError:
 
-            raise NameManagerError(
-                f"An error occurred in name management, unmanaged type {type(node)}")
+        raise NameManagerError(
+            f"An error occurred in name management, unmanaged type {type(node)}")
 
-        variable_counter += 1
-        name: str = f"{variable}.{variable_counter - 1}"
+    variable_counter += 1
+    name: str = f"{variable}.{variable_counter - 1}"
 
-        return TIdentifier(name)
+    return TIdentifier(name)

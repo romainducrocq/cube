@@ -2,7 +2,7 @@ from typing import Dict
 
 from ccc.util.__ast import *
 from ccc.parser.c_ast import *
-from ccc.intermediate.name import NameManager
+from ccc.intermediate.name import resolve_variable_identifier
 
 __all__ = [
     'semantic_analysis'
@@ -46,7 +46,7 @@ class SemanticAnalyzer:
                 raise SemanticAnalyzerError(
                     f"Variable {node.name.str_t} was already declared in this scope")
 
-            name: TIdentifier = NameManager.resolve_variable_identifier(node.name)
+            name: TIdentifier = resolve_variable_identifier(node.name)
             self.variable_map[node.name.str_t] = name.str_t
             node.name = name
             if node.init:
