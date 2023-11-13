@@ -1,1 +1,2 @@
-ae36239: refactor to cython
+ae36239: prepare and refactor to cython
+8f5a99d: refactor to cython without classes
