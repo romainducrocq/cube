@@ -24,7 +24,6 @@ def expect_next(next_node, *expected_nodes: type) -> None:
 
 
 def emit(line: str, t=0) -> None:
-    global asm_code
 
     asm_code.append("    " * t + line + "\n")
 
