@@ -1,6 +1,5 @@
 import re
 from typing import Dict, List, Generator
-from dataclasses import dataclass
 
 from ccc.util.iota_enum import IotaEnum
 
@@ -121,10 +120,13 @@ TOKEN_REGEX: Dict[int, str] = {
 }
 
 
-@dataclass
 class Token:
     token: str
     token_kind: int
+
+    def __init__(self, token: str, token_kind: int):
+        self.token = token
+        self.token_kind = token_kind
 
 
 TOKEN_PATTERN: re.Pattern = re.compile(

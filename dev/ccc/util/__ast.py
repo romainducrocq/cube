@@ -14,10 +14,6 @@ class AST:
     _fields = ()
 
     @staticmethod
-    def istype(node: Any, *expected_types: type):
-        return type(node) in expected_types
-
-    @staticmethod
     def iter_fields(node: Any) -> Generator[Tuple[Any, str], None, None]:
         for field, name in [(getattr(node, attr), attr) for attr in dir(node)
                             if not attr.startswith("__")]:
