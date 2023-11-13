@@ -29,12 +29,12 @@ class AST:
             def _pretty_string_child(_child_kind: str, _child_node: Any):
                 nonlocal string
                 if type(_child_node) in (str, int, type(None)):
-                    _pretty_string(_child_kind, _child_node, indent)
-                else:
                     string += str(' ' * indent + _child_kind + type(_child_node).__name__ + ': '
                                   + str(_child_node) + '\n')
+                else:
+                    _pretty_string(_child_kind, _child_node, indent)
 
-            for child_kind, child_node in ast_iter_fields(node):
+            for child_node, child_kind in ast_iter_fields(node):
                 if isinstance(child_node, list):
                     string += str(' ' * indent + '<' + child_kind + '> List(' + str(len(child_node)) + '):' + '\n')
                     indent += 4
