@@ -28,13 +28,13 @@ class AST:
 
             def _pretty_string_child(_child_kind: str, _child_node: Any):
                 nonlocal string
-                if '__dict__' in dir(_child_node):
+                if type(_child_node) in (str, int, type(None)):
                     _pretty_string(_child_kind, _child_node, indent)
                 else:
                     string += str(' ' * indent + _child_kind + type(_child_node).__name__ + ': '
                                   + str(_child_node) + '\n')
 
-            for child_kind, child_node in node.__dict__.items():
+            for child_kind, child_node in ast_iter_fields(node):
                 if isinstance(child_node, list):
                     string += str(' ' * indent + '<' + child_kind + '> List(' + str(len(child_node)) + '):' + '\n')
                     indent += 4
