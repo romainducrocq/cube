@@ -6,7 +6,7 @@ from ccc.assembly.asm_ast import *
 from ccc.assembly.register import REGISTER_KIND, generate_register
 
 __all__ = [
-    'StackManager'
+    'generate_stack'
 ]
 
 
@@ -114,8 +114,11 @@ class StackManager:
             else:
                 self.correct_instructions(child_node)
 
-    def generate_stack(self, node: AST) -> None:
 
-        self.replace_pseudo_registers(node)
+def generate_stack(node: AST) -> None:
 
-        self.correct_instructions(node)
+    stack_mngr: StackManager = StackManager()
+
+    stack_mngr.replace_pseudo_registers(node)
+
+    stack_mngr.correct_instructions(node)
