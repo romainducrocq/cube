@@ -1,5 +1,4 @@
 from typing import List
-from dataclasses import dataclass
 
 from ccc.util.__ast import *
 
@@ -61,32 +60,32 @@ class AsmReg(AST):
         | R10
         | R11
     """
-    pass
+    _fields = ()
 
 
 class AsmAx(AsmReg):
     """ AX """
-    pass
+    _fields = ()
 
 
 class AsmCx(AsmReg):
     """ CX """
-    pass
+    _fields = ()
 
 
 class AsmDx(AsmReg):
     """ DX """
-    pass
+    _fields = ()
 
 
 class AsmR10(AsmReg):
     """ R10 """
-    pass
+    _fields = ()
 
 
 class AsmR11(AsmReg):
     """ R11 """
-    pass
+    _fields = ()
 
 
 class AsmCondCode(AST):
@@ -98,37 +97,37 @@ class AsmCondCode(AST):
               | L
               | LE
     """
-    pass
+    _fields = ()
 
 
 class AsmE(AsmCondCode):
     """ E """
-    pass
+    _fields = ()
 
 
 class AsmNE(AsmCondCode):
     """ NE """
-    pass
+    _fields = ()
 
 
 class AsmG(AsmCondCode):
     """ G """
-    pass
+    _fields = ()
 
 
 class AsmGE(AsmCondCode):
     """ GE """
-    pass
+    _fields = ()
 
 
 class AsmL(AsmCondCode):
     """ L """
-    pass
+    _fields = ()
 
 
 class AsmLE(AsmCondCode):
     """ LE """
-    pass
+    _fields = ()
 
 
 class AsmOperand(AST):
@@ -138,31 +137,43 @@ class AsmOperand(AST):
             | Pseudo(identifier)
             | Stack(int)
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class AsmImm(AsmOperand):
     """ Imm(int value) """
     value: TInt = None
+    _fields = ('value',)
+
+    def __init__(self, value: TInt):
+        self.value = value
 
 
-@dataclass
 class AsmRegister(AsmOperand):
     """ Register(reg register) """
     register: AsmReg = None
+    _fields = ('register',)
+
+    def __init__(self, register: AsmReg):
+        self.register = register
 
 
-@dataclass
 class AsmPseudo(AsmOperand):
     """ Pseudo(identifier name) """
     name: TIdentifier = None
+    _fields = ('name',)
+
+    def __init__(self, name: TIdentifier):
+        self.name = name
 
 
-@dataclass
 class AsmStack(AsmOperand):
     """ Stack(int value) """
     value: TInt = None
+    _fields = ('value',)
+
+    def __init__(self, value: TInt):
+        self.value = value
 
 
 class AsmBinaryOp(AST):
@@ -176,47 +187,47 @@ class AsmBinaryOp(AST):
                     | BitShiftLeft
                     | BitShiftRight
     """
-    pass
+    _fields = ()
 
 
 class AsmAdd(AsmBinaryOp):
     """ Add """
-    pass
+    _fields = ()
 
 
 class AsmSub(AsmBinaryOp):
     """ Sub """
-    pass
+    _fields = ()
 
 
 class AsmMult(AsmBinaryOp):
     """ Mult """
-    pass
+    _fields = ()
 
 
 class AsmBitAnd(AsmBinaryOp):
     """ BitAnd """
-    pass
+    _fields = ()
 
 
 class AsmBitOr(AsmBinaryOp):
     """ BitOr """
-    pass
+    _fields = ()
 
 
 class AsmBitXor(AsmBinaryOp):
     """ BitXor """
-    pass
+    _fields = ()
 
 
 class AsmBitShiftLeft(AsmBinaryOp):
     """ BitShiftLeft """
-    pass
+    _fields = ()
 
 
 class AsmBitShiftRight(AsmBinaryOp):
     """ BitShiftRight """
-    pass
+    _fields = ()
 
 
 class AsmUnaryOp(AST):
@@ -224,17 +235,17 @@ class AsmUnaryOp(AST):
     unary_operator = Not
                    | Neg
     """
-    pass
+    _fields = ()
 
 
 class AsmNot(AsmUnaryOp):
     """ Not """
-    pass
+    _fields = ()
 
 
 class AsmNeg(AsmUnaryOp):
     """ Neg """
-    pass
+    _fields = ()
 
 
 class AsmInstruction(AST):
@@ -252,101 +263,145 @@ class AsmInstruction(AST):
                 | AllocateStack(int)
                 | Ret
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class AsmMov(AsmInstruction):
     """ Mov(operand src, operand dst) """
     src: AsmOperand = None
     dst: AsmOperand = None
+    _fields = ('src', 'dst')
+
+    def __init__(self, src: AsmOperand, dst: AsmOperand):
+        self.src = src
+        self.dst = dst
 
 
-@dataclass
 class AsmUnary(AsmInstruction):
     """ Unary(unary_operator unop, operand dst) """
     unary_op: AsmUnaryOp = None
     dst: AsmOperand = None
+    _fields = ('unary_op', 'dst')
+
+    def __init__(self, unary_op: AsmUnaryOp, dst: AsmOperand):
+        self.unary_op = unary_op
+        self.dst = dst
 
 
-@dataclass
 class AsmBinary(AsmInstruction):
     """ Binary(binary_operator binop, operand src, operand dst) """
     binary_op: AsmBinaryOp = None
     src: AsmOperand = None
     dst: AsmOperand = None
+    _fields = ('binary_op', 'src', 'dst')
+
+    def __init__(self, binary_op: AsmBinaryOp, src: AsmOperand, dst: AsmOperand):
+        self.binary_op = binary_op
+        self.src = src
+        self.dst = dst
 
 
-@dataclass
 class AsmCmp(AsmInstruction):
     """ Cmp(operand src, operand dst) """
     src: AsmOperand = None
     dst: AsmOperand = None
+    _fields = ('src', 'dst')
+
+    def __init__(self, src: AsmOperand, dst: AsmOperand):
+        self.src = src
+        self.dst = dst
 
 
-@dataclass
 class AsmIdiv(AsmInstruction):
     """ Idiv(operand src) """
     src: AsmOperand = None
+    _fields = ('src',)
+
+    def __init__(self, src: AsmOperand):
+        self.src = src
 
 
 class AsmCdq(AsmInstruction):
     """ Cdq """
-    pass
+    _fields = ()
 
 
-@dataclass
 class AsmJmp(AsmInstruction):
     """ Jmp(identifier target) """
     target: TIdentifier = None
+    _fields = ('target',)
+
+    def __init__(self, target: TIdentifier):
+        self.target = target
 
 
-@dataclass
 class AsmJmpCC(AsmInstruction):
     """ JmpCC(cond_code cond_code, identifier target) """
     cond_code: AsmCondCode = None
     target: TIdentifier = None
+    _fields = ('cond_code', 'target')
+
+    def __init__(self, cond_code: AsmCondCode, target: TIdentifier):
+        self.cond_code = cond_code
+        self.target = target
 
 
-@dataclass
 class AsmSetCC(AsmInstruction):
     """ SetCC(cond_code cond_code, operand dst) """
     cond_code: AsmCondCode = None
     dst: AsmOperand = None
+    _fields = ('cond_code', 'dst')
+
+    def __init__(self, cond_code: AsmCondCode, dst: AsmOperand):
+        self.cond_code = cond_code
+        self.dst = dst
 
 
-@dataclass
 class AsmLabel(AsmInstruction):
     """ Label(identifier name) """
     name: TIdentifier = None
+    _fields = ('name',)
+
+    def __init__(self, name: TIdentifier):
+        self.name = name
 
 
-@dataclass
 class AsmAllocStack(AsmInstruction):
     """ AllocateStack(int value) """
     value: TInt = None
+    _fields = ('value',)
+
+    def __init__(self, value: TInt):
+        self.value = value
 
 
 class AsmRet(AsmInstruction):
     """ Ret """
-    pass
+    _fields = ()
 
 
 class AsmFunctionDef(AST):
     """
     function_definition = Function(identifier name, instruction* instructions)
     """
-    pass
+    _fields = ()
 
 
-@dataclass
 class AsmFunction(AsmFunctionDef):
     """ Function(identifier name, instruction* instructions) """
     name: TIdentifier = None
     instructions: List[AsmInstruction] = None
+    _fields = ('name', 'instructions')
+
+    def __init__(self, name: TIdentifier, instructions: List[AsmInstruction]):
+        self.name = name
+        self.instructions = instructions
 
 
-@dataclass
 class AsmProgram(AST):
     """ AST = Program(function_definition) """
     function_def: AsmFunctionDef = None
+    _fields = ('function_def',)
+
+    def __init__(self, function_def: AsmFunctionDef):
+        self.function_def = function_def
