@@ -1,21 +1,19 @@
-from typing import Dict
-
 __all__ = [
     'IotaEnum'
 ]
 
 
-class IotaEnum(dict):
-    __getattr__ = dict.__getitem__
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
+cdef class IotaEnum:
+    cdef int iota_counter
+    cdef dict[str, int] iota_enum
 
-    def __init__(self, *names: str):
-        iota_counter: int = 0
-
-        iota_enum: Dict[str, int] = {}
+    def __init__(self, tuple[str] names):
+        cdef str name
+        self.iota_counter = 0
+        self.iota_enum = {}
         for name in names:
-            iota_enum[name] = iota_counter
-            iota_counter += 1
+            self.iota_enum[name] = self.iota_counter
+            self.iota_counter += 1
 
-        super(IotaEnum, self).__init__(iota_enum)
+    cpdef int get(self, str key):
+        return self.iota_enum[key]
