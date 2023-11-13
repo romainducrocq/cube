@@ -15,11 +15,11 @@ ln -s ../MOOC-NoStarch-Writing_a_C_Compiler/ccc/* .
 if [ ${#} -ne 0 ]; then
     test ${@}
 else
-    test --chapter 1 --latest-only
-    test --chapter 2 --latest-only
-    test --chapter 3 --latest-only --bitwise
-    test --chapter 4 --latest-only --bitwise
-    test --chapter 5 --latest-only --extra-credit
+    test --chapter 1 --stage lex --latest-only
+    test --chapter 2 --stage lex --latest-only
+    test --chapter 3 --stage lex --latest-only --bitwise
+    test --chapter 4 --stage lex --latest-only --bitwise
+    test --chapter 5 --stage lex --latest-only --extra-credit
 fi
 
 exit 0
