@@ -1,5 +1,6 @@
 import re
 
+from ccc.util_fopen import file_open, get_line, file_close
 from ccc.util_iota_enum cimport IotaEnum
 
 
@@ -126,28 +127,33 @@ TOKEN_PATTERN = re.compile(
     "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND.get(tk)]})" for tk in TOKEN_KIND.iter())
 )
 
-
 cpdef list[Token] lexing(str filename):
+
+    cdef bint eof
     cdef str line
-    cdef list[Token] tokens
-    cdef object input_file, match
+    cdef object match
+    cdef list[Token] tokens = []
 
-    tokens = []
-    with open(filename, "r", encoding="utf-8") as input_file:
-        for line in input_file:
+    file_open(filename)
+    while True:
+        eof, line = get_line()
+        if eof:
+            break
 
-            for match in re.finditer(TOKEN_PATTERN, line):
-                if match.lastgroup is None:
-                    raise LexerError(
-                        f"No token found in line:\n    {line}")
+        for match in re.finditer(TOKEN_PATTERN, line):
+            if match.lastgroup is None:
+                raise LexerError(
+                    f"No token found in line:\n    {line}")
 
-                if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('error'):
-                    raise LexerError(
-                        f"Invalid token \"{match.group()}\" found in line:\n    {line}")
+            if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('error'):
+                raise LexerError(
+                    f"Invalid token \"{match.group()}\" found in line:\n    {line}")
 
-                if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('skip'):
-                    continue
+            if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('skip'):
+                continue
 
-                tokens.append(Token(token=match.group(), token_kind=TOKEN_KIND.get(match.lastgroup)))
+            tokens.append(Token(token=match.group(), token_kind=TOKEN_KIND.get(match.lastgroup)))
+
+    file_close()
 
     return tokens
