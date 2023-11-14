@@ -23,10 +23,10 @@ cdef class TInt(AST):
 
 
 cpdef list[tuple[object, str]] ast_iter_fields(AST node):
-    cdef str name
-    cdef list[tuple[object, str]] fields
 
-    fields = []
+    cdef list[tuple[object, str]] fields = []
+
+    cdef str name
     for name in node._fields:
         fields.append((getattr(node, name), name))
 
@@ -34,12 +34,12 @@ cpdef list[tuple[object, str]] ast_iter_fields(AST node):
 
 
 cpdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node):
+
+    cdef object field, item
+    cdef list[tuple[AST, str, int]] child_nodes = []
+
     cdef int e
     cdef str name
-    cdef object field, item
-    cdef list[tuple[AST, str, int]] child_nodes
-
-    child_nodes = []
     for name in node._fields:
         field = getattr(node, name)
         if isinstance(field, AST):
