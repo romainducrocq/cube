@@ -69,8 +69,7 @@ TOKEN_KIND = IotaEnum((
 ))
 
 
-cdef dict[int, str] TOKEN_REGEX
-TOKEN_REGEX = {
+cdef dict[int, str] TOKEN_REGEX = {
     TOKEN_KIND.get('assignment_bitshiftleft'): r"<<=",
     TOKEN_KIND.get('assignment_bitshiftright'): r">>=",
 
@@ -122,19 +121,19 @@ TOKEN_REGEX = {
 }
 
 
-cdef object TOKEN_PATTERN
-TOKEN_PATTERN = re.compile(
+cdef object TOKEN_PATTERN = re.compile(
     "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND.get(tk)]})" for tk in TOKEN_KIND.iter())
 )
 
 cpdef list[Token] lexing(str filename):
 
-    cdef bint eof
-    cdef str line
-    cdef object match
     cdef list[Token] tokens = []
 
     file_open(filename)
+
+    cdef bint eof
+    cdef str line
+    cdef object match
     while True:
         eof, line = get_line()
         if eof:
