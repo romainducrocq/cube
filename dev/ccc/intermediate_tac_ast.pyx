@@ -1,72 +1,35 @@
-from typing import List
-
-from ccc.util.__ast import *
-
-__all__ = [
-    'TacUnaryOp',
-    'TacComplement',
-    'TacNegate',
-    'TacNot',
-    'TacBinaryOp',
-    'TacAdd',
-    'TacSubtract',
-    'TacMultiply',
-    'TacDivide',
-    'TacRemainder',
-    'TacBitAnd',
-    'TacBitOr',
-    'TacBitXor',
-    'TacBitShiftLeft',
-    'TacBitShiftRight',
-    'TacEqual',
-    'TacNotEqual',
-    'TacLessThan',
-    'TacLessOrEqual',
-    'TacGreaterThan',
-    'TacGreaterOrEqual',
-    'TacValue',
-    'TacConstant',
-    'TacVariable',
-    'TacInstruction',
-    'TacReturn',
-    'TacUnary',
-    'TacBinary',
-    'TacCopy',
-    'TacJump',
-    'TacJumpIfZero',
-    'TacJumpIfNotZero',
-    'TacLabel',
-    'TacFunctionDef',
-    'TacFunction',
-    'TacProgram'
-]
+from ccc.parser_c_ast cimport AST, TIdentifier, TInt
 
 
-class TacUnaryOp(AST):
+cdef class TacUnaryOp(AST):
     """
     unary_operator = Complement
                    | Negate
                    | Not
     """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacComplement(TacUnaryOp):
+cdef class TacComplement(TacUnaryOp):
     """ Complement """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacNegate(TacUnaryOp):
+cdef class TacNegate(TacUnaryOp):
     """ Negate """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacNot(TacUnaryOp):
+cdef class TacNot(TacUnaryOp):
     """ Not """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacBinaryOp(AST):
+cdef class TacBinaryOp(AST):
     """
     binary_operator = Add
                     | Subtract
@@ -85,116 +48,136 @@ class TacBinaryOp(AST):
                     | GreaterThan
                     | GreaterOrEqual
     """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacAdd(TacBinaryOp):
+cdef class TacAdd(TacBinaryOp):
     """ Add """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacSubtract(TacBinaryOp):
+cdef class TacSubtract(TacBinaryOp):
     """ Subtract """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacMultiply(TacBinaryOp):
+cdef class TacMultiply(TacBinaryOp):
     """ Multiply """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacDivide(TacBinaryOp):
+cdef class TacDivide(TacBinaryOp):
     """ Divide """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacRemainder(TacBinaryOp):
+cdef class TacRemainder(TacBinaryOp):
     """ Remainder """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacBitAnd(TacBinaryOp):
+cdef class TacBitAnd(TacBinaryOp):
     """ BitAnd """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacBitOr(TacBinaryOp):
+cdef class TacBitOr(TacBinaryOp):
     """ BitOr """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacBitXor(TacBinaryOp):
+cdef class TacBitXor(TacBinaryOp):
     """ BitXor """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacBitShiftLeft(TacBinaryOp):
+cdef class TacBitShiftLeft(TacBinaryOp):
     """ BitShiftLeft """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacBitShiftRight(TacBinaryOp):
+cdef class TacBitShiftRight(TacBinaryOp):
     """ BitShiftRight """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacEqual(TacBinaryOp):
+cdef class TacEqual(TacBinaryOp):
     """ Equal """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacNotEqual(TacBinaryOp):
+cdef class TacNotEqual(TacBinaryOp):
     """ NotEqual """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacLessThan(TacBinaryOp):
+cdef class TacLessThan(TacBinaryOp):
     """ LessThan """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacLessOrEqual(TacBinaryOp):
+cdef class TacLessOrEqual(TacBinaryOp):
     """ LessOrEqual """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacGreaterThan(TacBinaryOp):
+cdef class TacGreaterThan(TacBinaryOp):
     """ GreaterThan """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacGreaterOrEqual(TacBinaryOp):
+cdef class TacGreaterOrEqual(TacBinaryOp):
     """ GreaterOrEqual """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacValue(AST):
+cdef class TacValue(AST):
     """
     val = Constant(int)
         | Var(identifier)
     """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacConstant(TacValue):
+cdef class TacConstant(TacValue):
     """ Constant(int) """
-    value: TInt = None
-    _fields = ('value',)
+    cdef public TInt value
+    def __cinit__(self):
+        self._fields = ('value',)
 
-    def __init__(self, value: TInt):
+    def __init__(self, TInt value):
         self.value = value
 
 
-class TacVariable(TacValue):
+cdef class TacVariable(TacValue):
     """ Var(identifier) """
-    name: TIdentifier = None
-    _fields = ('name',)
+    cdef public TIdentifier name
+    def __cinit__(self):
+        self._fields = ('name',)
 
-    def __init__(self, name: TIdentifier):
+    def __init__(self, TIdentifier name):
         self.name = name
 
 
-class TacInstruction(AST):
+cdef class TacInstruction(AST):
     """
     instruction = Return(val)
                 | Unary(unary_operator, val src, val dst)
@@ -205,119 +188,131 @@ class TacInstruction(AST):
                 | JumpIfNotZero(val condition, identifier target)
                 | Label(identifier name)
     """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacReturn(TacInstruction):
+cdef class TacReturn(TacInstruction):
     """ Return(val) """
-    val: TacValue = None
-    _fields = ('val',)
+    cdef public TacValue val
+    def __cinit__(self):
+        self._fields = ('val',)
 
-    def __init__(self, val: TacValue):
+    def __init__(self, TacValue val):
         self.val = val
 
 
-class TacUnary(TacInstruction):
+cdef class TacUnary(TacInstruction):
     """ Unary(unary_operator, val src, val dst) """
-    unary_op: TacUnaryOp = None
-    src: TacValue = None
-    dst: TacValue = None
-    _fields = ('unary_op', 'src', 'dst')
+    cdef public TacUnaryOp unary_op
+    cdef public TacValue src
+    cdef public TacValue dst
+    def __cinit__(self):
+        self._fields = ('unary_op', 'src', 'dst')
 
-    def __init__(self, unary_op: TacUnaryOp, src: TacValue, dst: TacValue):
+    def __init__(self, TacUnaryOp unary_op, TacValue src, TacValue dst):
         self.unary_op = unary_op
         self.src = src
         self.dst = dst
 
 
-class TacBinary(TacInstruction):
+cdef class TacBinary(TacInstruction):
     """ Binary(binary_operator, val src1, val src2, val dst) """
-    binary_op: TacBinaryOp = None
-    src1: TacValue = None
-    src2: TacValue = None
-    dst: TacValue = None
-    _fields = ('binary_op', 'src1', 'src2', 'dst')
+    cdef public TacBinaryOp binary_op
+    cdef public TacValue src1
+    cdef public TacValue src2
+    cdef public TacValue dst
+    def __cinit__(self):
+        self._fields = ('binary_op', 'src1', 'src2', 'dst')
 
-    def __init__(self, binary_op: TacBinaryOp, src1: TacValue, src2: TacValue, dst: TacValue):
+    def __init__(self, TacBinaryOp binary_op, TacValue src1, TacValue src2, TacValue dst):
         self.binary_op = binary_op
         self.src1 = src1
         self.src2 = src2
         self.dst = dst
 
 
-class TacCopy(TacInstruction):
+cdef class TacCopy(TacInstruction):
     """ Copy(val src, val dst) """
-    src: TacValue = None
-    dst: TacValue = None
-    _fields = ('src', 'dst')
+    cdef public TacValue src
+    cdef public TacValue dst
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
 
-    def __init__(self, src: TacValue, dst: TacValue):
+    def __init__(self, TacValue src, TacValue dst):
         self.src = src
         self.dst = dst
 
 
-class TacJump(TacInstruction):
+cdef class TacJump(TacInstruction):
     """ Jump(identifier target) """
-    target: TIdentifier = None
-    _fields = ('target',)
+    cdef public TIdentifier target
+    def __cinit__(self):
+        self._fields = ('target',)
 
-    def __init__(self, target: TIdentifier):
+    def __init__(self, TIdentifier target):
         self.target = target
 
 
-class TacJumpIfZero(TacInstruction):
+cdef class TacJumpIfZero(TacInstruction):
     """ JumpIfZero(val condition, identifier target) """
-    condition: TacValue = None
-    target: TIdentifier = None
-    _fields = ('condition', 'target')
+    cdef public TacValue condition
+    cdef public TIdentifier target
+    def __cinit__(self):
+        self._fields = ('condition', 'target')
 
-    def __init__(self, condition: TacValue, target: TIdentifier):
+    def __init__(self, TacValue condition, TIdentifier target):
         self.condition = condition
         self.target = target
 
 
-class TacJumpIfNotZero(TacInstruction):
+cdef class TacJumpIfNotZero(TacInstruction):
     """ JumpIfNotZero(val condition, identifier target) """
-    condition: TacValue = None
-    target: TIdentifier = None
-    _fields = ('condition', 'target')
+    cdef public TacValue condition
+    cdef public TIdentifier target
+    def __cinit__(self):
+        self._fields = ('condition', 'target')
 
-    def __init__(self, condition: TacValue, target: TIdentifier):
+    def __init__(self, TacValue condition, TIdentifier target):
         self.condition = condition
         self.target = target
 
 
-class TacLabel(TacInstruction):
+cdef class TacLabel(TacInstruction):
     """ Label(identifier name) """
-    name: TIdentifier = None
-    _fields = ('name',)
+    cdef public TIdentifier name
+    def __cinit__(self):
+        self._fields = ('name',)
 
-    def __init__(self, name: TIdentifier):
+    def __init__(self, TIdentifier name):
         self.name = name
 
 
-class TacFunctionDef(AST):
+cdef class TacFunctionDef(AST):
     """
     function_definition = Function(identifier, instruction* body)
     """
-    _fields = ()
+    def __cinit__(self):
+        self._fields = ()
 
 
-class TacFunction(TacFunctionDef):
+cdef class TacFunction(TacFunctionDef):
     """ Function(identifier, instruction* body) """
-    name: TIdentifier = None
-    body: List[TacInstruction] = None
-    _fields = ('name', 'body')
+    cdef public TIdentifier name
+    cdef public list[TacInstruction] body
+    def __cinit__(self):
+        self._fields = ('name', 'body')
 
-    def __init__(self, name: TIdentifier, body: List[TacInstruction]):
+    def __init__(self, TIdentifier name, list[TacInstruction] body):
         self.name = name
         self.body = body
 
 
-class TacProgram(AST):
+cdef class TacProgram(AST):
     """ AST = Program(function_definition) """
-    function_def: TacFunctionDef = None
-    _fields = ('function_def',)
+    cdef public TacFunctionDef function_def
+    def __cinit__(self):
+        self._fields = ('function_def',)
 
-    def __init__(self, function_def: TacFunctionDef):
+    def __init__(self, TacFunctionDef function_def):
         self.function_def = function_def
