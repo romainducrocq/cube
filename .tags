@@ -1,2 +1,3 @@
 ae36239: prepare and refactor to cython
 3e04c79: refactor to cython without classes
+9c2eff9: lexer ok
