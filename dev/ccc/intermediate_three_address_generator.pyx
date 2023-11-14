@@ -200,7 +200,7 @@ cpdef TacValue represent_instructions(AST node): # TODO type AST node ?
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef list[TacInstruction] represent_list_instructions(list[CBlockItem] list_node):
+cpdef void represent_list_instructions(list[CBlockItem] list_node):
     """ instruction = Return(val) | Unary(unary_operator, val src, val dst)
                 | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
                 | Jump(identifier target) | JumpIfZero(val condition, identifier target)
@@ -220,41 +220,37 @@ cpdef list[TacInstruction] represent_list_instructions(list[CBlockItem] list_nod
                 "An error occurred in three address code representation, not all nodes were visited")
 
     instructions.append(TacReturn(TacConstant(TInt(0))))
-    return instructions
-#
-#
-# def represent_function_def(node: AST) -> TacFunctionDef:
-#     """ function_definition = Function(identifier, instruction* body) """
-#     expect_next(node, CFunctionDef)
-#     if isinstance(node, CFunction):
-#         name: TIdentifier = represent_identifier(node.name)
-#         instructions: List[TacInstruction] = represent_list_instructions(node.body)
-#         return TacFunction(name, instructions)
-#
-#     raise ThreeAddressCodeGeneratorError(
-#         "An error occurred in three address code representation, not all nodes were visited")
-#
-#
-# def represent_program(node: AST) -> TacProgram:
-#     """ AST = Program(function_definition) """
-#     expect_next(node, AST)
-#     if isinstance(node, CProgram):
-#         function_def: TacFunctionDef = represent_function_def(node.function_def)
-#         return TacProgram(function_def)
-#
-#     raise ThreeAddressCodeGeneratorError(
-#         "An error occurred in three address code representation, not all nodes were visited")
-#
-#
-# def three_address_code_representation(c_ast: AST) -> AST:
-#
-#     tac_ast: AST = represent_program(c_ast)
-#
-#     if not tac_ast:
-#         raise ThreeAddressCodeGeneratorError(
-#             "An error occurred in three address code representation, ASM was not generated")
-#
-#     return tac_ast
+
+
+cpdef TacFunctionDef represent_function_def(CFunctionDef node):
+    """ function_definition = Function(identifier, instruction* body) """
+    cdef TIdentifier name
+    if isinstance(node, CFunction):
+        name = represent_identifier(node.name)
+        represent_list_instructions(node.body)
+        return TacFunction(name, instructions)
+
+    raise ThreeAddressCodeGeneratorError(
+        "An error occurred in three address code representation, not all nodes were visited")
+
+
+cpdef TacProgram represent_program(AST node):
+    """ AST = Program(function_definition) """
+    cdef TacFunctionDef function_def
+    if isinstance(node, CProgram):
+        function_def = represent_function_def(node.function_def)
+        return TacProgram(function_def)
+
+    raise ThreeAddressCodeGeneratorError(
+        "An error occurred in three address code representation, not all nodes were visited")
+
 
 cpdef AST three_address_code_representation(AST c_ast):
-    return c_ast
+
+    cdef AST tac_ast = represent_program(c_ast)
+
+    if not tac_ast:
+        raise ThreeAddressCodeGeneratorError(
+            "An error occurred in three address code representation, ASM was not generated")
+
+    return tac_ast
