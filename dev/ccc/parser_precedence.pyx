@@ -1,4 +1,4 @@
-from ccc.parser_lexer import TOKEN_KIND
+from ccc.parser_lexer cimport TOKEN_KIND
 
 
 class PrecedenceManagerError(RuntimeError):

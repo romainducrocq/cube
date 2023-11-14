@@ -1,6 +1,6 @@
 import re
 
-from ccc.util_fopen import file_open, get_line, file_close
+from ccc.util_fopen cimport file_open, get_line, file_close
 from ccc.util_iota_enum cimport IotaEnum
 
 
