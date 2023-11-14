@@ -20,8 +20,7 @@ cpdef void expect_next(AST next_node, tuple[type, ...] expected_nodes):
             f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
 
 
-cpdef void resolve_statement(AST node):
-    expect_next(node, (CStatement,))
+cpdef void resolve_statement(CStatement node):
     if isinstance(node, (CReturn, CExpression)):
         resolve_expression(node.exp)
         return
@@ -32,10 +31,9 @@ cpdef void resolve_statement(AST node):
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
-cpdef void resolve_declaration(AST node):
+cpdef void resolve_declaration(CDeclaration node):
     global variable_map
 
-    expect_next(node, (CDeclaration,))
     cdef TIdentifier name
     if isinstance(node, CDecl):
         if node.name.str_t in variable_map:
@@ -54,8 +52,7 @@ cpdef void resolve_declaration(AST node):
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
-cpdef void resolve_expression(AST node):
-    expect_next(node, (CExp,))
+cpdef void resolve_expression(CExp node):
     if isinstance(node, CConstant):
         return
     cdef TIdentifier name
