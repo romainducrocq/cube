@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
-# from ccc.intermediate.name import represent_label_identifier, represent_variable_identifier
+from ccc.intermediate_name cimport represent_label_identifier, represent_variable_identifier
 
 
 class ThreeAddressCodeGeneratorError(RuntimeError):
@@ -27,79 +27,78 @@ cpdef TInt represent_int(TInt node):
     """ <int> = Built-in int type """
     return TInt(deepcopy(node.int_t))
 
-# def represent_binary_op(node: AST) -> TacBinaryOp:
-#     """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
-#                         | BitShiftLeft | BitShiftRight | Equal | NotEqual | LessThan | LessOrEqual
-#                         | GreaterThan | GreaterOrEqual """
-#     expect_next(node, CBinaryOp)
-#     if isinstance(node, CAdd):
-#         return TacAdd()
-#     if isinstance(node, CSubtract):
-#         return TacSubtract()
-#     if isinstance(node, CMultiply):
-#         return TacMultiply()
-#     if isinstance(node, CDivide):
-#         return TacDivide()
-#     if isinstance(node, CRemainder):
-#         return TacRemainder()
-#     if isinstance(node, CBitAnd):
-#         return TacBitAnd()
-#     if isinstance(node, CBitOr):
-#         return TacBitOr()
-#     if isinstance(node, CBitXor):
-#         return TacBitXor()
-#     if isinstance(node, CBitShiftLeft):
-#         return TacBitShiftLeft()
-#     if isinstance(node, CBitShiftRight):
-#         return TacBitShiftRight()
-#     if isinstance(node, CEqual):
-#         return TacEqual()
-#     if isinstance(node, CNotEqual):
-#         return TacNotEqual()
-#     if isinstance(node, CLessThan):
-#         return TacLessThan()
-#     if isinstance(node, CLessOrEqual):
-#         return TacLessOrEqual()
-#     if isinstance(node, CGreaterThan):
-#         return TacGreaterThan()
-#     if isinstance(node, CGreaterOrEqual):
-#         return TacGreaterOrEqual()
-#
-#     raise ThreeAddressCodeGeneratorError(
-#         "An error occurred in three address code representation, not all nodes were visited")
-#
-#
-# def represent_unary_op(node: AST) -> TacUnaryOp:
-#     """ unary_operator = Complement | Negate | Not """
-#     expect_next(node, CUnaryOp)
-#     if isinstance(node, CComplement):
-#         return TacComplement()
-#     if isinstance(node, CNegate):
-#         return TacNegate()
-#     if isinstance(node, CNot):
-#         return TacNot()
-#
-#     raise ThreeAddressCodeGeneratorError(
-#         "An error occurred in three address code representation, not all nodes were visited")
-#
-#
-# def represent_value(node: AST, outer: bool = True) -> TacValue:
-#     """ val = Constant(int) | Var(identifier) """
-#     expect_next(node, CExp)
-#     if outer:
-#         if isinstance(node, CConstant):
-#             value: TInt = represent_int(node.value)
-#             return TacConstant(value)
-#         if isinstance(node, CVar):
-#             name: TIdentifier = represent_identifier(node.name)
-#             return TacVariable(name)
-#
-#         raise ThreeAddressCodeGeneratorError(
-#             "An error occurred in three address code representation, not all nodes were visited")
-#
-#     name: TIdentifier = represent_variable_identifier(node)
-#     return TacVariable(name)
-#
+cpdef TacBinaryOp represent_binary_op(CBinaryOp node):
+    """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
+                        | BitShiftLeft | BitShiftRight | Equal | NotEqual | LessThan | LessOrEqual
+                        | GreaterThan | GreaterOrEqual """
+    if isinstance(node, CAdd):
+        return TacAdd()
+    if isinstance(node, CSubtract):
+        return TacSubtract()
+    if isinstance(node, CMultiply):
+        return TacMultiply()
+    if isinstance(node, CDivide):
+        return TacDivide()
+    if isinstance(node, CRemainder):
+        return TacRemainder()
+    if isinstance(node, CBitAnd):
+        return TacBitAnd()
+    if isinstance(node, CBitOr):
+        return TacBitOr()
+    if isinstance(node, CBitXor):
+        return TacBitXor()
+    if isinstance(node, CBitShiftLeft):
+        return TacBitShiftLeft()
+    if isinstance(node, CBitShiftRight):
+        return TacBitShiftRight()
+    if isinstance(node, CEqual):
+        return TacEqual()
+    if isinstance(node, CNotEqual):
+        return TacNotEqual()
+    if isinstance(node, CLessThan):
+        return TacLessThan()
+    if isinstance(node, CLessOrEqual):
+        return TacLessOrEqual()
+    if isinstance(node, CGreaterThan):
+        return TacGreaterThan()
+    if isinstance(node, CGreaterOrEqual):
+        return TacGreaterOrEqual()
+
+    raise ThreeAddressCodeGeneratorError(
+        "An error occurred in three address code representation, not all nodes were visited")
+
+
+cpdef TacUnaryOp represent_unary_op(CUnaryOp node):
+    """ unary_operator = Complement | Negate | Not """
+    if isinstance(node, CComplement):
+        return TacComplement()
+    if isinstance(node, CNegate):
+        return TacNegate()
+    if isinstance(node, CNot):
+        return TacNot()
+
+    raise ThreeAddressCodeGeneratorError(
+        "An error occurred in three address code representation, not all nodes were visited")
+
+
+cpdef TacValue represent_value(CExp node, bint outer = True):
+    """ val = Constant(int) | Var(identifier) """
+    cdef TInt value
+    cdef TIdentifier name
+    if outer:
+        if isinstance(node, CConstant):
+            value = represent_int(node.value)
+            return TacConstant(value)
+        if isinstance(node, CVar):
+            name = represent_identifier(node.name)
+            return TacVariable(name)
+
+        raise ThreeAddressCodeGeneratorError(
+            "An error occurred in three address code representation, not all nodes were visited")
+
+    name = represent_variable_identifier(node)
+    return TacVariable(name)
+
 #
 # def represent_list_instructions(list_node: list) -> List[TacInstruction]:
 #     """ instruction = Return(val) | Unary(unary_operator, val src, val dst)
