@@ -159,7 +159,6 @@ cdef class TacValue(AST):
 
 cdef class TacConstant(TacValue):
     """ Constant(int) """
-    cdef public TInt value
     def __cinit__(self):
         self._fields = ('value',)
 
@@ -169,7 +168,6 @@ cdef class TacConstant(TacValue):
 
 cdef class TacVariable(TacValue):
     """ Var(identifier) """
-    cdef public TIdentifier name
     def __cinit__(self):
         self._fields = ('name',)
 
@@ -194,7 +192,6 @@ cdef class TacInstruction(AST):
 
 cdef class TacReturn(TacInstruction):
     """ Return(val) """
-    cdef public TacValue val
     def __cinit__(self):
         self._fields = ('val',)
 
@@ -204,9 +201,6 @@ cdef class TacReturn(TacInstruction):
 
 cdef class TacUnary(TacInstruction):
     """ Unary(unary_operator, val src, val dst) """
-    cdef public TacUnaryOp unary_op
-    cdef public TacValue src
-    cdef public TacValue dst
     def __cinit__(self):
         self._fields = ('unary_op', 'src', 'dst')
 
@@ -218,10 +212,6 @@ cdef class TacUnary(TacInstruction):
 
 cdef class TacBinary(TacInstruction):
     """ Binary(binary_operator, val src1, val src2, val dst) """
-    cdef public TacBinaryOp binary_op
-    cdef public TacValue src1
-    cdef public TacValue src2
-    cdef public TacValue dst
     def __cinit__(self):
         self._fields = ('binary_op', 'src1', 'src2', 'dst')
 
@@ -234,8 +224,6 @@ cdef class TacBinary(TacInstruction):
 
 cdef class TacCopy(TacInstruction):
     """ Copy(val src, val dst) """
-    cdef public TacValue src
-    cdef public TacValue dst
     def __cinit__(self):
         self._fields = ('src', 'dst')
 
@@ -246,7 +234,6 @@ cdef class TacCopy(TacInstruction):
 
 cdef class TacJump(TacInstruction):
     """ Jump(identifier target) """
-    cdef public TIdentifier target
     def __cinit__(self):
         self._fields = ('target',)
 
@@ -256,8 +243,6 @@ cdef class TacJump(TacInstruction):
 
 cdef class TacJumpIfZero(TacInstruction):
     """ JumpIfZero(val condition, identifier target) """
-    cdef public TacValue condition
-    cdef public TIdentifier target
     def __cinit__(self):
         self._fields = ('condition', 'target')
 
@@ -268,8 +253,6 @@ cdef class TacJumpIfZero(TacInstruction):
 
 cdef class TacJumpIfNotZero(TacInstruction):
     """ JumpIfNotZero(val condition, identifier target) """
-    cdef public TacValue condition
-    cdef public TIdentifier target
     def __cinit__(self):
         self._fields = ('condition', 'target')
 
@@ -280,7 +263,6 @@ cdef class TacJumpIfNotZero(TacInstruction):
 
 cdef class TacLabel(TacInstruction):
     """ Label(identifier name) """
-    cdef public TIdentifier name
     def __cinit__(self):
         self._fields = ('name',)
 
@@ -298,8 +280,6 @@ cdef class TacFunctionDef(AST):
 
 cdef class TacFunction(TacFunctionDef):
     """ Function(identifier, instruction* body) """
-    cdef public TIdentifier name
-    cdef public list[TacInstruction] body
     def __cinit__(self):
         self._fields = ('name', 'body')
 
@@ -310,7 +290,6 @@ cdef class TacFunction(TacFunctionDef):
 
 cdef class TacProgram(AST):
     """ AST = Program(function_definition) """
-    cdef public TacFunctionDef function_def
     def __cinit__(self):
         self._fields = ('function_def',)
 
