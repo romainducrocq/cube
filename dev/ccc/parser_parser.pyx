@@ -19,127 +19,127 @@ cdef list[Token] tokens = []
 cdef Token next_token = Token('', TOKEN_KIND.get('error'))
 cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
 
-#
-# def expect_next(_next_token: Token, *expected_tokens: int) -> None:
-#     if _next_token.token_kind not in expected_tokens:
-#         raise ParserError(
-#             f"""Expected token in kinds { tuple([
-#                 list(TOKEN_KIND.keys())[
-#                        list(TOKEN_KIND.values()).index(expected_token)
-#                 ] for expected_token in expected_tokens])
-#             } but found \"{_next_token.token}\"""")
-#
-#
-# def pop_next() -> Token:
-#     global next_token
-#
-#     try:
-#         next_token = tokens.pop(0)
-#         return next_token
-#     except IndexError:
-#         raise StopIteration
-#
-#
-# def peek_next() -> Token:
-#     global peek_token
-#
-#     try:
-#         peek_token = tokens[0]
-#         return peek_token
-#     except IndexError:
-#         raise StopIteration
-#
-#
-# def parse_identifier() -> TIdentifier:
-#     """ <identifier> ::= ? An identifier token ? """
-#     expect_next(pop_next(), TOKEN_KIND.identifier)
-#     return TIdentifier(next_token.token)
-#
-#
-# def parse_int() -> TInt:
-#     """ <int> ::= ? A constant token ? """
-#     expect_next(pop_next(), TOKEN_KIND.constant)
-#     return TInt(int(next_token.token))
-#
-#
-# def parse_binary_op() -> CBinaryOp:
-#     """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
-#                   | "<" | "<=" | ">" | ">=" """
-#     expect_next(pop_next(), TOKEN_KIND.unop_negation,
-#                 TOKEN_KIND.binop_addition,
-#                 TOKEN_KIND.binop_multiplication,
-#                 TOKEN_KIND.binop_division,
-#                 TOKEN_KIND.binop_remainder,
-#                 TOKEN_KIND.binop_bitand,
-#                 TOKEN_KIND.binop_bitor,
-#                 TOKEN_KIND.binop_bitxor,
-#                 TOKEN_KIND.binop_bitshiftleft,
-#                 TOKEN_KIND.binop_bitshiftright,
-#                 TOKEN_KIND.binop_lessthan,
-#                 TOKEN_KIND.binop_lessthanorequal,
-#                 TOKEN_KIND.binop_greaterthan,
-#                 TOKEN_KIND.binop_greaterthanorequal,
-#                 TOKEN_KIND.binop_equalto,
-#                 TOKEN_KIND.binop_notequal,
-#                 TOKEN_KIND.binop_and,
-#                 TOKEN_KIND.binop_or,
-#                 TOKEN_KIND.assignment_plus,
-#                 TOKEN_KIND.assignment_difference,
-#                 TOKEN_KIND.assignment_product,
-#                 TOKEN_KIND.assignment_quotient,
-#                 TOKEN_KIND.assignment_remainder,
-#                 TOKEN_KIND.assignment_bitand,
-#                 TOKEN_KIND.assignment_bitor,
-#                 TOKEN_KIND.assignment_bitxor,
-#                 TOKEN_KIND.assignment_bitshiftleft,
-#                 TOKEN_KIND.assignment_bitshiftright)
-#     if next_token.token_kind in (TOKEN_KIND.unop_negation,
-#                                  TOKEN_KIND.assignment_difference):
-#         return CSubtract()
-#     if next_token.token_kind in (TOKEN_KIND.binop_addition,
-#                                  TOKEN_KIND.assignment_plus):
-#         return CAdd()
-#     if next_token.token_kind in (TOKEN_KIND.binop_multiplication,
-#                                  TOKEN_KIND.assignment_product):
-#         return CMultiply()
-#     if next_token.token_kind in (TOKEN_KIND.binop_division,
-#                                  TOKEN_KIND.assignment_quotient):
-#         return CDivide()
-#     if next_token.token_kind in (TOKEN_KIND.binop_remainder,
-#                                  TOKEN_KIND.assignment_remainder):
-#         return CRemainder()
-#     if next_token.token_kind in (TOKEN_KIND.binop_bitand,
-#                                  TOKEN_KIND.assignment_bitand):
-#         return CBitAnd()
-#     if next_token.token_kind in (TOKEN_KIND.binop_bitor,
-#                                  TOKEN_KIND.assignment_bitor):
-#         return CBitOr()
-#     if next_token.token_kind in (TOKEN_KIND.binop_bitxor,
-#                                  TOKEN_KIND.assignment_bitxor):
-#         return CBitXor()
-#     if next_token.token_kind in (TOKEN_KIND.binop_bitshiftleft,
-#                                  TOKEN_KIND.assignment_bitshiftleft):
-#         return CBitShiftLeft()
-#     if next_token.token_kind in (TOKEN_KIND.binop_bitshiftright,
-#                                  TOKEN_KIND.assignment_bitshiftright):
-#         return CBitShiftRight()
-#     if next_token.token_kind == TOKEN_KIND.binop_and:
-#         return CAnd()
-#     if next_token.token_kind == TOKEN_KIND.binop_or:
-#         return COr()
-#     if next_token.token_kind == TOKEN_KIND.binop_equalto:
-#         return CEqual()
-#     if next_token.token_kind == TOKEN_KIND.binop_notequal:
-#         return CNotEqual()
-#     if next_token.token_kind == TOKEN_KIND.binop_lessthan:
-#         return CLessThan()
-#     if next_token.token_kind == TOKEN_KIND.binop_lessthanorequal:
-#         return CLessOrEqual()
-#     if next_token.token_kind == TOKEN_KIND.binop_greaterthan:
-#         return CGreaterThan()
-#     if next_token.token_kind == TOKEN_KIND.binop_greaterthanorequal:
-#         return CGreaterOrEqual()
-#
+
+cpdef void expect_next(Token _next_token, tuple[int, ...] expected_tokens):
+    if _next_token.token_kind not in expected_tokens:
+        raise ParserError(
+            f"""Expected token in kinds { tuple([
+                list(TOKEN_KIND.iter().keys())[
+                       list(TOKEN_KIND.iter().values()).index(expected_token)
+                ] for expected_token in expected_tokens])
+            } but found \"{_next_token.token}\"""")
+
+
+cpdef Token pop_next():
+    global next_token
+
+    try:
+        next_token = tokens.pop(0)
+        return next_token
+    except IndexError:
+        raise StopIteration
+
+
+cpdef Token peek_next():
+    global peek_token
+
+    try:
+        peek_token = tokens[0]
+        return peek_token
+    except IndexError:
+        raise StopIteration
+
+
+cpdef TIdentifier parse_identifier():
+    """ <identifier> ::= ? An identifier token ? """
+    expect_next(pop_next(), (TOKEN_KIND.get('identifier'),))
+    return TIdentifier(next_token.token)
+
+
+cpdef TInt parse_int():
+    """ <int> ::= ? A constant token ? """
+    expect_next(pop_next(), (TOKEN_KIND.get('constant'),))
+    return TInt(int(next_token.token))
+
+
+cpdef CBinaryOp parse_binary_op():
+    """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
+                  | "<" | "<=" | ">" | ">=" """
+    expect_next(pop_next(), (TOKEN_KIND.get('unop_negation'),
+                TOKEN_KIND.get('binop_addition'),
+                TOKEN_KIND.get('binop_multiplication'),
+                TOKEN_KIND.get('binop_division'),
+                TOKEN_KIND.get('binop_remainder'),
+                TOKEN_KIND.get('binop_bitand'),
+                TOKEN_KIND.get('binop_bitor'),
+                TOKEN_KIND.get('binop_bitxor'),
+                TOKEN_KIND.get('binop_bitshiftleft'),
+                TOKEN_KIND.get('binop_bitshiftright'),
+                TOKEN_KIND.get('binop_lessthan'),
+                TOKEN_KIND.get('binop_lessthanorequal'),
+                TOKEN_KIND.get('binop_greaterthan'),
+                TOKEN_KIND.get('binop_greaterthanorequal'),
+                TOKEN_KIND.get('binop_equalto'),
+                TOKEN_KIND.get('binop_notequal'),
+                TOKEN_KIND.get('binop_and'),
+                TOKEN_KIND.get('binop_or'),
+                TOKEN_KIND.get('assignment_plus'),
+                TOKEN_KIND.get('assignment_difference'),
+                TOKEN_KIND.get('assignment_product'),
+                TOKEN_KIND.get('assignment_quotient'),
+                TOKEN_KIND.get('assignment_remainder'),
+                TOKEN_KIND.get('assignment_bitand'),
+                TOKEN_KIND.get('assignment_bitor'),
+                TOKEN_KIND.get('assignment_bitxor'),
+                TOKEN_KIND.get('assignment_bitshiftleft'),
+                TOKEN_KIND.get('assignment_bitshiftright')))
+    if next_token.token_kind in (TOKEN_KIND.get('unop_negation'),
+                                 TOKEN_KIND.get('assignment_difference')):
+        return CSubtract()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_addition'),
+                                 TOKEN_KIND.get('assignment_plus')):
+        return CAdd()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_multiplication'),
+                                 TOKEN_KIND.get('assignment_product')):
+        return CMultiply()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_division'),
+                                 TOKEN_KIND.get('assignment_quotient')):
+        return CDivide()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_remainder'),
+                                 TOKEN_KIND.get('assignment_remainder')):
+        return CRemainder()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_bitand'),
+                                 TOKEN_KIND.get('assignment_bitand')):
+        return CBitAnd()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_bitor'),
+                                 TOKEN_KIND.get('assignment_bitor')):
+        return CBitOr()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_bitxor'),
+                                 TOKEN_KIND.get('assignment_bitxor')):
+        return CBitXor()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_bitshiftleft'),
+                                 TOKEN_KIND.get('assignment_bitshiftleft')):
+        return CBitShiftLeft()
+    if next_token.token_kind in (TOKEN_KIND.get('binop_bitshiftright'),
+                                 TOKEN_KIND.get('assignment_bitshiftright')):
+        return CBitShiftRight()
+    if next_token.token_kind == TOKEN_KIND.get('binop_and'):
+        return CAnd()
+    if next_token.token_kind == TOKEN_KIND.get('binop_or'):
+        return COr()
+    if next_token.token_kind == TOKEN_KIND.get('binop_equalto'):
+        return CEqual()
+    if next_token.token_kind == TOKEN_KIND.get('binop_notequal'):
+        return CNotEqual()
+    if next_token.token_kind == TOKEN_KIND.get('binop_lessthan'):
+        return CLessThan()
+    if next_token.token_kind == TOKEN_KIND.get('binop_lessthanorequal'):
+        return CLessOrEqual()
+    if next_token.token_kind == TOKEN_KIND.get('binop_greaterthan'):
+        return CGreaterThan()
+    if next_token.token_kind == TOKEN_KIND.get('binop_greaterthanorequal'):
+        return CGreaterOrEqual()
+
 #
 # def parse_unary_op() -> CUnaryOp:
 #     """ <unop> ::= "-" | "~" | "!" """

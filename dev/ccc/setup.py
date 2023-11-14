@@ -3,14 +3,14 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
 ext_modules = [
-    # Extension("ccc.__compiler",  ["./__compiler.pyx"]),
-    # Extension("ccc.util_ast", ["./util_ast.pyx"]),
-    # Extension("ccc.util_fopen", ["./util_fopen.pyx"]),
-    # Extension("ccc.util_iota_enum",  ["./util_iota_enum.pyx"]),
-    # Extension("ccc.parser_c_ast",  ["./parser_c_ast.pyx"]),
-    # Extension("ccc.parser_lexer",  ["./parser_lexer.pyx"]),
+    Extension("ccc.__compiler",  ["./__compiler.pyx"]),
+    Extension("ccc.util_ast", ["./util_ast.pyx"]),
+    Extension("ccc.util_fopen", ["./util_fopen.pyx"]),
+    Extension("ccc.util_iota_enum",  ["./util_iota_enum.pyx"]),
+    Extension("ccc.parser_c_ast",  ["./parser_c_ast.pyx"]),
+    Extension("ccc.parser_lexer",  ["./parser_lexer.pyx"]),
     Extension("ccc.parser_parser",  ["./parser_parser.pyx"]),
-    # Extension("ccc.parser_precedence", ["./parser_precedence.pyx"]),
+    Extension("ccc.parser_precedence", ["./parser_precedence.pyx"]),
 ]
 
 for ext_module in ext_modules:

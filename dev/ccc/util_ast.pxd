@@ -1,5 +1,5 @@
 cdef class AST:
-    cdef public tuple[str] _fields
+    cdef public tuple[str, ...] _fields
 
 cdef class TIdentifier(AST):
     cdef public str str_t

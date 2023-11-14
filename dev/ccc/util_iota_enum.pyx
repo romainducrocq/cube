@@ -1,6 +1,6 @@
 cdef class IotaEnum:
 
-    def __init__(self, tuple[unicode] names):
+    def __init__(self, tuple[str, ...] names):
         self.iota_counter = 0
         self.iota_enum = {}
 
