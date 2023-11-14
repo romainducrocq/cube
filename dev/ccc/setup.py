@@ -12,6 +12,8 @@ ext_modules = [
     Extension("ccc.parser_parser",  ["./parser_parser.pyx"]),
     Extension("ccc.parser_precedence", ["./parser_precedence.pyx"]),
     Extension("ccc.intermediate_name", ["./intermediate_name.pyx"]),
+    Extension("ccc.intermediate_semantic_analyzer", ["./intermediate_semantic_analyzer.pyx"]),
+
 ]
 
 for ext_module in ext_modules:
