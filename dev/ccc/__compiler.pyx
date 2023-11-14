@@ -5,7 +5,7 @@ import os
 from ccc.util_iota_enum cimport IotaEnum
 from ccc.util_ast cimport AST, ast_pretty_string
 from ccc.parser_lexer cimport lexing, Token
-# from ccc.parser.parser import parsing
+from ccc.parser_parser cimport parsing
 # from ccc.intermediate.semantic_analyzer import semantic_analysis
 # from ccc.intermediate.three_address_generator import three_address_code_representation
 # from ccc.assembly.assembly_generator import assembly_generation
@@ -51,12 +51,12 @@ cpdef void compile(str filename, int opt_exit, int opt_s):
                   str(token.token_kind) + ')')
         return
 
-    # print("-- Start parsing...")
-    # c_ast: AST = parsing(tokens)
-    # print("-- Exit parsing: OK")
-    # if opt_exit == OPT.parse:
-    #     debug(c_ast.pretty_string())
-    #     return
+    print("-- Start parsing...")
+    cdef AST c_ast = parsing(tokens)
+    print("-- Exit parsing: OK")
+    if opt_exit == OPT.get('parse'):
+        debug(ast_pretty_string(c_ast))
+        return
 
     # print("-- Start semantic analysis...")
     # semantic_analysis(c_ast)
