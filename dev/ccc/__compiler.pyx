@@ -3,7 +3,7 @@ import sys
 import os
 
 from ccc.util_iota_enum cimport IotaEnum
-# from ccc.util.__ast import AST
+from ccc.util_ast cimport AST, ast_pretty_string
 from ccc.parser_lexer cimport lexing, Token
 # from ccc.parser.parser import parsing
 # from ccc.intermediate.semantic_analyzer import semantic_analysis

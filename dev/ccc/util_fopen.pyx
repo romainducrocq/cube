@@ -11,16 +11,16 @@ class FileError(RuntimeError):
         super(FileError, self).__init__(message)
 
 
-cdef FILE *cfile
+cdef FILE *cfile = NULL
 
 
 cpdef void file_open(str filename):
     global cfile
+    cfile = NULL
 
     cdef bytes b_filename = filename.encode("UTF-8")
     cdef char *c_filename = b_filename
 
-    cfile = NULL
     cfile = fopen(c_filename, "rb")
     if cfile == NULL:
 

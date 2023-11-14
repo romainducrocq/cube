@@ -83,12 +83,13 @@ cpdef void _pretty_string(str kind, object node):
     cdef int e
     cdef str child_kind
     cdef object child_node
-    cdef list[object] list_node
+    cdef object list_node
 
     string += str(' ' * indent + kind + type(node).__name__ + ':' + '\n')
     indent += 4
 
     for child_node, child_kind in ast_iter_fields(node):
+        print(child_node)
         if isinstance(child_node, list):
             string += str(' ' * indent + '<' + child_kind + '> List(' + str(len(child_node)) + '):' + '\n')
             indent += 4
@@ -101,12 +102,14 @@ cpdef void _pretty_string(str kind, object node):
         else:
             _pretty_string_child('<' + child_kind + '> ', child_node)
 
+    indent -= 4
+
 
 cpdef str ast_pretty_string(AST node):
     global string
     global indent
-
     string = ""
     indent = 0
+
     _pretty_string('<AST> ', node)
     return string[:-1]
