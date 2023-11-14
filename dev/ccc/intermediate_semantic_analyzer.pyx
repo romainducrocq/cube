@@ -14,12 +14,6 @@ class SemanticAnalyzerError(RuntimeError):
 cdef dict[str, str] variable_map = {}
 
 
-cpdef void expect_next(AST next_node, tuple[type, ...] expected_nodes):
-    if not isinstance(next_node, expected_nodes):
-        raise SemanticAnalyzerError(
-            f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
-
-
 cpdef void resolve_statement(CStatement node):
     if isinstance(node, (CReturn, CExpression)):
         resolve_expression(node.exp)

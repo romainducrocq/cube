@@ -11,12 +11,6 @@ class ThreeAddressCodeGeneratorError(RuntimeError):
         super(ThreeAddressCodeGeneratorError, self).__init__(message)
 
 
-cpdef void expect_next(AST next_node, tuple[type, ...] expected_nodes):
-    if not isinstance(next_node, expected_nodes):
-        raise ThreeAddressCodeGeneratorError(
-            f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
-
-
 cpdef TIdentifier represent_identifier(TIdentifier node):
     """ <identifier> = Built-in identifier type """
     return TIdentifier(deepcopy(node.str_t))
@@ -102,9 +96,7 @@ cpdef TacValue represent_value(CExp node, bint outer = True):
 cdef list[TacInstruction] instructions = []
 
 
-cpdef TacValue represent_instructions(AST node): # TODO type AST node ?
-    # expect_next(node, CDeclaration, CStatement,
-    #                  CExp) # TODO check type
+cpdef TacValue represent_instructions(AST node): # TODO type is (CDeclaration, CStatement, CExp)
     if isinstance(node, CNull):
         return None
     if isinstance(node, CExpression):
