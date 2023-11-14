@@ -21,8 +21,7 @@ class CompilerError(RuntimeError):
         super(CompilerError, self).__init__(message)
 
 
-cdef IotaEnum OPT
-OPT = IotaEnum((
+cdef IotaEnum OPT = IotaEnum((
     "none",
     "lex",
     "parse",
@@ -41,15 +40,15 @@ cpdef void debug(str string = "", str end="\n"):
 
 cpdef void compile(str filename, int opt_exit, int opt_s):
 
+    print("-- Start lexing...")
+    cdef list[Token] tokens = lexing(filename)
+    print("-- Exit lexing: OK")
     cdef int e
     cdef Token token
-    cdef list[Token] tokens
-    print("-- Start lexing...")
-    tokens = lexing(filename)
-    print("-- Exit lexing: OK")
     if opt_exit == OPT.get('lex'):
         for e, token in enumerate(tokens):
-            debug(str(e) + ': ("' + token.token + '", ' + str(token.token_kind) + ')')
+            debug(str(e) + ': ("' + token.token + '", ' +
+                  str(token.token_kind) + ')')
         return
 
     # print("-- Start parsing...")
@@ -94,20 +93,18 @@ cpdef void compile(str filename, int opt_exit, int opt_s):
 
 
 cpdef tuple[str, int, int] arg_parse(list[str] argv):
-    cdef str filename
-    cdef int opt_exit, opt_s
 
     _ = "" if not argv else argv.pop(0)
     if not argv:
         raise CompilerError(
             f"No file was provided in args")
 
-    filename = "" if not argv else argv.pop(0)
+    cdef str filename = "" if not argv else argv.pop(0)
     if not os.path.exists(filename):
         raise CompilerError(
             f"File {filename} does not exist")
 
-    opt_exit = OPT.get('none')
+    cdef int opt_exit = OPT.get('none')
     if "--codeemit" in argv:
         opt_exit = OPT.get('codeemit')
     elif "--codegen" in argv:
@@ -121,7 +118,7 @@ cpdef tuple[str, int, int] arg_parse(list[str] argv):
     elif "--lex" in argv:
         opt_exit = OPT.get('lex')
 
-    opt_s = OPT.get('none')
+    cdef int opt_s = OPT.get('none')
     if "-S" in argv:
         opt_s = OPT.get('S')
 
