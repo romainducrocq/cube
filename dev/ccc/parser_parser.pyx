@@ -14,6 +14,15 @@ cdef Token next_token = Token('', TOKEN_KIND.get('error'))
 cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
 
 
+cpdef void expect_next_is(Token _next_token, int expected_token):
+    if _next_token.token_kind != expected_token:
+        raise ParserError(
+            f"""Expected token {
+                list(TOKEN_KIND.iter().keys())[
+                       list(TOKEN_KIND.iter().values()).index(expected_token)
+            ]} but found \"{_next_token.token}\"""")
+
+
 cpdef void expect_next(Token _next_token, tuple[int, ...] expected_tokens):
     if _next_token.token_kind not in expected_tokens:
         raise ParserError(
@@ -46,13 +55,13 @@ cpdef Token peek_next():
 
 cpdef TIdentifier parse_identifier():
     """ <identifier> ::= ? An identifier token ? """
-    expect_next(pop_next(), (TOKEN_KIND.get('identifier'),))
+    expect_next_is(pop_next(), TOKEN_KIND.get('identifier'))
     return TIdentifier(next_token.token)
 
 
 cpdef TInt parse_int():
     """ <int> ::= ? A constant token ? """
-    expect_next(pop_next(), (TOKEN_KIND.get('constant'),))
+    expect_next_is(pop_next(), TOKEN_KIND.get('constant'))
     return TInt(int(next_token.token))
 
 
@@ -174,7 +183,7 @@ cpdef CExp parse_factor():
         return CVar(name)
     if pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
         inner_exp = parse_exp()
-        expect_next(pop_next(), (TOKEN_KIND.get('parenthesis_close'),))
+        expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
         return inner_exp
 
 
@@ -249,17 +258,17 @@ cpdef CStatement parse_statement():
     if peek_token.token_kind == TOKEN_KIND.get('key_return'):
         _ = pop_next()
         return_exp = parse_exp()
-        expect_next(pop_next(), (TOKEN_KIND.get('semicolon'),))
+        expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
         return CReturn(return_exp)
     if True:
         return_exp = parse_exp()
-        expect_next(pop_next(), (TOKEN_KIND.get('semicolon'),))
+        expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
         return CExpression(return_exp)
 
 
 cpdef CDeclaration parse_declaration():
     """ <declaration> ::= "int" <identifier> [ "=" <exp> ] ";" """
-    expect_next(pop_next(), (TOKEN_KIND.get('key_int'),))
+    expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
     cdef TIdentifier name = parse_identifier()
     cdef CExp init
     if peek_next().token_kind == TOKEN_KIND.get('assignment_simple'):
@@ -267,7 +276,7 @@ cpdef CDeclaration parse_declaration():
         init = parse_exp()
     else:
         init = None
-    expect_next(pop_next(), (TOKEN_KIND.get('semicolon'),))
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
     return CDecl(name, init)
 
 
@@ -285,18 +294,18 @@ cpdef CBlockItem parse_block_item():
 
 cpdef CFunctionDef parse_function_def():
     """ <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}" """
-    expect_next(pop_next(), (TOKEN_KIND.get('key_int'),))
+    expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
     cdef TIdentifier name = parse_identifier()
-    expect_next(pop_next(), (TOKEN_KIND.get('parenthesis_open'),))
-    expect_next(pop_next(), (TOKEN_KIND.get('key_void'),))
-    expect_next(pop_next(), (TOKEN_KIND.get('parenthesis_close'),))
-    expect_next(pop_next(), (TOKEN_KIND.get('brace_open'),))
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
+    expect_next_is(pop_next(), TOKEN_KIND.get('key_void'))
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
+    expect_next_is(pop_next(), TOKEN_KIND.get('brace_open'))
     cdef CBlockItem block_item
     cdef list[CBlockItem] body = []
     while peek_next().token_kind != TOKEN_KIND.get('brace_close'):
         block_item = parse_block_item()
         body.append(block_item)
-    expect_next(pop_next(), (TOKEN_KIND.get('brace_close'),))
+    expect_next_is(pop_next(), TOKEN_KIND.get('brace_close'))
     return CFunction(name, body)
 
 
