@@ -1,10 +1,10 @@
 cdef class IotaEnum:
 
     def __init__(self, tuple[unicode] names):
-        cdef unicode name
-
         self.iota_counter = 0
         self.iota_enum = {}
+
+        cdef str name
         for name in names:
             self.iota_enum[name] = self.iota_counter
             self.iota_counter += 1
