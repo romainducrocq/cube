@@ -23,7 +23,7 @@ cpdef void expect_next_is(Token _next_token, int expected_token):
             ]} but found \"{_next_token.token}\"""")
 
 
-cpdef void expect_next(Token _next_token, tuple[int, ...] expected_tokens):
+cpdef void expect_next_in(Token _next_token, tuple[int, ...] expected_tokens):
     if _next_token.token_kind not in expected_tokens:
         raise ParserError(
             f"""Expected token in kinds { tuple([
@@ -68,34 +68,34 @@ cpdef TInt parse_int():
 cpdef CBinaryOp parse_binary_op():
     """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
                   | "<" | "<=" | ">" | ">=" """
-    expect_next(pop_next(), (TOKEN_KIND.get('unop_negation'),
-                TOKEN_KIND.get('binop_addition'),
-                TOKEN_KIND.get('binop_multiplication'),
-                TOKEN_KIND.get('binop_division'),
-                TOKEN_KIND.get('binop_remainder'),
-                TOKEN_KIND.get('binop_bitand'),
-                TOKEN_KIND.get('binop_bitor'),
-                TOKEN_KIND.get('binop_bitxor'),
-                TOKEN_KIND.get('binop_bitshiftleft'),
-                TOKEN_KIND.get('binop_bitshiftright'),
-                TOKEN_KIND.get('binop_lessthan'),
-                TOKEN_KIND.get('binop_lessthanorequal'),
-                TOKEN_KIND.get('binop_greaterthan'),
-                TOKEN_KIND.get('binop_greaterthanorequal'),
-                TOKEN_KIND.get('binop_equalto'),
-                TOKEN_KIND.get('binop_notequal'),
-                TOKEN_KIND.get('binop_and'),
-                TOKEN_KIND.get('binop_or'),
-                TOKEN_KIND.get('assignment_plus'),
-                TOKEN_KIND.get('assignment_difference'),
-                TOKEN_KIND.get('assignment_product'),
-                TOKEN_KIND.get('assignment_quotient'),
-                TOKEN_KIND.get('assignment_remainder'),
-                TOKEN_KIND.get('assignment_bitand'),
-                TOKEN_KIND.get('assignment_bitor'),
-                TOKEN_KIND.get('assignment_bitxor'),
-                TOKEN_KIND.get('assignment_bitshiftleft'),
-                TOKEN_KIND.get('assignment_bitshiftright')))
+    expect_next_in(pop_next(), (TOKEN_KIND.get('unop_negation'),
+                   TOKEN_KIND.get('binop_addition'),
+                   TOKEN_KIND.get('binop_multiplication'),
+                   TOKEN_KIND.get('binop_division'),
+                   TOKEN_KIND.get('binop_remainder'),
+                   TOKEN_KIND.get('binop_bitand'),
+                   TOKEN_KIND.get('binop_bitor'),
+                   TOKEN_KIND.get('binop_bitxor'),
+                   TOKEN_KIND.get('binop_bitshiftleft'),
+                   TOKEN_KIND.get('binop_bitshiftright'),
+                   TOKEN_KIND.get('binop_lessthan'),
+                   TOKEN_KIND.get('binop_lessthanorequal'),
+                   TOKEN_KIND.get('binop_greaterthan'),
+                   TOKEN_KIND.get('binop_greaterthanorequal'),
+                   TOKEN_KIND.get('binop_equalto'),
+                   TOKEN_KIND.get('binop_notequal'),
+                   TOKEN_KIND.get('binop_and'),
+                   TOKEN_KIND.get('binop_or'),
+                   TOKEN_KIND.get('assignment_plus'),
+                   TOKEN_KIND.get('assignment_difference'),
+                   TOKEN_KIND.get('assignment_product'),
+                   TOKEN_KIND.get('assignment_quotient'),
+                   TOKEN_KIND.get('assignment_remainder'),
+                   TOKEN_KIND.get('assignment_bitand'),
+                   TOKEN_KIND.get('assignment_bitor'),
+                   TOKEN_KIND.get('assignment_bitxor'),
+                   TOKEN_KIND.get('assignment_bitshiftleft'),
+                   TOKEN_KIND.get('assignment_bitshiftright')))
     if next_token.token_kind in (TOKEN_KIND.get('unop_negation'),
                                  TOKEN_KIND.get('assignment_difference')):
         return CSubtract()
@@ -146,9 +146,9 @@ cpdef CBinaryOp parse_binary_op():
 
 cpdef CUnaryOp parse_unary_op():
     """ <unop> ::= "-" | "~" | "!" """
-    expect_next(pop_next(), (TOKEN_KIND.get('unop_complement'),
-                TOKEN_KIND.get('unop_negation'),
-                TOKEN_KIND.get('unop_not')))
+    expect_next_in(pop_next(), (TOKEN_KIND.get('unop_complement'),
+                   TOKEN_KIND.get('unop_negation'),
+                   TOKEN_KIND.get('unop_not')))
     if next_token.token_kind == TOKEN_KIND.get('unop_complement'):
         return CComplement()
     if next_token.token_kind == TOKEN_KIND.get('unop_negation'):
@@ -159,12 +159,12 @@ cpdef CUnaryOp parse_unary_op():
 
 cpdef CExp parse_factor():
     """ <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" """
-    expect_next(peek_next(),(TOKEN_KIND.get('constant'),
-                TOKEN_KIND.get('identifier'),
-                TOKEN_KIND.get('unop_complement'),
-                TOKEN_KIND.get('unop_negation'),
-                TOKEN_KIND.get('unop_not'),
-                TOKEN_KIND.get('parenthesis_open')))
+    expect_next_in(peek_next(),(TOKEN_KIND.get('constant'),
+                   TOKEN_KIND.get('identifier'),
+                   TOKEN_KIND.get('unop_complement'),
+                   TOKEN_KIND.get('unop_negation'),
+                   TOKEN_KIND.get('unop_not'),
+                   TOKEN_KIND.get('parenthesis_open')))
     cdef CUnaryOp unary_op
     cdef CExp inner_exp
     if peek_token.token_kind in (TOKEN_KIND.get('unop_complement'),
