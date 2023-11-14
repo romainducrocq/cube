@@ -13,7 +13,7 @@ ext_modules = [
     Extension("ccc.parser_precedence", ["./parser_precedence.pyx"]),
     Extension("ccc.intermediate_name", ["./intermediate_name.pyx"]),
     Extension("ccc.intermediate_semantic_analyzer", ["./intermediate_semantic_analyzer.pyx"]),
-
+    Extension("ccc.intermediate_tac_ast", ["./intermediate_tac_ast.pyx"]),
 ]
 
 for ext_module in ext_modules:
