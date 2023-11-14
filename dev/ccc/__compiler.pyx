@@ -7,7 +7,7 @@ from ccc.util_ast cimport AST, ast_pretty_string
 from ccc.parser_lexer cimport lexing, Token
 from ccc.parser_parser cimport parsing
 from ccc.intermediate_semantic_analyzer cimport semantic_analysis
-# from ccc.intermediate.three_address_generator import three_address_code_representation
+from ccc.intermediate_three_address_generator cimport three_address_code_representation
 # from ccc.assembly.assembly_generator import assembly_generation
 # from ccc.assembly.code_emitter import code_emission
 
@@ -65,13 +65,13 @@ cpdef void compile(str filename, int opt_exit, int opt_s):
         debug(ast_pretty_string(c_ast))
         return
 
-    # print("-- Start tac representation...")
-    # tac_ast: AST = three_address_code_representation(c_ast)
-    # print("-- Exit tac representation: OK")
-    # if opt_exit == OPT.tacky:
-    #     debug(tac_ast.pretty_string())
-    #     return
-    #
+    print("-- Start tac representation...")
+    cdef AST tac_ast = three_address_code_representation(c_ast)
+    print("-- Exit tac representation: OK")
+    if opt_exit == OPT.get('tacky'):
+        debug(ast_pretty_string(tac_ast))
+        return
+
     # print("-- Start assembly generation...")
     # asm_ast: AST = assembly_generation(tac_ast)
     # print("-- Exit assembly generation: OK")

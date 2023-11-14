@@ -1,4 +1,3 @@
-# from typing import List, Optional
 from copy import deepcopy
 
 from ccc.parser_c_ast cimport *
@@ -131,14 +130,14 @@ cpdef TacValue represent_instructions(AST node): # TODO type AST node ?
         src: TacValue = represent_instructions(node.exp_right)
         dst: TacValue = represent_value(node.exp_left)
         instructions.append(TacCopy(src, dst))
-        return deepcopy(dst)
+        return dst
     cdef TacUnaryOp unary_op
     if isinstance(node, CUnary):
         src = represent_instructions(node.exp)
         dst = represent_value(node.exp, outer=False)
         unary_op = represent_unary_op(node.unary_op)
         instructions.append(TacUnary(unary_op, src, dst))
-        return deepcopy(dst)
+        return dst
     cdef TacValue src2
     cdef TacBinaryOp binary_op
     if isinstance(node, CBinary) and \
@@ -148,7 +147,7 @@ cpdef TacValue represent_instructions(AST node): # TODO type AST node ?
         dst = represent_value(node.exp_left, outer=False)
         binary_op = represent_binary_op(node.binary_op)
         instructions.append(TacBinary(binary_op, src, src2, dst))
-        return deepcopy(dst)
+        return dst
     if isinstance(node, CAssignmentCompound):
         src = represent_instructions(node.exp_left)
         src2 = represent_instructions(node.exp_right)
@@ -156,8 +155,8 @@ cpdef TacValue represent_instructions(AST node): # TODO type AST node ?
         binary_op = represent_binary_op(node.binary_op)
         instructions.append(TacBinary(binary_op, src, src2, val))
         dst = represent_value(node.exp_left)
-        instructions.append(TacCopy(deepcopy(val), dst))
-        return deepcopy(dst)
+        instructions.append(TacCopy(val, dst))
+        return dst
     cdef TacValue istrue
     cdef TacValue is_false
     cdef TIdentifier label_true
@@ -171,14 +170,14 @@ cpdef TacValue represent_instructions(AST node): # TODO type AST node ?
             src = represent_instructions(node.exp_left)
             instructions.append(TacJumpIfZero(src, label_false))
             src2 = represent_instructions(node.exp_right)
-            instructions.append(TacJumpIfZero(src2, deepcopy(label_false)))
+            instructions.append(TacJumpIfZero(src2, label_false))
             dst = represent_value(node.exp_left, outer=False)
             instructions.append(TacCopy(is_true, dst))
             instructions.append(TacJump(label_true))
-            instructions.append(TacLabel(deepcopy(label_false)))
-            instructions.append(TacCopy(is_false, deepcopy(dst)))
-            instructions.append(TacLabel(deepcopy(label_true)))
-            return deepcopy(dst)
+            instructions.append(TacLabel(label_false))
+            instructions.append(TacCopy(is_false, dst))
+            instructions.append(TacLabel(label_true))
+            return dst
         if isinstance(node.binary_op, COr):
             is_true = TacConstant(TInt(1))
             is_false = TacConstant(TInt(0))
@@ -187,14 +186,14 @@ cpdef TacValue represent_instructions(AST node): # TODO type AST node ?
             src = represent_instructions(node.exp_left)
             instructions.append(TacJumpIfNotZero(src, label_true))
             src2 = represent_instructions(node.exp_right)
-            instructions.append(TacJumpIfNotZero(src2, deepcopy(label_true)))
+            instructions.append(TacJumpIfNotZero(src2, label_true))
             dst = represent_value(node.exp_left, outer=False)
             instructions.append(TacCopy(is_false, dst))
             instructions.append(TacJump(label_false))
-            instructions.append(TacLabel(deepcopy(label_true)))
-            instructions.append(TacCopy(is_true, deepcopy(dst)))
-            instructions.append(TacLabel(deepcopy(label_false)))
-            return deepcopy(dst)
+            instructions.append(TacLabel(label_true))
+            instructions.append(TacCopy(is_true, dst))
+            instructions.append(TacLabel(label_false))
+            return dst
 
     raise ThreeAddressCodeGeneratorError(
         "An error occurred in three address code representation, not all nodes were visited")
