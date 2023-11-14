@@ -14,6 +14,8 @@ ext_modules = [
     Extension("ccc.intermediate_name", ["./intermediate_name.pyx"]),
     Extension("ccc.intermediate_semantic_analyzer", ["./intermediate_semantic_analyzer.pyx"]),
     Extension("ccc.intermediate_tac_ast", ["./intermediate_tac_ast.pyx"]),
+    Extension("ccc.intermediate_three_address_generator", ["./intermediate_three_address_generator.pyx"]),
+
 ]
 
 for ext_module in ext_modules:

@@ -1,3 +1,4 @@
 cython:
+- test performance with in / expect -> static set instead of tuple
 - fopen: https://gist.github.com/pydemo/0b85bd5d1c017f6873422e02aeb9618a
 
