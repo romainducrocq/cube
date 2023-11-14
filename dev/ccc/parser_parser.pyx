@@ -140,103 +140,110 @@ cpdef CBinaryOp parse_binary_op():
     if next_token.token_kind == TOKEN_KIND.get('binop_greaterthanorequal'):
         return CGreaterOrEqual()
 
-#
-# def parse_unary_op() -> CUnaryOp:
-#     """ <unop> ::= "-" | "~" | "!" """
-#     expect_next(pop_next(), TOKEN_KIND.unop_complement,
-#                 TOKEN_KIND.unop_negation,
-#                 TOKEN_KIND.unop_not)
-#     if next_token.token_kind == TOKEN_KIND.unop_complement:
-#         return CComplement()
-#     if next_token.token_kind == TOKEN_KIND.unop_negation:
-#         return CNegate()
-#     if next_token.token_kind == TOKEN_KIND.unop_not:
-#         return CNot()
-#
-#
-# def parse_factor() -> CExp:
-#     """ <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" """
-#     expect_next(peek_next(), TOKEN_KIND.constant,
-#                 TOKEN_KIND.identifier,
-#                 TOKEN_KIND.unop_complement,
-#                 TOKEN_KIND.unop_negation,
-#                 TOKEN_KIND.unop_not,
-#                 TOKEN_KIND.parenthesis_open)
-#     if peek_token.token_kind in (TOKEN_KIND.unop_complement,
-#                                  TOKEN_KIND.unop_negation,
-#                                  TOKEN_KIND.unop_not):
-#         unary_op: CUnaryOp = parse_unary_op()
-#         inner_exp: CExp = parse_factor()
-#         return CUnary(unary_op, inner_exp)
-#     if peek_token.token_kind == TOKEN_KIND.constant:
-#         value: TInt = parse_int()
-#         return CConstant(value)
-#     if peek_token.token_kind == TOKEN_KIND.identifier:
-#         name: TIdentifier = parse_identifier()
-#         return CVar(name)
-#     if pop_next().token_kind == TOKEN_KIND.parenthesis_open:
-#         inner_exp: CExp = parse_exp()
-#         expect_next(pop_next(), TOKEN_KIND.parenthesis_close)
-#         return inner_exp
-#
-#
-# def parse_exp(min_precedence: int = 0) -> CExp:
-#     """ <exp> ::= <factor> | <exp> <binop> <exp> """
-#     exp_left: CExp = parse_factor()
-#     while peek_next().token_kind in (TOKEN_KIND.unop_negation,
-#                                      TOKEN_KIND.binop_addition,
-#                                      TOKEN_KIND.binop_multiplication,
-#                                      TOKEN_KIND.binop_division,
-#                                      TOKEN_KIND.binop_remainder,
-#                                      TOKEN_KIND.binop_bitand,
-#                                      TOKEN_KIND.binop_bitor,
-#                                      TOKEN_KIND.binop_bitxor,
-#                                      TOKEN_KIND.binop_bitshiftleft,
-#                                      TOKEN_KIND.binop_bitshiftright,
-#                                      TOKEN_KIND.binop_lessthan,
-#                                      TOKEN_KIND.binop_lessthanorequal,
-#                                      TOKEN_KIND.binop_greaterthan,
-#                                      TOKEN_KIND.binop_greaterthanorequal,
-#                                      TOKEN_KIND.binop_equalto,
-#                                      TOKEN_KIND.binop_notequal,
-#                                      TOKEN_KIND.binop_and,
-#                                      TOKEN_KIND.binop_or,
-#                                      TOKEN_KIND.assignment_simple,
-#                                      TOKEN_KIND.assignment_plus,
-#                                      TOKEN_KIND.assignment_difference,
-#                                      TOKEN_KIND.assignment_product,
-#                                      TOKEN_KIND.assignment_quotient,
-#                                      TOKEN_KIND.assignment_remainder,
-#                                      TOKEN_KIND.assignment_bitand,
-#                                      TOKEN_KIND.assignment_bitor,
-#                                      TOKEN_KIND.assignment_bitxor,
-#                                      TOKEN_KIND.assignment_bitshiftleft,
-#                                      TOKEN_KIND.assignment_bitshiftright):
-#         precedence: int = parse_token_precedence(peek_token.token_kind)
-#         if precedence < min_precedence:
-#             break
-#         if peek_token.token_kind == TOKEN_KIND.assignment_simple:
-#             _ = pop_next()
-#             exp_right: CExp = parse_exp(precedence)
-#             exp_left: CExp = CAssignment(exp_left, exp_right)
-#         elif peek_token.token_kind in (TOKEN_KIND.assignment_plus,
-#                                        TOKEN_KIND.assignment_difference,
-#                                        TOKEN_KIND.assignment_product,
-#                                        TOKEN_KIND.assignment_quotient,
-#                                        TOKEN_KIND.assignment_remainder,
-#                                        TOKEN_KIND.assignment_bitand,
-#                                        TOKEN_KIND.assignment_bitor,
-#                                        TOKEN_KIND.assignment_bitxor,
-#                                        TOKEN_KIND.assignment_bitshiftleft,
-#                                        TOKEN_KIND.assignment_bitshiftright):
-#             binary_op: CBinaryOp = parse_binary_op()
-#             exp_right: CExp = parse_exp(precedence)
-#             exp_left: CExp = CAssignmentCompound(binary_op, exp_left, exp_right)
-#         else:
-#             binary_op: CBinaryOp = parse_binary_op()
-#             exp_right: CExp = parse_exp(precedence + 1)
-#             exp_left: CExp = CBinary(binary_op, exp_left, exp_right)
-#     return exp_left
+
+cpdef CUnaryOp parse_unary_op():
+    """ <unop> ::= "-" | "~" | "!" """
+    expect_next(pop_next(), (TOKEN_KIND.get('unop_complement'),
+                TOKEN_KIND.get('unop_negation'),
+                TOKEN_KIND.get('unop_not')))
+    if next_token.token_kind == TOKEN_KIND.get('unop_complement'):
+        return CComplement()
+    if next_token.token_kind == TOKEN_KIND.get('unop_negation'):
+        return CNegate()
+    if next_token.token_kind == TOKEN_KIND.get('unop_not'):
+        return CNot()
+
+
+cpdef CExp parse_factor():
+    """ <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" """
+    expect_next(peek_next(),(TOKEN_KIND.get('constant'),
+                TOKEN_KIND.get('identifier'),
+                TOKEN_KIND.get('unop_complement'),
+                TOKEN_KIND.get('unop_negation'),
+                TOKEN_KIND.get('unop_not'),
+                TOKEN_KIND.get('parenthesis_open')))
+    cdef CUnaryOp unary_op
+    cdef CExp inner_exp
+    if peek_token.token_kind in (TOKEN_KIND.get('unop_complement'),
+                                 TOKEN_KIND.get('unop_negation'),
+                                 TOKEN_KIND.get('unop_not')):
+        unary_op = parse_unary_op()
+        inner_exp = parse_factor()
+        return CUnary(unary_op, inner_exp)
+    cdef TInt value
+    if peek_token.token_kind == TOKEN_KIND.get('constant'):
+        value = parse_int()
+        return CConstant(value)
+    cdef TIdentifier name
+    if peek_token.token_kind == TOKEN_KIND.get('identifier'):
+        name = parse_identifier()
+        return CVar(name)
+    if pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
+        inner_exp = parse_exp()
+        expect_next(pop_next(), (TOKEN_KIND.get('parenthesis_close'),))
+        return inner_exp
+
+
+cpdef CExp parse_exp(int min_precedence = 0):
+    """ <exp> ::= <factor> | <exp> <binop> <exp> """
+    cdef int precedence
+    cdef CBinaryOp binary_op
+    cdef CExp exp_right
+    cdef CExp exp_left = parse_factor()
+    while peek_next().token_kind in (TOKEN_KIND.get('unop_negation'),
+                                     TOKEN_KIND.get('binop_addition'),
+                                     TOKEN_KIND.get('binop_multiplication'),
+                                     TOKEN_KIND.get('binop_division'),
+                                     TOKEN_KIND.get('binop_remainder'),
+                                     TOKEN_KIND.get('binop_bitand'),
+                                     TOKEN_KIND.get('binop_bitor'),
+                                     TOKEN_KIND.get('binop_bitxor'),
+                                     TOKEN_KIND.get('binop_bitshiftleft'),
+                                     TOKEN_KIND.get('binop_bitshiftright'),
+                                     TOKEN_KIND.get('binop_lessthan'),
+                                     TOKEN_KIND.get('binop_lessthanorequal'),
+                                     TOKEN_KIND.get('binop_greaterthan'),
+                                     TOKEN_KIND.get('binop_greaterthanorequal'),
+                                     TOKEN_KIND.get('binop_equalto'),
+                                     TOKEN_KIND.get('binop_notequal'),
+                                     TOKEN_KIND.get('binop_and'),
+                                     TOKEN_KIND.get('binop_or'),
+                                     TOKEN_KIND.get('assignment_simple'),
+                                     TOKEN_KIND.get('assignment_plus'),
+                                     TOKEN_KIND.get('assignment_difference'),
+                                     TOKEN_KIND.get('assignment_product'),
+                                     TOKEN_KIND.get('assignment_quotient'),
+                                     TOKEN_KIND.get('assignment_remainder'),
+                                     TOKEN_KIND.get('assignment_bitand'),
+                                     TOKEN_KIND.get('assignment_bitor'),
+                                     TOKEN_KIND.get('assignment_bitxor'),
+                                     TOKEN_KIND.get('assignment_bitshiftleft'),
+                                     TOKEN_KIND.get('assignment_bitshiftright')):
+        precedence = parse_token_precedence(peek_token.token_kind)
+        if precedence < min_precedence:
+            break
+        if peek_token.token_kind == TOKEN_KIND.get('assignment_simple'):
+            _ = pop_next()
+            exp_right = parse_exp(precedence)
+            exp_left = CAssignment(exp_left, exp_right)
+        elif peek_token.token_kind in (TOKEN_KIND.get('assignment_plus'),
+                                       TOKEN_KIND.get('assignment_difference'),
+                                       TOKEN_KIND.get('assignment_product'),
+                                       TOKEN_KIND.get('assignment_quotient'),
+                                       TOKEN_KIND.get('assignment_remainder'),
+                                       TOKEN_KIND.get('assignment_bitand'),
+                                       TOKEN_KIND.get('assignment_bitor'),
+                                       TOKEN_KIND.get('assignment_bitxor'),
+                                       TOKEN_KIND.get('assignment_bitshiftleft'),
+                                       TOKEN_KIND.get('assignment_bitshiftright')):
+            binary_op = parse_binary_op()
+            exp_right = parse_exp(precedence)
+            exp_left = CAssignmentCompound(binary_op, exp_left, exp_right)
+        else:
+            binary_op = parse_binary_op()
+            exp_right = parse_exp(precedence + 1)
+            exp_left = CBinary(binary_op, exp_left, exp_right)
+    return exp_left
 #
 #
 # def parse_statement() -> CStatement:
