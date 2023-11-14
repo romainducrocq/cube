@@ -5,11 +5,7 @@ function requirements () {
     if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
-function setup () {
-    echo -n '' > __init__.py
-    echo -n '' > __init__.pyx
-    echo -n '' > __init__.pxd
-
+# function setup () {
 #    echo -n '' > setup.py
 #    echo 'from distutils.core import setup' >> setup.py
 #    echo 'from distutils.extension import Extension' >> setup.py
@@ -34,7 +30,7 @@ function setup () {
 #    echo '    cmdclass={"build_ext": build_ext},' >> setup.py
 #    echo '    ext_modules=ext_modules' >> setup.py
 #    echo ')' >> setup.py
-}
+#}
 
 function compile () {
     if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]]; then
@@ -58,7 +54,7 @@ function install () {
 
 cd ../ccc/
 requirements
-setup
+# setup
 compile
 install
 
