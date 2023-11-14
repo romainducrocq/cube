@@ -1,12 +1,6 @@
-from typing import List, Optional
-
 from ccc.parser_c_ast cimport *
 from ccc.parser_lexer cimport TOKEN_KIND, Token
 from ccc.parser_precedence cimport parse_token_precedence
-
-__all__ = [
-    'parsing'
-]
 
 
 class ParserError(RuntimeError):
@@ -244,95 +238,96 @@ cpdef CExp parse_exp(int min_precedence = 0):
             exp_right = parse_exp(precedence + 1)
             exp_left = CBinary(binary_op, exp_left, exp_right)
     return exp_left
-#
-#
-# def parse_statement() -> CStatement:
-#     """ <statement> ::= "return" <exp> ";" | <exp> ";" | ";" """
-#     if peek_token.token_kind == TOKEN_KIND.semicolon:
-#         _ = pop_next()
-#         return CNull()
-#     if peek_token.token_kind == TOKEN_KIND.key_return:
-#         _ = pop_next()
-#         return_exp: CExp = parse_exp()
-#         expect_next(pop_next(), TOKEN_KIND.semicolon)
-#         return CReturn(return_exp)
-#     if True:
-#         return_exp: CExp = parse_exp()
-#         expect_next(pop_next(), TOKEN_KIND.semicolon)
-#         return CExpression(return_exp)
-#
-#
-# def parse_declaration() -> CDeclaration:
-#     """ <declaration> ::= "int" <identifier> [ "=" <exp> ] ";" """
-#     expect_next(pop_next(), TOKEN_KIND.key_int)
-#     name: TIdentifier = parse_identifier()
-#     if peek_next().token_kind == TOKEN_KIND.assignment_simple:
-#         _ = pop_next()
-#         init: Optional[CExp] = parse_exp()
-#     else:
-#         init: Optional[CExp] = None
-#     expect_next(pop_next(), TOKEN_KIND.semicolon)
-#     return CDecl(name, init)
-#
-#
-# def parse_block_item() -> CBlockItem:
-#     """ <block-item> ::= <statement> | <declaration> """
-#     if peek_token.token_kind == TOKEN_KIND.key_int:
-#         declaration: CDeclaration = parse_declaration()
-#         return CD(declaration)
-#     if True:
-#         statement: CStatement = parse_statement()
-#         return CS(statement)
-#
-#
-# def parse_function_def() -> CFunctionDef:
-#     """ <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}" """
-#     expect_next(pop_next(), TOKEN_KIND.key_int)
-#     name: TIdentifier = parse_identifier()
-#     expect_next(pop_next(), TOKEN_KIND.parenthesis_open)
-#     expect_next(pop_next(), TOKEN_KIND.key_void)
-#     expect_next(pop_next(), TOKEN_KIND.parenthesis_close)
-#     expect_next(pop_next(), TOKEN_KIND.brace_open)
-#     body: List[CBlockItem] = []
-#     while peek_next().token_kind != TOKEN_KIND.brace_close:
-#         block_item: CBlockItem = parse_block_item()
-#         body.append(block_item)
-#     expect_next(pop_next(), TOKEN_KIND.brace_close)
-#     return CFunction(name, body)
-#
-#
-# def parse_program() -> CProgram:
-#     """ <program> ::= <function> """
-#     function_def: CFunctionDef = parse_function_def()
-#     return CProgram(function_def)
-#
-#
-# def parsing(lex_tokens: List[Token]) -> AST:
-#     global tokens
-#     global next_token
-#     global peek_token
-#
-#     tokens = lex_tokens
-#     c_ast: AST = AST()
-#     while True:
-#         try:
-#             next_token: Token = Token('', TOKEN_KIND.error)
-#             peek_token: Token = Token('', TOKEN_KIND.error)
-#             c_ast = parse_program()
-#
-#         except StopIteration:
-#             break
-#
-#     if tokens:
-#         raise ParserError(
-#             "An error occurred in parsing, not all tokens were consumed")
-#
-#     if not c_ast:
-#         raise ParserError(
-#             "An error occurred in parsing, AST was not parsed")
-#
-#     return c_ast
+
+
+cpdef CStatement parse_statement():
+    """ <statement> ::= "return" <exp> ";" | <exp> ";" | ";" """
+    if peek_token.token_kind == TOKEN_KIND.get('semicolon'):
+        _ = pop_next()
+        return CNull()
+    cdef CExp return_exp
+    if peek_token.token_kind == TOKEN_KIND.get('key_return'):
+        _ = pop_next()
+        return_exp = parse_exp()
+        expect_next(pop_next(), (TOKEN_KIND.get('semicolon'),))
+        return CReturn(return_exp)
+    if True:
+        return_exp = parse_exp()
+        expect_next(pop_next(), (TOKEN_KIND.get('semicolon'),))
+        return CExpression(return_exp)
+
+
+cpdef CDeclaration parse_declaration():
+    """ <declaration> ::= "int" <identifier> [ "=" <exp> ] ";" """
+    expect_next(pop_next(), (TOKEN_KIND.get('key_int'),))
+    cdef TIdentifier name = parse_identifier()
+    cdef CExp init
+    if peek_next().token_kind == TOKEN_KIND.get('assignment_simple'):
+        _ = pop_next()
+        init = parse_exp()
+    else:
+        init = None
+    expect_next(pop_next(), (TOKEN_KIND.get('semicolon'),))
+    return CDecl(name, init)
+
+
+cpdef CBlockItem parse_block_item():
+    """ <block-item> ::= <statement> | <declaration> """
+    cdef CDeclaration declaration
+    if peek_token.token_kind == TOKEN_KIND.get('key_int'):
+        declaration = parse_declaration()
+        return CD(declaration)
+    cdef CStatement statement
+    if True:
+        statement = parse_statement()
+        return CS(statement)
+
+
+cpdef CFunctionDef parse_function_def():
+    """ <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}" """
+    expect_next(pop_next(), (TOKEN_KIND.get('key_int'),))
+    cdef TIdentifier name = parse_identifier()
+    expect_next(pop_next(), (TOKEN_KIND.get('parenthesis_open'),))
+    expect_next(pop_next(), (TOKEN_KIND.get('key_void'),))
+    expect_next(pop_next(), (TOKEN_KIND.get('parenthesis_close'),))
+    expect_next(pop_next(), (TOKEN_KIND.get('brace_open'),))
+    cdef CBlockItem block_item
+    cdef list[CBlockItem] body = []
+    while peek_next().token_kind != TOKEN_KIND.get('brace_close'):
+        block_item = parse_block_item()
+        body.append(block_item)
+    expect_next(pop_next(), (TOKEN_KIND.get('brace_close'),))
+    return CFunction(name, body)
+
+
+cpdef CProgram parse_program():
+    """ <program> ::= <function> """
+    cdef CFunctionDef function_def = parse_function_def()
+    return CProgram(function_def)
+
 
 cpdef AST parsing(list[Token] lex_tokens):
-    cdef AST ast = AST()
-    return ast
+    global tokens
+    global next_token
+    global peek_token
+    tokens = lex_tokens
+
+    cdef AST c_ast
+    while True:
+        try:
+            next_token: Token = Token('', TOKEN_KIND.get('error'))
+            peek_token: Token = Token('', TOKEN_KIND.get('error'))
+            c_ast = parse_program()
+
+        except StopIteration:
+            break
+
+    if tokens:
+        raise ParserError(
+            "An error occurred in parsing, not all tokens were consumed")
+
+    if not c_ast:
+        raise ParserError(
+            "An error occurred in parsing, AST was not parsed")
+
+    return c_ast
