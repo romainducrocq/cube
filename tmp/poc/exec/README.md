@@ -17,3 +17,4 @@ c. make unique by appending file name
 Option 
 1. change path to python3.9.so in build.sh && run.sh
 2. preprocess input args in main.c
+3. alternative -> see cython --embed
