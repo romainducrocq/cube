@@ -1,5 +1,13 @@
 #!/bin/bash
 
+function clean () {
+    if [[ "${1}" == "--clean" ]]; then
+        rm *.c
+        rm -r ./ccc/
+        rm -r ./build/
+    fi
+}
+
 function requirements () {
     python3.9 -m pip install Cython==3.0.5
     if [ ${?} -ne 0 ]; then exit 1; fi
@@ -26,6 +34,7 @@ function install () {
 }
 
 cd ../ccc/
+clean ${1}
 requirements
 compile
 install

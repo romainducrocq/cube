@@ -1,4 +1,4 @@
-from ccc.parser_c_ast cimport (AST, TIdentifier,
+from ccc.parser_c_ast cimport (TIdentifier, CExp,
                                CVar, CConstant, CUnary, CBinary)
 
 
@@ -30,7 +30,7 @@ cpdef TIdentifier represent_label_identifier(str label):
     return TIdentifier(name)
 
 
-cpdef TIdentifier represent_variable_identifier(AST node):
+cpdef TIdentifier represent_variable_identifier(CExp node):
     global variable_counter
 
     cdef str variable
