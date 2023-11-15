@@ -2,3 +2,15 @@ cython:
 - test performance with in / expect -> static set instead of tuple (seems not relevant)
 - fopen: https://gist.github.com/pydemo/0b85bd5d1c017f6873422e02aeb9618a
 - see if possible to pass union / fused type to cpdef intermediate_three_address_generator.represent_instructions(AST node)
+- see if better to refactor every return scope into sub functions:
+    => make use of static typing declaration
+    => declare only cdef needed for scope
+    => readability
+    => eg:
+    - cpdef AstType do_something(AstType node):
+        if isinstance(node, type1):
+            _do_something_type1(node)
+            ...
+        if isinstance(node, type2):
+            _do_something_type2(node)
+            ...

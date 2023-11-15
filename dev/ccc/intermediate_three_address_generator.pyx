@@ -96,36 +96,21 @@ cpdef TacValue represent_value(CExp node, bint outer = True):
 cdef list[TacInstruction] instructions = []
 
 
-cpdef TacValue represent_instructions(AST node): # TODO type is (CDeclaration, CStatement, CExp)
-    if isinstance(node, CNull):
-        return None
-    if isinstance(node, CExpression):
-        _ = represent_instructions(node.exp)
-        return None
+cpdef TacValue represent_exp_instructions(CExp node):
     cdef TacValue val
     if isinstance(node, (CVar, CConstant)):
         val = represent_value(node)
         return val
-    if isinstance(node, CReturn):
-        val: TacValue = represent_instructions(node.exp)
-        instructions.append(TacReturn(val))
-        return None
     cdef TacValue src
     cdef TacValue dst
-    if isinstance(node, CDecl):
-        if node.init:
-            src = represent_instructions(node.init)
-            dst = represent_value(CVar(node.name))
-            instructions.append(TacCopy(src, dst))
-        return None
     if isinstance(node, CAssignment):
-        src: TacValue = represent_instructions(node.exp_right)
-        dst: TacValue = represent_value(node.exp_left)
+        src = represent_exp_instructions(node.exp_right)
+        dst = represent_exp_instructions(node.exp_left)
         instructions.append(TacCopy(src, dst))
         return dst
     cdef TacUnaryOp unary_op
     if isinstance(node, CUnary):
-        src = represent_instructions(node.exp)
+        src = represent_exp_instructions(node.exp)
         dst = represent_value(node.exp, outer=False)
         unary_op = represent_unary_op(node.unary_op)
         instructions.append(TacUnary(unary_op, src, dst))
@@ -134,15 +119,15 @@ cpdef TacValue represent_instructions(AST node): # TODO type is (CDeclaration, C
     cdef TacBinaryOp binary_op
     if isinstance(node, CBinary) and \
             not isinstance(node.binary_op, (CAnd, COr)):
-        src = represent_instructions(node.exp_left)
-        src2 = represent_instructions(node.exp_right)
+        src = represent_exp_instructions(node.exp_left)
+        src2 = represent_exp_instructions(node.exp_right)
         dst = represent_value(node.exp_left, outer=False)
         binary_op = represent_binary_op(node.binary_op)
         instructions.append(TacBinary(binary_op, src, src2, dst))
         return dst
     if isinstance(node, CAssignmentCompound):
-        src = represent_instructions(node.exp_left)
-        src2 = represent_instructions(node.exp_right)
+        src = represent_exp_instructions(node.exp_left)
+        src2 = represent_exp_instructions(node.exp_right)
         val = represent_value(node.exp_left, outer=False)
         binary_op = represent_binary_op(node.binary_op)
         instructions.append(TacBinary(binary_op, src, src2, val))
@@ -159,9 +144,9 @@ cpdef TacValue represent_instructions(AST node): # TODO type is (CDeclaration, C
             is_false = TacConstant(TInt(0))
             label_true = represent_label_identifier("and_true")
             label_false = represent_label_identifier("and_false")
-            src = represent_instructions(node.exp_left)
+            src = represent_exp_instructions(node.exp_left)
             instructions.append(TacJumpIfZero(src, label_false))
-            src2 = represent_instructions(node.exp_right)
+            src2 = represent_exp_instructions(node.exp_right)
             instructions.append(TacJumpIfZero(src2, label_false))
             dst = represent_value(node.exp_left, outer=False)
             instructions.append(TacCopy(is_true, dst))
@@ -175,9 +160,9 @@ cpdef TacValue represent_instructions(AST node): # TODO type is (CDeclaration, C
             is_false = TacConstant(TInt(0))
             label_true = represent_label_identifier("or_true")
             label_false = represent_label_identifier("or_false")
-            src = represent_instructions(node.exp_left)
+            src = represent_exp_instructions(node.exp_left)
             instructions.append(TacJumpIfNotZero(src, label_true))
-            src2 = represent_instructions(node.exp_right)
+            src2 = represent_exp_instructions(node.exp_right)
             instructions.append(TacJumpIfNotZero(src2, label_true))
             dst = represent_value(node.exp_left, outer=False)
             instructions.append(TacCopy(is_false, dst))
@@ -186,6 +171,36 @@ cpdef TacValue represent_instructions(AST node): # TODO type is (CDeclaration, C
             instructions.append(TacCopy(is_true, dst))
             instructions.append(TacLabel(label_false))
             return dst
+
+    raise ThreeAddressCodeGeneratorError(
+        "An error occurred in three address code representation, not all nodes were visited")
+
+
+cpdef void represent_statement_instructions(CStatement node):
+    if isinstance(node, CNull):
+        return
+    if isinstance(node, CExpression):
+        _ = represent_exp_instructions(node.exp)
+        return
+    cdef TacValue val
+    if isinstance(node, CReturn):
+        val = represent_exp_instructions(node.exp)
+        instructions.append(TacReturn(val))
+        return
+
+    raise ThreeAddressCodeGeneratorError(
+        "An error occurred in three address code representation, not all nodes were visited")
+
+
+cpdef void represent_declaration_instructions(CDeclaration node):
+    cdef TacValue src
+    cdef TacValue dst
+    if isinstance(node, CDecl):
+        if node.init:
+            src = represent_exp_instructions(node.init)
+            dst = represent_value(CVar(node.name))
+            instructions.append(TacCopy(src, dst))
+        return
 
     raise ThreeAddressCodeGeneratorError(
         "An error occurred in three address code representation, not all nodes were visited")
@@ -202,9 +217,9 @@ cpdef void represent_list_instructions(list[CBlockItem] list_node):
     cdef CBlockItem item_node
     for item_node in list_node:
         if isinstance(item_node, CS):
-            represent_instructions(item_node.statement)
+            represent_statement_instructions(item_node.statement)
         elif isinstance(item_node, CD):
-            represent_instructions(item_node.declaration)
+            represent_declaration_instructions(item_node.declaration)
         else:
 
             raise ThreeAddressCodeGeneratorError(
