@@ -14,7 +14,7 @@ class FileError(RuntimeError):
 cdef FILE *cfile = NULL
 
 
-cpdef void file_open(str filename):
+cdef void file_open(str filename):
     global cfile
     cfile = NULL
 
@@ -28,7 +28,7 @@ cpdef void file_open(str filename):
             f"File {filename} does not exist")
 
 
-cpdef tuple[bint, str] get_line():
+cdef tuple[bint, str] get_line():
 
     cdef size_t l = 0
     cdef char *cline = NULL
@@ -40,7 +40,7 @@ cpdef tuple[bint, str] get_line():
     return False, str(cline.decode("UTF-8"))
 
 
-cpdef void file_close():
+cdef void file_close():
 
     fclose(cfile)
 

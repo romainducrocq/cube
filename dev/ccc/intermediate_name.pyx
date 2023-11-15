@@ -12,7 +12,7 @@ cdef int label_counter = 0
 cdef int variable_counter = 0
 
 
-cpdef TIdentifier resolve_variable_identifier(TIdentifier variable):
+cdef TIdentifier resolve_variable_identifier(TIdentifier variable):
     global variable_counter
 
     variable_counter += 1
@@ -21,7 +21,7 @@ cpdef TIdentifier resolve_variable_identifier(TIdentifier variable):
     return TIdentifier(name)
 
 
-cpdef TIdentifier represent_label_identifier(str label):
+cdef TIdentifier represent_label_identifier(str label):
     global label_counter
 
     label_counter += 1
@@ -30,7 +30,7 @@ cpdef TIdentifier represent_label_identifier(str label):
     return TIdentifier(name)
 
 
-cpdef TIdentifier represent_variable_identifier(CExp node):
+cdef TIdentifier represent_variable_identifier(CExp node):
     global variable_counter
 
     cdef str variable

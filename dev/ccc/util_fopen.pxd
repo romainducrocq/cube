@@ -1,3 +1,3 @@
-cpdef void file_open(str filename)
-cpdef tuple[bint, str] get_line()
-cpdef void file_close()
+cdef void file_open(str filename)
+cdef tuple[bint, str] get_line()
+cdef void file_close()

@@ -14,7 +14,7 @@ class SemanticAnalyzerError(RuntimeError):
 cdef dict[str, str] variable_map = {}
 
 
-cpdef void resolve_statement(CStatement node):
+cdef void resolve_statement(CStatement node):
     if isinstance(node, (CReturn, CExpression)):
         resolve_expression(node.exp)
         return
@@ -25,7 +25,7 @@ cpdef void resolve_statement(CStatement node):
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
-cpdef void resolve_declaration(CDeclaration node):
+cdef void resolve_declaration(CDeclaration node):
     global variable_map
 
     cdef TIdentifier name
@@ -46,7 +46,7 @@ cpdef void resolve_declaration(CDeclaration node):
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
-cpdef void resolve_expression(CExp node):
+cdef void resolve_expression(CExp node):
     if isinstance(node, CConstant):
         return
     cdef TIdentifier name
@@ -80,7 +80,7 @@ cpdef void resolve_expression(CExp node):
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
-cpdef void resolve_variable(AST node):
+cdef void resolve_variable(AST node):
 
     cdef int e
     cdef AST child_node
@@ -102,7 +102,7 @@ cpdef void resolve_variable(AST node):
             resolve_variable(child_node)
 
 
-cpdef void semantic_analysis(AST c_ast):
+cdef void semantic_analysis(AST c_ast):
     global variable_map
     variable_map = {}
 

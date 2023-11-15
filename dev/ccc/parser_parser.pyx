@@ -14,7 +14,7 @@ cdef Token next_token = Token('', TOKEN_KIND.get('error'))
 cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
 
 
-cpdef void expect_next_is(Token _next_token, int expected_token):
+cdef void expect_next_is(Token _next_token, int expected_token):
     if _next_token.token_kind != expected_token:
         raise ParserError(
             f"""Expected token {
@@ -23,7 +23,7 @@ cpdef void expect_next_is(Token _next_token, int expected_token):
             ]} but found \"{_next_token.token}\"""")
 
 
-cpdef void expect_next_in(Token _next_token, tuple[int, ...] expected_tokens):
+cdef void expect_next_in(Token _next_token, tuple[int, ...] expected_tokens):
     if _next_token.token_kind not in expected_tokens:
         raise ParserError(
             f"""Expected token in kinds { tuple([
@@ -33,7 +33,7 @@ cpdef void expect_next_in(Token _next_token, tuple[int, ...] expected_tokens):
             } but found \"{_next_token.token}\"""")
 
 
-cpdef Token pop_next():
+cdef Token pop_next():
     global next_token
 
     try:
@@ -43,7 +43,7 @@ cpdef Token pop_next():
         raise StopIteration
 
 
-cpdef Token peek_next():
+cdef Token peek_next():
     global peek_token
 
     try:
@@ -53,19 +53,19 @@ cpdef Token peek_next():
         raise StopIteration
 
 
-cpdef TIdentifier parse_identifier():
+cdef TIdentifier parse_identifier():
     """ <identifier> ::= ? An identifier token ? """
     expect_next_is(pop_next(), TOKEN_KIND.get('identifier'))
     return TIdentifier(next_token.token)
 
 
-cpdef TInt parse_int():
+cdef TInt parse_int():
     """ <int> ::= ? A constant token ? """
     expect_next_is(pop_next(), TOKEN_KIND.get('constant'))
     return TInt(int(next_token.token))
 
 
-cpdef CBinaryOp parse_binary_op():
+cdef CBinaryOp parse_binary_op():
     """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
                   | "<" | "<=" | ">" | ">=" """
     expect_next_in(pop_next(), (TOKEN_KIND.get('unop_negation'),
@@ -144,7 +144,7 @@ cpdef CBinaryOp parse_binary_op():
         return CGreaterOrEqual()
 
 
-cpdef CUnaryOp parse_unary_op():
+cdef CUnaryOp parse_unary_op():
     """ <unop> ::= "-" | "~" | "!" """
     expect_next_in(pop_next(), (TOKEN_KIND.get('unop_complement'),
                    TOKEN_KIND.get('unop_negation'),
@@ -157,7 +157,7 @@ cpdef CUnaryOp parse_unary_op():
         return CNot()
 
 
-cpdef CExp parse_factor():
+cdef CExp parse_factor():
     """ <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" """
     expect_next_in(peek_next(),(TOKEN_KIND.get('constant'),
                    TOKEN_KIND.get('identifier'),
@@ -187,7 +187,7 @@ cpdef CExp parse_factor():
         return inner_exp
 
 
-cpdef CExp parse_exp(int min_precedence = 0):
+cdef CExp parse_exp(int min_precedence = 0):
     """ <exp> ::= <factor> | <exp> <binop> <exp> """
     cdef int precedence
     cdef CBinaryOp binary_op
@@ -249,7 +249,7 @@ cpdef CExp parse_exp(int min_precedence = 0):
     return exp_left
 
 
-cpdef CStatement parse_statement():
+cdef CStatement parse_statement():
     """ <statement> ::= "return" <exp> ";" | <exp> ";" | ";" """
     if peek_token.token_kind == TOKEN_KIND.get('semicolon'):
         _ = pop_next()
@@ -266,7 +266,7 @@ cpdef CStatement parse_statement():
         return CExpression(return_exp)
 
 
-cpdef CDeclaration parse_declaration():
+cdef CDeclaration parse_declaration():
     """ <declaration> ::= "int" <identifier> [ "=" <exp> ] ";" """
     expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
     cdef TIdentifier name = parse_identifier()
@@ -280,7 +280,7 @@ cpdef CDeclaration parse_declaration():
     return CDecl(name, init)
 
 
-cpdef CBlockItem parse_block_item():
+cdef CBlockItem parse_block_item():
     """ <block-item> ::= <statement> | <declaration> """
     cdef CDeclaration declaration
     if peek_token.token_kind == TOKEN_KIND.get('key_int'):
@@ -292,7 +292,7 @@ cpdef CBlockItem parse_block_item():
         return CS(statement)
 
 
-cpdef CFunctionDef parse_function_def():
+cdef CFunctionDef parse_function_def():
     """ <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}" """
     expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
     cdef TIdentifier name = parse_identifier()
@@ -309,13 +309,13 @@ cpdef CFunctionDef parse_function_def():
     return CFunction(name, body)
 
 
-cpdef CProgram parse_program():
+cdef CProgram parse_program():
     """ <program> ::= <function> """
     cdef CFunctionDef function_def = parse_function_def()
     return CProgram(function_def)
 
 
-cpdef AST parsing(list[Token] lex_tokens):
+cdef AST parsing(list[Token] lex_tokens):
     global tokens
     global next_token
     global peek_token

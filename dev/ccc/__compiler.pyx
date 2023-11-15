@@ -33,12 +33,12 @@ cdef IotaEnum OPT = IotaEnum((
 ))
 
 
-cpdef void debug(str string = "", str end="\n"):
+cdef void debug(str string = "", str end="\n"):
     if DEBUG:
         print(string, end=end)
 
 
-cpdef void compile(str filename, int opt_exit, int opt_s):
+cdef void compile(str filename, int opt_exit, int opt_s):
 
     print("-- Start lexing...")
     cdef list[Token] tokens = lexing(filename)
@@ -92,7 +92,7 @@ cpdef void compile(str filename, int opt_exit, int opt_s):
     #     output_file.writelines(asm_code)
 
 
-cpdef tuple[str, int, int] arg_parse(list[str] argv):
+cdef tuple[str, int, int] arg_parse(list[str] argv):
 
     _ = "" if not argv else argv.pop(0)
     if not argv:
@@ -133,6 +133,10 @@ cpdef void main():
         raise CompilerError(
             f"Python version too old, >= 3.9 required but {platform.python_version()} used")
 
-    compile(*arg_parse(sys.argv))
+    cdef str filename
+    cdef int opt_exit
+    cdef int opt_s
+    filename, opt_exit, opt_s = arg_parse(sys.argv)
+    compile(filename, opt_exit, opt_s)
 
     exit(0)

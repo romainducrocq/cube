@@ -6,4 +6,4 @@ cdef class Token:
     cdef str token
     cdef int token_kind
 
-cpdef list[Token] lexing(str filename)
+cdef list[Token] lexing(str filename)

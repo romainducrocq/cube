@@ -11,16 +11,16 @@ class ThreeAddressCodeGeneratorError(RuntimeError):
         super(ThreeAddressCodeGeneratorError, self).__init__(message)
 
 
-cpdef TIdentifier represent_identifier(TIdentifier node):
+cdef TIdentifier represent_identifier(TIdentifier node):
     """ <identifier> = Built-in identifier type """
     return TIdentifier(deepcopy(node.str_t))
 
 
-cpdef TInt represent_int(TInt node):
+cdef TInt represent_int(TInt node):
     """ <int> = Built-in int type """
     return TInt(deepcopy(node.int_t))
 
-cpdef TacBinaryOp represent_binary_op(CBinaryOp node):
+cdef TacBinaryOp represent_binary_op(CBinaryOp node):
     """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
                         | BitShiftLeft | BitShiftRight | Equal | NotEqual | LessThan | LessOrEqual
                         | GreaterThan | GreaterOrEqual """
@@ -61,7 +61,7 @@ cpdef TacBinaryOp represent_binary_op(CBinaryOp node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef TacUnaryOp represent_unary_op(CUnaryOp node):
+cdef TacUnaryOp represent_unary_op(CUnaryOp node):
     """ unary_operator = Complement | Negate | Not """
     if isinstance(node, CComplement):
         return TacComplement()
@@ -74,7 +74,7 @@ cpdef TacUnaryOp represent_unary_op(CUnaryOp node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef TacValue represent_value(CExp node, bint outer = True):
+cdef TacValue represent_value(CExp node, bint outer = True):
     """ val = Constant(int) | Var(identifier) """
     cdef TInt value
     cdef TIdentifier name
@@ -96,7 +96,7 @@ cpdef TacValue represent_value(CExp node, bint outer = True):
 cdef list[TacInstruction] instructions = []
 
 
-cpdef TacValue represent_exp_instructions(CExp node):
+cdef TacValue represent_exp_instructions(CExp node):
     cdef TacValue val
     if isinstance(node, (CVar, CConstant)):
         val = represent_value(node)
@@ -176,7 +176,7 @@ cpdef TacValue represent_exp_instructions(CExp node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef void represent_statement_instructions(CStatement node):
+cdef void represent_statement_instructions(CStatement node):
     if isinstance(node, CNull):
         return
     if isinstance(node, CExpression):
@@ -192,7 +192,7 @@ cpdef void represent_statement_instructions(CStatement node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef void represent_declaration_instructions(CDeclaration node):
+cdef void represent_declaration_instructions(CDeclaration node):
     cdef TacValue src
     cdef TacValue dst
     if isinstance(node, CDecl):
@@ -206,7 +206,7 @@ cpdef void represent_declaration_instructions(CDeclaration node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef void represent_list_instructions(list[CBlockItem] list_node):
+cdef void represent_list_instructions(list[CBlockItem] list_node):
     """ instruction = Return(val) | Unary(unary_operator, val src, val dst)
                 | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
                 | Jump(identifier target) | JumpIfZero(val condition, identifier target)
@@ -228,7 +228,7 @@ cpdef void represent_list_instructions(list[CBlockItem] list_node):
     instructions.append(TacReturn(TacConstant(TInt(0))))
 
 
-cpdef TacFunctionDef represent_function_def(CFunctionDef node):
+cdef TacFunctionDef represent_function_def(CFunctionDef node):
     """ function_definition = Function(identifier, instruction* body) """
     cdef TIdentifier name
     if isinstance(node, CFunction):
@@ -240,7 +240,7 @@ cpdef TacFunctionDef represent_function_def(CFunctionDef node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef TacProgram represent_program(AST node):
+cdef TacProgram represent_program(AST node):
     """ AST = Program(function_definition) """
     cdef TacFunctionDef function_def
     if isinstance(node, CProgram):
@@ -251,7 +251,7 @@ cpdef TacProgram represent_program(AST node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cpdef AST three_address_code_representation(AST c_ast):
+cdef AST three_address_code_representation(AST c_ast):
 
     cdef AST tac_ast = represent_program(c_ast)
 

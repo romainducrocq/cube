@@ -22,7 +22,7 @@ cdef class TInt(AST):
         self.int_t = int_t
 
 
-cpdef list[tuple[object, str]] ast_iter_fields(AST node):
+cdef list[tuple[object, str]] ast_iter_fields(AST node):
 
     cdef list[tuple[object, str]] fields = []
 
@@ -33,7 +33,7 @@ cpdef list[tuple[object, str]] ast_iter_fields(AST node):
     return fields
 
 
-cpdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node):
+cdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node):
 
     cdef object field, item
     cdef list[tuple[AST, str, int]] child_nodes = []
@@ -52,7 +52,7 @@ cpdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node):
     return child_nodes
 
 
-cpdef void ast_set_child_node(object field, str name, int index, AST set_node):
+cdef void ast_set_child_node(object field, str name, int index, AST set_node):
     if isinstance(field, AST):
         setattr(field, name, set_node)
     elif isinstance(getattr(field, name), list):
@@ -65,7 +65,7 @@ cdef str string = ''
 cdef int indent = 0
 
 
-cpdef void _pretty_string_child(str _child_kind, object _child_node):
+cdef void _pretty_string_child(str _child_kind, object _child_node):
     global string
     global indent
 
@@ -76,7 +76,7 @@ cpdef void _pretty_string_child(str _child_kind, object _child_node):
         _pretty_string(_child_kind, _child_node)
 
 
-cpdef void _pretty_string(str kind, object node):
+cdef void _pretty_string(str kind, object node):
     global string
     global indent
 
@@ -104,7 +104,7 @@ cpdef void _pretty_string(str kind, object node):
     indent -= 4
 
 
-cpdef str ast_pretty_string(AST node):
+cdef str ast_pretty_string(AST node):
     global string
     global indent
     string = ""

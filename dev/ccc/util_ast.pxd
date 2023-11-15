@@ -7,6 +7,6 @@ cdef class TIdentifier(AST):
 cdef class TInt(AST):
     cdef public int int_t
 
-cpdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node)
-cpdef void ast_set_child_node(object field, str name, int index, AST set_node)
-cpdef str ast_pretty_string(AST node)
+cdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node)
+cdef void ast_set_child_node(object field, str name, int index, AST set_node)
+cdef str ast_pretty_string(AST node)
