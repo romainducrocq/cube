@@ -5,9 +5,14 @@ import graphlib
 
 cdef str PYX_TARGET = "ccc"
 cdef str DIR_TARGET = f"{os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd())))}/dev/{PYX_TARGET}/"
-cdef dict PYX_FILES = {f[:-4]: {} for f in os.listdir(DIR_TARGET) if f.endswith(".pyx")}
+cdef list[str] PYX_FILES = [f[:-4] for f in os.listdir(DIR_TARGET) if f.endswith(".pyx")]
 cdef list[str] SORT_INCLUDES = []
-cdef dict[str, str] PUBLIC_SYMBOLS = {}
+
+cdef int PYX_ID = 0
+cdef list[str] PXD_VARIABLES = []
+cdef dict[str, list[str]] PXD_CLASSES = {}
+cdef list[tuple(object, str)] PXD_PUBLIC_SYMBOLS = []
+# cdef dict[str, str] PYX_PRIVATE_SYMBOLS = {}
 
 cdef object RGX_SANITIZE = re.compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
 cdef object RGX_IS_LOCAL_CIMPORT = re.compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
@@ -16,8 +21,6 @@ cdef object RGX_IS_FUNC_PXD = re.compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*$")
 cdef object RGX_IS_FUNC_PYX = re.compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*:$")
 cdef object RGX_IS_GLOB_VAR = re.compile(r"^cdef .*[^:$]$")
 cdef object RGX_IS_CLASS_VAR = re.compile(r"^\s{4}cdef .*[^:$]$")
-cdef list[object] RGX_PUBLIC_SYMBOLS = []
-cdef object RGX_PRIVATE_SYMBOLS
 
 cdef str FILE_BUFFER = ""
 
@@ -93,8 +96,11 @@ cdef str sanitize_line(str line):
 """  sort dependencies """
 
 
-cdef void get_includes():
-    global PYX_FILES
+cdef void sort_includes():
+    global SORT_INCLUDES
+    SORT_INCLUDES = []
+
+    cdef dict[str, set[str]] pxd_includes = {}
 
     cdef str pyx_file
     cdef str filename
@@ -102,7 +108,7 @@ cdef void get_includes():
     cdef bint eof
     cdef str line
     for pyx_file in PYX_FILES:
-        PYX_FILES[pyx_file]["includes"] = []
+        pxd_includes[pyx_file] = set()
 
         filename = f"{DIR_TARGET}{pyx_file}.pyx"
         file_open_read(filename)
@@ -115,17 +121,11 @@ cdef void get_includes():
             line = sanitize_line(line)
             if re.match(RGX_IS_LOCAL_CIMPORT, line):
                 line = line.split(".")[1].split(" ")[0]
-                PYX_FILES[pyx_file]["includes"].append(line)
+                pxd_includes[pyx_file].add(line)
 
         file_close()
 
-
-cdef void sort_includes():
-    global SORT_INCLUDES
-
-    SORT_INCLUDES = list(graphlib.TopologicalSorter(
-        {pyx_file: set(PYX_FILES[pyx_file]["includes"]) for pyx_file in PYX_FILES}
-    ).static_order())
+    SORT_INCLUDES = list(graphlib.TopologicalSorter(pxd_includes).static_order())
 
 
 """  extract header  """
@@ -151,20 +151,17 @@ cdef str get_variable_symbol(str line):
            lstrip(" ").split(" ")[-1]
 
 
-cdef str get_hash(str pyx_file, str symbol):
-    return f"{pyx_file}_{symbol}_{PYX_FILES[pyx_file]['id']}"
-
-
-cdef str add_rgx_public_symbol(str symbol):
-    RGX_PUBLIC_SYMBOLS.append(re.compile(r"\b{0}\b".format(PUBLIC_SYMBOLS[symbol])))
+cdef str get_unique_id(str pyx_file, str symbol):
+    return f"{pyx_file}_{symbol}_{PYX_ID}"
 
 
 cdef void extract_header(str pxd_file):
     global PYX_FILES
-    global PUBLIC_SYMBOLS
-
-    PYX_FILES[pxd_file]["classes"] = {}
-    PYX_FILES[pxd_file]["glob_vars"] = []
+    global PXD_PUBLIC_SYMBOLS
+    global PXD_VARIABLES
+    global PXD_CLASSES
+    PXD_VARIABLES = []
+    PXD_CLASSES = {}
 
     cdef str filename = f"{DIR_TARGET}{pxd_file}.pxd"
     file_open_read(filename)
@@ -181,22 +178,24 @@ cdef void extract_header(str pxd_file):
         line = sanitize_line(line)
         if re.match(RGX_IS_CLASS, line):
             clss = get_class_symbol(line)
-            PYX_FILES[pxd_file]["classes"][clss] = []
-            PUBLIC_SYMBOLS[clss] = get_hash(pxd_file, clss)
-            add_rgx_public_symbol(clss)
+            PXD_CLASSES[clss] = []
+            PXD_PUBLIC_SYMBOLS.append((re.compile(r"\b{0}\b".format(clss)),
+                                       get_unique_id(pxd_file, clss)))
         elif re.match(RGX_IS_FUNC_PXD, line):
             symbol = get_function_symbol(line)
-            PUBLIC_SYMBOLS[symbol] = get_hash(pxd_file, symbol)
-            add_rgx_public_symbol(symbol)
+            PXD_PUBLIC_SYMBOLS.append((re.compile(r"\b{0}\b".format(symbol)),
+                                       get_unique_id(pxd_file, symbol)))
         elif re.match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
-            PUBLIC_SYMBOLS[symbol] = get_hash(pxd_file, symbol)
-            PYX_FILES[pxd_file]["glob_vars"].append(line)
-            add_rgx_public_symbol(symbol)
+            PXD_PUBLIC_SYMBOLS.append((re.compile(r"\b{0}\b".format(symbol)),
+                                       get_unique_id(pxd_file, symbol)))
+            PXD_VARIABLES.append(line)
         elif re.match(RGX_IS_CLASS_VAR, line):
-            PYX_FILES[pxd_file]["classes"][clss].append(line)
+            PXD_CLASSES[clss].append(line)
 
     file_close()
+
+    print(PXD_PUBLIC_SYMBOLS)
 
 
 """  process source  """
@@ -207,77 +206,71 @@ cdef void append_file_buffer(str line):
     FILE_BUFFER += line + "\n"
 
 
-cdef void process_source(str pyx_file):
-    global FILE_BUFFER
-    FILE_BUFFER = ""
-
-    PYX_FILES[pyx_file]["symbols"] = {}
-    PYX_FILES[pyx_file]["rgx_symbols"] = {}
-
-    cdef str filename = f"{DIR_TARGET}{pyx_file}.pyx"
-    file_open_read(filename)
-
-    append_file_buffer("")
-    cdef str line
-    for line in PYX_FILES[pyx_file]["glob_vars"]:
-        append_file_buffer(line)
-    append_file_buffer("")
-
-    cdef bint eof
-    cdef str symbol
-    while True:
-        eof, line = get_line()
-        if eof:
-            break
-
-        line = sanitize_line(line)
-        if re.match(RGX_IS_LOCAL_CIMPORT, line):
-            continue
-
-        append_file_buffer(line)
-        if re.match(RGX_IS_CLASS, line):
-            symbol = get_class_symbol(line)
-            PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
-            if symbol in PYX_FILES[pyx_file]["classes"]:
-                for line in PYX_FILES[pyx_file]["classes"][symbol]:
-                    append_file_buffer(line)
-                append_file_buffer("")
-                append_file_buffer("")
-        elif re.match(RGX_IS_FUNC_PYX, line):
-            symbol = get_function_symbol(line)
-            PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
-        elif re.match(RGX_IS_GLOB_VAR, line):
-            symbol = get_variable_symbol(line)
-            PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
-
-    file_close()
-
-    print(pyx_file)
-    for symbol in PYX_FILES[pyx_file]["symbols"]:
-        print("    " + symbol + " " + PYX_FILES[pyx_file]["symbols"][symbol])
-    print("")
-    print(PUBLIC_SYMBOLS)
+# cdef void process_source(str pyx_file):
+#     global PXD_PUBLIC_SYMBOLS
+#     global PYX_PRIVATE_SYMBOLS
+#     global FILE_BUFFER
+#     PYX_PRIVATE_SYMBOLS = {}
+#     FILE_BUFFER = ""
+#
+#     cdef str filename = f"{DIR_TARGET}{pyx_file}.pyx"
+#     file_open_read(filename)
+#
+#     append_file_buffer("")
+#     cdef str line
+#     for line in PXD_VARIABLES:
+#         append_file_buffer(line)
+#     append_file_buffer("")
+#
+#     cdef bint eof
+#     cdef str symbol
+#     while True:
+#         eof, line = get_line()
+#         if eof:
+#             break
+#
+#         line = sanitize_line(line)
+#         if re.match(RGX_IS_LOCAL_CIMPORT, line):
+#             continue
+#
+#         append_file_buffer(line)
+#         if re.match(RGX_IS_CLASS, line):
+#             symbol = get_class_symbol(line)
+#             PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
+#             if symbol in PXD_CLASSES:
+#                 for line in PXD_CLASSES[symbol]:
+#                     append_file_buffer(line)
+#                 append_file_buffer("")
+#                 append_file_buffer("")
+#         elif re.match(RGX_IS_FUNC_PYX, line):
+#             symbol = get_function_symbol(line)
+#             PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
+#         elif re.match(RGX_IS_GLOB_VAR, line):
+#             symbol = get_variable_symbol(line)
+#             PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
+#
+#     file_close()
+#
+#     print(pyx_file)
+#     for symbol in PYX_FILES[pyx_file]["symbols"]:
+#         print("    " + symbol + " " + PYX_FILES[pyx_file]["symbols"][symbol])
+#     print("")
+#     print(PUBLIC_SYMBOLS)
 
 """  main """
 
 
 cdef void _main(list[str] args):
     global PYX_FILES
+    global PYX_ID
 
-    get_includes()
     sort_includes()
 
-    cdef int e
     cdef str pyx_file
-    for e, pyx_file in enumerate(SORT_INCLUDES):
-
-        PYX_FILES[pyx_file]["id"] = e
+    for PYX_ID, pyx_file in enumerate(SORT_INCLUDES):
 
         extract_header(pyx_file)
-
-        process_source(pyx_file)
-
-        PYX_FILES[pyx_file] = []
+        # process_source(pyx_file)
 
 
 cdef public main_c(int argc, char **argv):
