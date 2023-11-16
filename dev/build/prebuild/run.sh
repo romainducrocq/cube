@@ -3,5 +3,6 @@
 PYTHON_DIR="/opt/Python-3.9.18/"
 PYX_TARGET="prebuild"
 
+cd ${PYX_TARGET}/
 export LD_LIBRARY_PATH=${PYTHON_DIR}
 ./${PYX_TARGET} ${@}

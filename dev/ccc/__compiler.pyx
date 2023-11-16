@@ -140,3 +140,12 @@ cpdef void main():
     compile(filename, opt_exit, opt_s)
 
     exit(0)
+
+
+cdef public main_c(int argc, char **argv):
+    cdef int i
+    cdef list[str] args = []
+    for i in range(argc):
+        args.append(str(argv[i].decode("UTF-8")))
+
+    main(args)

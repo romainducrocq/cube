@@ -8,3 +8,5 @@ __pycache__/
 /ccc/
 /dev/ccc/ccc/
 /dev/ccc/build/
+/dev/build/prebuild/prebuild
+/dev/build/ccc/ccc.pyx

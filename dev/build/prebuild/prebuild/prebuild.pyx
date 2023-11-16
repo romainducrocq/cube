@@ -4,7 +4,7 @@ import graphlib
 
 
 cdef str PYX_TARGET = "ccc"
-cdef str DIR_TARGET = f"{os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd())))}/dev/{PYX_TARGET}/"
+cdef str DIR_TARGET = f"{os.path.dirname(os.path.dirname(os.getcwd()))}/{PYX_TARGET}/"
 cdef list[str] PYX_FILES = [f[:-4] for f in os.listdir(DIR_TARGET) if f.endswith(".pyx")]
 cdef list[str] SORT_INCLUDES = []
 
@@ -13,6 +13,7 @@ cdef list[str] PXD_VARIABLES = []
 cdef dict[str, list[str]] PXD_CLASSES = {}
 cdef dict[str, object] PXD_PUBLIC_SYMBOLS = {}
 cdef dict[str, object] PYX_PRIVATE_SYMBOLS = {}
+cdef tuple[str, ...] SYMBOL_SKIP = ("main", "main_c")
 
 cdef object RGX_SANITIZE = re.compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
 cdef object RGX_IS_LOCAL_CIMPORT = re.compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
@@ -24,6 +25,8 @@ cdef object RGX_IS_CLASS_VAR = re.compile(r"^\s{4}cdef .*[^:$]$")
 
 cdef str FILE_BUFFER = ""
 cdef object OUTPUT_FILE
+cdef str OUTPUT_DIR = f"../../{PYX_TARGET}/"
+
 
 """ file open """
 
@@ -46,11 +49,6 @@ cdef FILE *cfile = NULL
 
 cdef void file_open_read(str filename):
     file_open(filename, "rb")
-
-
-cdef void file_open_write(str filename):
-    #  TODO
-    pass
 
 
 cdef void file_open(str filename, str mode):
@@ -77,10 +75,6 @@ cdef tuple[bint, str] get_line():
         return True, ''
 
     return False, str(cline.decode("UTF-8"))
-
-
-cdef void write_line(str line):
-    print(line)  # TODO
 
 
 cdef void file_close():
@@ -182,6 +176,8 @@ cdef void extract_header(str pxd_file):
             PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, clss)] = re.compile(r"\b{0}\b".format(clss))
         elif re.match(RGX_IS_FUNC_PXD, line):
             symbol = get_function_symbol(line)
+            if symbol in SYMBOL_SKIP:
+                continue
             PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re.compile(r"\b{0}\b".format(symbol))
         elif re.match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
@@ -241,6 +237,8 @@ cdef void process_source(str pyx_file):
                 append_file_buffer("")
         elif re.match(RGX_IS_FUNC_PYX, line):
             symbol = get_function_symbol(line)
+            if symbol in SYMBOL_SKIP:
+                continue
             unique_id = get_unique_id(pyx_file, symbol)
             if not unique_id in PXD_PUBLIC_SYMBOLS:
                 PYX_PRIVATE_SYMBOLS[unique_id] = re.compile(r"\b{0}\b".format(symbol))
@@ -268,7 +266,7 @@ cdef void _main(list[str] args):
     global PYX_FILES
     global PYX_ID
     global OUTPUT_FILE
-    OUTPUT_FILE = open("test.txt", "w")
+    OUTPUT_FILE = open(f"{OUTPUT_DIR}{PYX_TARGET}.pyx", "w")
 
     sort_includes()
 
