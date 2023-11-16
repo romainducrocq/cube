@@ -11,8 +11,8 @@ cdef list[str] SORT_INCLUDES = []
 cdef int PYX_ID = 0
 cdef list[str] PXD_VARIABLES = []
 cdef dict[str, list[str]] PXD_CLASSES = {}
-cdef list[tuple(object, str)] PXD_PUBLIC_SYMBOLS = []
-# cdef dict[str, str] PYX_PRIVATE_SYMBOLS = {}
+cdef dict[str, object] PXD_PUBLIC_SYMBOLS = {}
+cdef dict[str, object] PYX_PRIVATE_SYMBOLS = {}
 
 cdef object RGX_SANITIZE = re.compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
 cdef object RGX_IS_LOCAL_CIMPORT = re.compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
@@ -179,23 +179,18 @@ cdef void extract_header(str pxd_file):
         if re.match(RGX_IS_CLASS, line):
             clss = get_class_symbol(line)
             PXD_CLASSES[clss] = []
-            PXD_PUBLIC_SYMBOLS.append((re.compile(r"\b{0}\b".format(clss)),
-                                       get_unique_id(pxd_file, clss)))
+            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, clss)] = re.compile(r"\b{0}\b".format(clss))
         elif re.match(RGX_IS_FUNC_PXD, line):
             symbol = get_function_symbol(line)
-            PXD_PUBLIC_SYMBOLS.append((re.compile(r"\b{0}\b".format(symbol)),
-                                       get_unique_id(pxd_file, symbol)))
+            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re.compile(r"\b{0}\b".format(symbol))
         elif re.match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
-            PXD_PUBLIC_SYMBOLS.append((re.compile(r"\b{0}\b".format(symbol)),
-                                       get_unique_id(pxd_file, symbol)))
+            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re.compile(r"\b{0}\b".format(symbol))
             PXD_VARIABLES.append(line)
         elif re.match(RGX_IS_CLASS_VAR, line):
             PXD_CLASSES[clss].append(line)
 
     file_close()
-
-    print(PXD_PUBLIC_SYMBOLS)
 
 
 """  process source  """
@@ -206,56 +201,65 @@ cdef void append_file_buffer(str line):
     FILE_BUFFER += line + "\n"
 
 
-# cdef void process_source(str pyx_file):
-#     global PXD_PUBLIC_SYMBOLS
-#     global PYX_PRIVATE_SYMBOLS
-#     global FILE_BUFFER
-#     PYX_PRIVATE_SYMBOLS = {}
-#     FILE_BUFFER = ""
-#
-#     cdef str filename = f"{DIR_TARGET}{pyx_file}.pyx"
-#     file_open_read(filename)
-#
-#     append_file_buffer("")
-#     cdef str line
-#     for line in PXD_VARIABLES:
-#         append_file_buffer(line)
-#     append_file_buffer("")
-#
-#     cdef bint eof
-#     cdef str symbol
-#     while True:
-#         eof, line = get_line()
-#         if eof:
-#             break
-#
-#         line = sanitize_line(line)
-#         if re.match(RGX_IS_LOCAL_CIMPORT, line):
-#             continue
-#
-#         append_file_buffer(line)
-#         if re.match(RGX_IS_CLASS, line):
-#             symbol = get_class_symbol(line)
-#             PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
-#             if symbol in PXD_CLASSES:
-#                 for line in PXD_CLASSES[symbol]:
-#                     append_file_buffer(line)
-#                 append_file_buffer("")
-#                 append_file_buffer("")
-#         elif re.match(RGX_IS_FUNC_PYX, line):
-#             symbol = get_function_symbol(line)
-#             PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
-#         elif re.match(RGX_IS_GLOB_VAR, line):
-#             symbol = get_variable_symbol(line)
-#             PYX_FILES[pyx_file]["symbols"][symbol] = get_hash(pyx_file, symbol)
-#
-#     file_close()
-#
-#     print(pyx_file)
-#     for symbol in PYX_FILES[pyx_file]["symbols"]:
-#         print("    " + symbol + " " + PYX_FILES[pyx_file]["symbols"][symbol])
-#     print("")
-#     print(PUBLIC_SYMBOLS)
+cdef void process_source(str pyx_file):
+    global PYX_PRIVATE_SYMBOLS
+    global FILE_BUFFER
+    PYX_PRIVATE_SYMBOLS = {}
+    FILE_BUFFER = ""
+
+    cdef str filename = f"{DIR_TARGET}{pyx_file}.pyx"
+    file_open_read(filename)
+
+    append_file_buffer("")
+    cdef str line
+    for line in PXD_VARIABLES:
+        append_file_buffer(line)
+    append_file_buffer("")
+
+    cdef bint eof
+    cdef str symbol
+    cdef str unique_id
+    while True:
+        eof, line = get_line()
+        if eof:
+            break
+
+        line = sanitize_line(line)
+        if re.match(RGX_IS_LOCAL_CIMPORT, line):
+            continue
+
+        append_file_buffer(line)
+        if re.match(RGX_IS_CLASS, line):
+            symbol = get_class_symbol(line)
+            unique_id = get_unique_id(pyx_file, symbol)
+            if not unique_id in PXD_PUBLIC_SYMBOLS:
+                PYX_PRIVATE_SYMBOLS[unique_id] = re.compile(r"\b{0}\b".format(symbol))
+            if symbol in PXD_CLASSES:
+                for line in PXD_CLASSES[symbol]:
+                    append_file_buffer(line)
+                append_file_buffer("")
+                append_file_buffer("")
+        elif re.match(RGX_IS_FUNC_PYX, line):
+            symbol = get_function_symbol(line)
+            unique_id = get_unique_id(pyx_file, symbol)
+            if not unique_id in PXD_PUBLIC_SYMBOLS:
+                PYX_PRIVATE_SYMBOLS[unique_id] = re.compile(r"\b{0}\b".format(symbol))
+        elif re.match(RGX_IS_GLOB_VAR, line):
+            symbol = get_variable_symbol(line)
+            unique_id = get_unique_id(pyx_file, symbol)
+            if not unique_id in PXD_PUBLIC_SYMBOLS:
+                PYX_PRIVATE_SYMBOLS[unique_id] = re.compile(r"\b{0}\b".format(symbol))
+
+    file_close()
+
+    for unique_id in PXD_PUBLIC_SYMBOLS:
+        FILE_BUFFER = re.sub(PXD_PUBLIC_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
+
+    for unique_id in PYX_PRIVATE_SYMBOLS:
+        FILE_BUFFER = re.sub(PYX_PRIVATE_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
+
+    print(FILE_BUFFER)
+
 
 """  main """
 
@@ -270,7 +274,7 @@ cdef void _main(list[str] args):
     for PYX_ID, pyx_file in enumerate(SORT_INCLUDES):
 
         extract_header(pyx_file)
-        # process_source(pyx_file)
+        process_source(pyx_file)
 
 
 cdef public main_c(int argc, char **argv):
