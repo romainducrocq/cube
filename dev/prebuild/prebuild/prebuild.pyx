@@ -23,7 +23,7 @@ cdef object RGX_IS_GLOB_VAR = re.compile(r"^cdef .*[^:$]$")
 cdef object RGX_IS_CLASS_VAR = re.compile(r"^\s{4}cdef .*[^:$]$")
 
 cdef str FILE_BUFFER = ""
-
+cdef object OUTPUT_FILE
 
 """ file open """
 
@@ -258,7 +258,7 @@ cdef void process_source(str pyx_file):
     for unique_id in PYX_PRIVATE_SYMBOLS:
         FILE_BUFFER = re.sub(PYX_PRIVATE_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
 
-    print(FILE_BUFFER)
+    OUTPUT_FILE.write(FILE_BUFFER)
 
 
 """  main """
@@ -267,6 +267,8 @@ cdef void process_source(str pyx_file):
 cdef void _main(list[str] args):
     global PYX_FILES
     global PYX_ID
+    global OUTPUT_FILE
+    OUTPUT_FILE = open("test.txt", "w")
 
     sort_includes()
 
@@ -275,6 +277,8 @@ cdef void _main(list[str] args):
 
         extract_header(pyx_file)
         process_source(pyx_file)
+
+    OUTPUT_FILE.close()
 
 
 cdef public main_c(int argc, char **argv):
