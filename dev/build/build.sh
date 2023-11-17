@@ -27,11 +27,10 @@ function make () {
 }
 
 function clean () {
-    mkdir -p ${PYX_TARGET}/
-    rm *.o ${PYX_TARGET}/*
+    rm *.o ${PYX_TARGET}/*.c ${PYX_TARGET}/*.h
 }
 
-clean
 prebuild
 cythonize
 make
+clean
