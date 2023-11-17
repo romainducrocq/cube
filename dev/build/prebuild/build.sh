@@ -10,7 +10,7 @@ function cythonize () {
     cd ../
 }
 
-function make () {
+function compile () {
     if [ -f "${PYX_TARGET}/${PYX_TARGET}" ]; then rm ${PYX_TARGET}/${PYX_TARGET}; fi
     gcc -I${PYTHON_DIR} -I${PYTHON_DIR}Include -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall \
         -c ${PYX_TARGET}/*.c main.c
@@ -22,5 +22,5 @@ function clean () {
 }
 
 cythonize
-make
+compile
 clean

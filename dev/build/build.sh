@@ -3,6 +3,11 @@
 PYTHON_DIR="/opt/Python-3.9.18/"
 PYX_TARGET="ccc"
 
+function requirements () {
+    python3.9 -m pip install Cython==3.0.5
+    if [ ${?} -ne 0 ]; then exit 1; fi
+}
+
 function prebuild () {
     cd prebuild/
     ./build.sh
@@ -19,7 +24,7 @@ function cythonize () {
     cd ../
 }
 
-function make () {
+function compile () {
     if [ -f "${PYX_TARGET}/${PYX_TARGET}" ]; then rm ${PYX_TARGET}/${PYX_TARGET}; fi
     gcc -I${PYTHON_DIR} -I${PYTHON_DIR}Include -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall \
         -c ${PYX_TARGET}/*.c main.c
@@ -30,7 +35,8 @@ function clean () {
     rm *.o ${PYX_TARGET}/*.c ${PYX_TARGET}/*.h
 }
 
+requirements
 prebuild
 cythonize
-make
+compile
 clean
