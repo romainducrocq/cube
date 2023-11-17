@@ -333,10 +333,10 @@ cdef AST parsing(list[Token] lex_tokens):
 
     if tokens:
         raise ParserError(
-            "An error occurred in parsing, not all toks were consumed")
+            "An error occurred in parser, not all Tokens were consumed")
 
     if not c_ast:
         raise ParserError(
-            "An error occurred in parsing, AST was not parsed")
+            "An error occurred in parser, Ast was not parsed")
 
     return c_ast

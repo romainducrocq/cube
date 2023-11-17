@@ -257,6 +257,6 @@ cdef AST three_address_code_representation(AST c_ast):
 
     if not tac_ast:
         raise ThreeAddressCodeGeneratorError(
-            "An error occurred in three address code representation, ASM was not generated")
+            "An error occurred in three address code representation, Asm was not generated")
 
     return tac_ast
