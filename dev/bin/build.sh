@@ -1,9 +1,11 @@
 #!/bin/bash
 
+PACKAGE_NAME="ccc"
+
 function clean () {
     if [[ "${1}" == "--clean" ]]; then
         rm *.c
-        rm -r ./ccc/
+        rm -r ./${PACKAGE_NAME}/
         rm -r ./build/
     fi
 }
@@ -23,17 +25,17 @@ function compile () {
 }
 
 function install () {
-    cp ../../ccc/driver.sh ./ccc/
+    cp ../../${PACKAGE_NAME}/driver.sh ./${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
-    cp ../../ccc/install.sh ./ccc/
+    cp ../../${PACKAGE_NAME}/install.sh ./${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
-    rm -r ../../ccc/
+    rm -r ../../${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
 
-    cp -r ./ccc/ ../../
+    cp -r ./${PACKAGE_NAME}/ ../../
 }
 
-cd ../ccc/
+cd ../${PACKAGE_NAME}/
 clean ${1}
 requirements
 compile

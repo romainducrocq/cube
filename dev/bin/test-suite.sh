@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PACKAGE_NAME="ccc"
+
 function test () {
     echo ""
     echo "----------------------------------------------------------------------"
@@ -10,7 +12,7 @@ function test () {
 
 cd ../../../writing-a-c-compiler-tests/
 find . -maxdepth 1 -type l -delete
-ln -s ../MOOC-NoStarch-Writing_a_C_Compiler/ccc/* .
+ln -s ../MOOC-NoStarch-Writing_a_C_Compiler/${PACKAGE_NAME}/* .
 
 if [ ${#} -ne 0 ]; then
     test ${@}

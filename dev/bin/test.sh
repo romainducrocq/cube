@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PACKAGE_NAME="ccc"
+
 LIGHT_RED='\033[1;31m'
 LIGHT_GREEN='\033[1;32m'
 NC='\033[0m'
@@ -18,7 +20,7 @@ function ret_gcc () {
 
 function ret_ccc () {
     FILE=${1}
-    ccc ${FILE}.c > /dev/null 2>&1;  ${1}
+    ${PACKAGE_NAME} ${FILE}.c > /dev/null 2>&1;  ${1}
     echo "${?}"
 }
 
@@ -36,7 +38,7 @@ function test_file () {
     else
         RES="${LIGHT_RED}[n] ${FILE}${NC}"
     fi
-    echo -e "${RES} -> gcc: ${RET_GCC}, ccc: ${RET_CCC}"
+    echo -e "${RES} -> gcc: ${RET_GCC}, ${PACKAGE_NAME}: ${RET_CCC}"
 }
 
 function test_dir () {
@@ -64,7 +66,7 @@ function test_dir () {
             else
                 RES="${LIGHT_RED}[n] ${SUBDIR}${FILE}${NC}"
             fi
-            echo -e "${RES} -> gcc: ${RET_GCC}, ccc: ${RET_CCC}"
+            echo -e "${RES} -> gcc: ${RET_GCC}, ${PACKAGE_NAME}: ${RET_CCC}"
 
             let TOTAL+=1
         done

@@ -1,10 +1,12 @@
 #!/bin/bash
 
+PACKAGE_NAME="ccc"
+
 function usage () {
     echo ${@} |\
        grep -q -e "--help"
     if [ ${?} -eq 0 ]; then
-        echo "Usage: ccc [Options] FILE"
+        echo "Usage: ${PACKAGE_NAME} FILE [Options]"
         echo ""
         echo "Options:"
         echo "    --help       print help and exit"
@@ -49,14 +51,14 @@ function preprocess () {
 
 function compile () {
     FILE=${1}
-    ARGV=${@:2}
+    ARGV=${@}
 
     if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]] ; then
         export PYTHONPATH="$PYTHONPATH:$HOME/.python"
     fi
 
     echo "Compile    -> ${FILE}.i"
-    python3.9 -c "from ccc.__compiler import main; main()" ${FILE}.i ${ARGV}
+    python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${ARGV}
     if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
 }
 
