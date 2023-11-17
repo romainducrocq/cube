@@ -1,7 +1,16 @@
 #!/bin/bash
 
 PYTHON_DIR="/opt/Python-3.9.18/"
-PYX_TARGET="prebuild"
+PYX_TARGET="ccc"
+
+function prebuild () {
+    cd prebuild/
+    ./build.sh
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    ./run.sh
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    cd ../
+}
 
 function cythonize () {
     cd ${PYX_TARGET}/
@@ -18,9 +27,15 @@ function make () {
 }
 
 function clean () {
-    rm *.o ${PYX_TARGET}/*.c ${PYX_TARGET}/*.h
+    mkdir -p ${PYX_TARGET}/
+    rm *.o ${PYX_TARGET}/*
 }
 
+clean
+echo 1
+prebuild
+echo 2
 cythonize
+echo 3
 make
 clean

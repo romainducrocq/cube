@@ -4,7 +4,7 @@ import graphlib
 
 
 cdef str PYX_TARGET = "ccc"
-cdef str DIR_TARGET = f"{os.path.dirname(os.path.dirname(os.getcwd()))}/{PYX_TARGET}/"
+cdef str DIR_TARGET = f"{os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd())))}/{PYX_TARGET}/"
 cdef list[str] PYX_FILES = [f[:-4] for f in os.listdir(DIR_TARGET) if f.endswith(".pyx")]
 cdef list[str] SORT_INCLUDES = []
 
