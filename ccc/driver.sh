@@ -44,7 +44,7 @@ function preprocess () {
 
     echo "Preprocess -> ${FILE}.c"
     gcc -E -P ${FILE}.c -o ${FILE}.i
-    if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
+    if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
 }
 
 function compile () {
@@ -57,7 +57,7 @@ function compile () {
 
     echo "Compile    -> ${FILE}.i"
     python3.9 -c "from ccc.__compiler import main; main()" ${FILE}.i ${ARGV}
-    if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
+    if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
 }
 
 function link () {
@@ -70,7 +70,7 @@ function link () {
     if [ ${?} -ne 0 ]; then
         echo "Link       -> ${FILE}.s"
         gcc ${FILE}.s -o ${FILE}
-        if [ ${?} -ne 0 ]; then clean ${FILE} && exit 1; fi
+        if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
         echo "Executable -> ${FILE}"
     fi
 }
