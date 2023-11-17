@@ -19,13 +19,13 @@ class CompilerError(RuntimeError):
 
 cdef IotaEnum OPT = IotaEnum((
     "none",
-    "lex",
-    "parse",
-    "validate",
-    "tacky",
-    "codegen",
-    "codeemit",
-    "S"
+    "--lex",
+    "--parse",
+    "--validate",
+    "--tacky",
+    "--codegen",
+    "--codeemit",
+    "-S"
 ))
 
 
@@ -41,7 +41,7 @@ cdef void compile(str filename, int opt_exit, int opt_s):
     print("-- Exit lexer: OK")
     cdef int e
     cdef Token token
-    if opt_exit == OPT.get('lex'):
+    if opt_exit == OPT.get('--lex'):
         for e, token in enumerate(tokens):
             debug(str(e) + ': ("' + token.token + '", ' +
                   str(token.token_kind) + ')')
@@ -50,21 +50,21 @@ cdef void compile(str filename, int opt_exit, int opt_s):
     print("-- Start parser...")
     cdef AST c_ast = parsing(tokens)
     print("-- Exit parser: OK")
-    if opt_exit == OPT.get('parse'):
+    if opt_exit == OPT.get('--parse'):
         debug(ast_pretty_string(c_ast))
         return
 
     print("-- Start semantic analysis...")
     semantic_analysis(c_ast)
     print("-- Exit semantic analysis: OK")
-    if opt_exit == OPT.get('validate'):
+    if opt_exit == OPT.get('--validate'):
         debug(ast_pretty_string(c_ast))
         return
 
     print("-- Start tac representation...")
     cdef AST tac_ast = three_address_code_representation(c_ast)
     print("-- Exit tac representation: OK")
-    if opt_exit == OPT.get('tacky'):
+    if opt_exit == OPT.get('--tacky'):
         debug(ast_pretty_string(tac_ast))
         return
 
@@ -102,35 +102,27 @@ cdef tuple[str, int, int] arg_parse(list[str] argv):
     cdef list[str] argv_opts = []
     while True:
         arg = shift_args(argv)
-        if not arg in (
-            "--codeemit",
-            "--codegen",
-            "--tacky",
-            "--validate",
-            "--parse",
-            "--lex",
-            "-S"
-        ):
+        if not arg in OPT.iter():
             break
         argv_opts.append(arg)
 
     cdef int opt_exit = OPT.get('none')
     if "--codeemit" in argv_opts:
-        opt_exit = OPT.get('codeemit')
+        opt_exit = OPT.get('--codeemit')
     elif "--codegen" in argv_opts:
-        opt_exit = OPT.get('codegen')
+        opt_exit = OPT.get('--codegen')
     elif "--tacky" in argv_opts:
-        opt_exit = OPT.get('tacky')
+        opt_exit = OPT.get('--tacky')
     elif "--validate" in argv_opts:
-        opt_exit = OPT.get('validate')
+        opt_exit = OPT.get('--validate')
     elif "--parse" in argv_opts:
-        opt_exit = OPT.get('parse')
+        opt_exit = OPT.get('--parse')
     elif "--lex" in argv_opts:
-        opt_exit = OPT.get('lex')
+        opt_exit = OPT.get('--lex')
 
     cdef int opt_s = OPT.get('none')
     if "-S" in argv_opts:
-        opt_s = OPT.get('S')
+        opt_s = OPT.get('-S')
 
     cdef str filename = arg
 
