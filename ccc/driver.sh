@@ -51,14 +51,14 @@ function preprocess () {
 
 function compile () {
     FILE=${1}
-    ARGV=${@}
+    ARGV=${@:2}
 
     if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]] ; then
         export PYTHONPATH="$PYTHONPATH:$HOME/.python"
     fi
 
     echo "Compile    -> ${FILE}.i"
-    python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${ARGV}
+    python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${FILE}.i ${ARGV}
     if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
 }
 

@@ -4,6 +4,7 @@ __pycache__/
 .temp/
 /tests/
 *.c
+*.h
 *.so
 /ccc/
 /dev/ccc/ccc/
