@@ -88,14 +88,20 @@ cdef void compile(str filename, int opt_exit, int opt_s):
     #     output_file.writelines(asm_code)
 
 
+cdef str shift_args(list[str] argv):
+    if argv:
+        return argv.pop(0)
+    return ""
+
+
 cdef tuple[str, int, int] arg_parse(list[str] argv):
 
-    _ = "" if not argv else argv.pop(0)
+    _ = shift_args(argv)
     if not argv:
         raise CompilerError(
             f"No file was provided in args")
 
-    cdef str filename = "" if not argv else argv.pop(0)
+    cdef str filename = shift_args(argv)
 
     cdef int opt_exit = OPT.get('none')
     if "--codeemit" in argv:
