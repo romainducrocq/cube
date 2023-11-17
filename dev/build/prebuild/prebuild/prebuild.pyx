@@ -1,11 +1,15 @@
-import os
-import re
-import graphlib
+from os import path as os_path
+from os import getcwd as os_getcwd
+from os import listdir as os_listdir
+from re import compile as re_compile
+from re import match as re_match
+from re import sub as re_sub
+from graphlib import TopologicalSorter as graphlib_TopologicalSorter
 
 
 cdef str PYX_TARGET = "ccc"
-cdef str DIR_TARGET = f"{os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd())))}/{PYX_TARGET}/"
-cdef list[str] PYX_FILES = [f[:-4] for f in os.listdir(DIR_TARGET) if f.endswith(".pyx")]
+cdef str DIR_TARGET = f"{os_path.dirname(os_path.dirname(os_path.dirname(os_getcwd())))}/{PYX_TARGET}/"
+cdef list[str] PYX_FILES = [f[:-4] for f in os_listdir(DIR_TARGET) if f.endswith(".pyx")]
 cdef list[str] SORT_INCLUDES = []
 
 cdef int PYX_ID = 0
@@ -15,14 +19,14 @@ cdef dict[str, object] PXD_PUBLIC_SYMBOLS = {}
 cdef dict[str, object] PYX_PRIVATE_SYMBOLS = {}
 cdef tuple[str, ...] SYMBOL_SKIP = ("main_c",)
 
-cdef object RGX_SANITIZE = re.compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
-cdef object RGX_IS_LOCAL_CIMPORT = re.compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
-cdef object RGX_IS_CLASS = re.compile(r"^(^cdef |^)class .*:$")
-cdef object RGX_IS_FUNC_PXD = re.compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*$")
-cdef object RGX_IS_FUNC_PYX = re.compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*:$")
-cdef object RGX_IS_GLOB_VAR = re.compile(r"^cdef .*[^:$]$")
-cdef object RGX_IS_CLASS_VAR = re.compile(r"^\s{4}cdef .*[^:$]$")
-cdef object RGX_IS_PY_MAIN = re.compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
+cdef object RGX_SANITIZE = re_compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
+cdef object RGX_IS_LOCAL_CIMPORT = re_compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
+cdef object RGX_IS_CLASS = re_compile(r"^(^cdef |^)class .*:$")
+cdef object RGX_IS_FUNC_PXD = re_compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*$")
+cdef object RGX_IS_FUNC_PYX = re_compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*:$")
+cdef object RGX_IS_GLOB_VAR = re_compile(r"^cdef .*[^:$]$")
+cdef object RGX_IS_CLASS_VAR = re_compile(r"^\s{4}cdef .*[^:$]$")
+cdef object RGX_IS_PY_MAIN = re_compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
 
 cdef str FILE_BUFFER = ""
 cdef object OUTPUT_FILE
@@ -85,7 +89,7 @@ cdef void file_close():
 
 cdef str sanitize_line(str line):
     line = line.split("#")[0]
-    return re.sub(RGX_SANITIZE, "", line)
+    return re_sub(RGX_SANITIZE, "", line)
 
 
 """  sort dependencies """
@@ -114,13 +118,13 @@ cdef void sort_includes():
                 break
 
             line = sanitize_line(line)
-            if re.match(RGX_IS_LOCAL_CIMPORT, line):
+            if re_match(RGX_IS_LOCAL_CIMPORT, line):
                 line = line.split(".")[1].split(" ")[0]
                 pxd_includes[pyx_file].add(line)
 
         file_close()
 
-    SORT_INCLUDES = list(graphlib.TopologicalSorter(pxd_includes).static_order())
+    SORT_INCLUDES = list(graphlib_TopologicalSorter(pxd_includes).static_order())
 
 
 """  extract header  """
@@ -171,20 +175,20 @@ cdef void extract_header(str pxd_file):
             break
 
         line = sanitize_line(line)
-        if re.match(RGX_IS_CLASS, line):
+        if re_match(RGX_IS_CLASS, line):
             clss = get_class_symbol(line)
             PXD_CLASSES[clss] = []
-            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, clss)] = re.compile(r"\b{0}\b".format(clss))
-        elif re.match(RGX_IS_FUNC_PXD, line):
+            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, clss)] = re_compile(r"\b{0}\b".format(clss))
+        elif re_match(RGX_IS_FUNC_PXD, line):
             symbol = get_function_symbol(line)
             if symbol in SYMBOL_SKIP:
                 continue
-            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re.compile(r"\b{0}\b".format(symbol))
-        elif re.match(RGX_IS_GLOB_VAR, line):
+            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re_compile(r"\b{0}\b".format(symbol))
+        elif re_match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
-            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re.compile(r"\b{0}\b".format(symbol))
+            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re_compile(r"\b{0}\b".format(symbol))
             PXD_VARIABLES.append(line)
-        elif re.match(RGX_IS_CLASS_VAR, line):
+        elif re_match(RGX_IS_CLASS_VAR, line):
             PXD_CLASSES[clss].append(line)
 
     file_close()
@@ -222,42 +226,42 @@ cdef void process_source(str pyx_file):
             break
 
         line = sanitize_line(line)
-        if re.match(RGX_IS_LOCAL_CIMPORT, line):
+        if re_match(RGX_IS_LOCAL_CIMPORT, line):
             continue
-        if re.match(RGX_IS_PY_MAIN, line):
+        if re_match(RGX_IS_PY_MAIN, line):
             break
 
         append_file_buffer(line)
-        if re.match(RGX_IS_CLASS, line):
+        if re_match(RGX_IS_CLASS, line):
             symbol = get_class_symbol(line)
             unique_id = get_unique_id(pyx_file, symbol)
             if not unique_id in PXD_PUBLIC_SYMBOLS:
-                PYX_PRIVATE_SYMBOLS[unique_id] = re.compile(r"\b{0}\b".format(symbol))
+                PYX_PRIVATE_SYMBOLS[unique_id] = re_compile(r"\b{0}\b".format(symbol))
             if symbol in PXD_CLASSES:
                 for line in PXD_CLASSES[symbol]:
                     append_file_buffer(line)
                 append_file_buffer("")
                 append_file_buffer("")
-        elif re.match(RGX_IS_FUNC_PYX, line):
+        elif re_match(RGX_IS_FUNC_PYX, line):
             symbol = get_function_symbol(line)
             if symbol in SYMBOL_SKIP:
                 continue
             unique_id = get_unique_id(pyx_file, symbol)
             if not unique_id in PXD_PUBLIC_SYMBOLS:
-                PYX_PRIVATE_SYMBOLS[unique_id] = re.compile(r"\b{0}\b".format(symbol))
-        elif re.match(RGX_IS_GLOB_VAR, line):
+                PYX_PRIVATE_SYMBOLS[unique_id] = re_compile(r"\b{0}\b".format(symbol))
+        elif re_match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
             unique_id = get_unique_id(pyx_file, symbol)
             if not unique_id in PXD_PUBLIC_SYMBOLS:
-                PYX_PRIVATE_SYMBOLS[unique_id] = re.compile(r"\b{0}\b".format(symbol))
+                PYX_PRIVATE_SYMBOLS[unique_id] = re_compile(r"\b{0}\b".format(symbol))
 
     file_close()
 
     for unique_id in PXD_PUBLIC_SYMBOLS:
-        FILE_BUFFER = re.sub(PXD_PUBLIC_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
+        FILE_BUFFER = re_sub(PXD_PUBLIC_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
 
     for unique_id in PYX_PRIVATE_SYMBOLS:
-        FILE_BUFFER = re.sub(PYX_PRIVATE_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
+        FILE_BUFFER = re_sub(PYX_PRIVATE_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
 
     OUTPUT_FILE.write(FILE_BUFFER)
 

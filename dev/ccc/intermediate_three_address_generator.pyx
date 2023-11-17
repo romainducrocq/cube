@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy as copy_deepcopy
 
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
@@ -13,12 +13,12 @@ class ThreeAddressCodeGeneratorError(RuntimeError):
 
 cdef TIdentifier represent_identifier(TIdentifier node):
     """ <identifier> = Built-in identifier type """
-    return TIdentifier(deepcopy(node.str_t))
+    return TIdentifier(copy_deepcopy(node.str_t))
 
 
 cdef TInt represent_int(TInt node):
     """ <int> = Built-in int type """
-    return TInt(deepcopy(node.int_t))
+    return TInt(copy_deepcopy(node.int_t))
 
 cdef TacBinaryOp represent_binary_op(CBinaryOp node):
     """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor

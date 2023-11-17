@@ -1,4 +1,5 @@
-from re import compile, finditer
+from re import compile as re_compile
+from re import finditer as re_finditer
 
 from ccc.util_fopen cimport file_open, get_line, file_close
 from ccc.util_iota_enum cimport IotaEnum
@@ -121,7 +122,7 @@ cdef dict[int, str] TOKEN_REGEX = {
 }
 
 
-cdef object TOKEN_PATTERN = compile(
+cdef object TOKEN_PATTERN = re_compile(
     "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND.get(tk)]})" for tk in TOKEN_KIND.iter())
 )
 
@@ -139,7 +140,7 @@ cdef list[Token] lexing(str filename):
         if eof:
             break
 
-        for match in finditer(TOKEN_PATTERN, line):
+        for match in re_finditer(TOKEN_PATTERN, line):
             if match.lastgroup is None:
                 raise LexerError(
                     f"No token found in line: {line}")
