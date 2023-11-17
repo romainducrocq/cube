@@ -7,6 +7,6 @@ __pycache__/
 *.h
 *.so
 /ccc/
-/dev/ccc/ccc/
-/dev/ccc/build/
-/dev/build/
+/lang/ccc/ccc/
+/lang/ccc/build/
+/lang/build/
