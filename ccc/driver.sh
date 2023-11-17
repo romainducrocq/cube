@@ -58,8 +58,14 @@ function compile () {
     fi
 
     echo "Compile    -> ${FILE}.i"
-    python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${FILE}.i ${ARGV}
-    if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
+
+    if [ -f "$HOME/.python/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
+        $HOME/.python/${PACKAGE_NAME}/${PACKAGE_NAME} ${FILE}.i ${ARGV}
+        if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
+    else
+        python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${FILE}.i ${ARGV}
+        if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
+    fi
 }
 
 function link () {
