@@ -34,3 +34,5 @@ compile
 clean
 
 prebuild
+
+exit 0

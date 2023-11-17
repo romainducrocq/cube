@@ -35,19 +35,25 @@ function compile () {
     if [ ${?} -ne 0 ]; then clean; exit 1; fi
 }
 
-#function install () {
-#    cp ./ccc/ccc ./ccc/
-#    if [ ${?} -ne 0 ]; then exit 1; fi
-#    cp ../../ccc/install.sh ./ccc/
-#    if [ ${?} -ne 0 ]; then exit 1; fi
-#    rm -r ../../ccc/
-#    if [ ${?} -ne 0 ]; then exit 1; fi
-#
-#    cp -r ./ccc/ ../../
-#}
+function install () {
+    cp ../../ccc/driver.sh ./ccc/
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    cp ../../ccc/install.sh ./ccc/
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    rm -r ../../ccc/
+    if [ ${?} -ne 0 ]; then exit 1; fi
+
+    cp -r ./ccc/ ../../
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    rm -r ../../ccc/${PYX_TARGET}.pyx
+}
 
 requirements
 prebuild
 cythonize
 compile
 clean
+
+install
+
+exit 0
