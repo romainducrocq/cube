@@ -135,8 +135,6 @@ cdef public main_c(int argc, char **argv):
 
     entry(args)
 
-    exit(0)
-
 
 cpdef void main_py():
     import platform
@@ -149,5 +147,3 @@ cpdef void main_py():
             f"Python version too old, >= 3.9 required but {platform.python_version()} used")
 
     entry(sys.argv)
-
-    exit(0)
