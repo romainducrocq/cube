@@ -1,7 +1,3 @@
-import platform
-import sys
-import os
-
 from ccc.util_iota_enum cimport IotaEnum
 from ccc.util_ast cimport AST, ast_pretty_string
 from ccc.parser_lexer cimport lexing, Token
@@ -100,9 +96,6 @@ cdef tuple[str, int, int] arg_parse(list[str] argv):
             f"No file was provided in args")
 
     cdef str filename = "" if not argv else argv.pop(0)
-    if not os.path.exists(filename):
-        raise CompilerError(
-            f"File {filename} does not exist")
 
     cdef int opt_exit = OPT.get('none')
     if "--codeemit" in argv:
@@ -127,12 +120,6 @@ cdef tuple[str, int, int] arg_parse(list[str] argv):
 
 cdef void entry(list[str] args):
 
-    if (int(platform.python_version().split('.')[0]) < 3 or
-            (int(platform.python_version().split('.')[0]) >= 3 and
-             int(platform.python_version().split('.')[1]) < 9)):
-        raise CompilerError(
-            f"Python version too old, >= 3.9 required but {platform.python_version()} used")
-
     cdef str filename
     cdef int opt_exit
     cdef int opt_s
@@ -152,6 +139,14 @@ cdef public main_c(int argc, char **argv):
 
 
 cpdef void main_py():
+    import platform
+    import sys
+
+    if (int(platform.python_version().split('.')[0]) < 3 or
+            (int(platform.python_version().split('.')[0]) >= 3 and
+             int(platform.python_version().split('.')[1]) < 9)):
+        raise CompilerError(
+            f"Python version too old, >= 3.9 required but {platform.python_version()} used")
 
     entry(sys.argv)
 
