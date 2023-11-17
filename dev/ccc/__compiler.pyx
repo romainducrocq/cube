@@ -125,7 +125,7 @@ cdef tuple[str, int, int] arg_parse(list[str] argv):
     return filename, opt_exit, opt_s
 
 
-cpdef void main():
+cdef void entry(list[str] args):
 
     if (int(platform.python_version().split('.')[0]) < 3 or
             (int(platform.python_version().split('.')[0]) >= 3 and
@@ -136,8 +136,13 @@ cpdef void main():
     cdef str filename
     cdef int opt_exit
     cdef int opt_s
-    filename, opt_exit, opt_s = arg_parse(sys.argv)
+    filename, opt_exit, opt_s = arg_parse(args)
     compile(filename, opt_exit, opt_s)
+
+
+cpdef void main_py():
+
+    entry(sys.argv)
 
     exit(0)
 
@@ -148,4 +153,6 @@ cdef public main_c(int argc, char **argv):
     for i in range(argc):
         args.append(str(argv[i].decode("UTF-8")))
 
-    main(args)
+    entry(args)
+
+    exit(0)

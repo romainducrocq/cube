@@ -32,10 +32,6 @@ function clean () {
 }
 
 clean
-echo 1
 prebuild
-echo 2
 cythonize
-echo 3
 make
-clean

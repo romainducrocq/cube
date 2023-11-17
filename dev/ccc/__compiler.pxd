@@ -1,1 +1,1 @@
-cpdef void main()
+cpdef void main_py()

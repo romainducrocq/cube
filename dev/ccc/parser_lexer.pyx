@@ -142,11 +142,11 @@ cdef list[Token] lexing(str filename):
         for match in re.finditer(TOKEN_PATTERN, line):
             if match.lastgroup is None:
                 raise LexerError(
-                    f"No token found in line:\n    {line}")
+                    f"No token found in line: {line}")
 
             if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('error'):
                 raise LexerError(
-                    f"Invalid token \"{match.group()}\" found in line:\n    {line}")
+                    f"Invalid token \"{match.group()}\" found in line: {line}")
 
             if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('skip'):
                 continue

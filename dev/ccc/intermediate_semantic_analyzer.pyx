@@ -1,7 +1,7 @@
 from ccc.util_ast cimport ast_iter_child_nodes
-from ccc.parser_c_ast cimport (AST, TIdentifier, CFunction, CBlockItem,
-                               CD, CDeclaration, CDecl, CS, CStatement, CReturn, CExpression, CNull,
-                               CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound)
+from ccc.parser_c_ast cimport AST, TIdentifier, CFunction, CBlockItem
+from ccc.parser_c_ast cimport CD, CDeclaration, CDecl, CS, CStatement, CReturn, CExpression, CNull
+from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound
 from ccc.intermediate_name cimport resolve_variable_identifier
 
 

@@ -1,5 +1,5 @@
-from ccc.parser_c_ast cimport (TIdentifier, CExp,
-                               CVar, CConstant, CUnary, CBinary)
+from ccc.parser_c_ast cimport TIdentifier, CExp
+from ccc.parser_c_ast cimport CVar, CConstant, CUnary, CBinary
 
 
 class NameManagerError(RuntimeError):

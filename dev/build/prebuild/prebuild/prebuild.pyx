@@ -13,7 +13,7 @@ cdef list[str] PXD_VARIABLES = []
 cdef dict[str, list[str]] PXD_CLASSES = {}
 cdef dict[str, object] PXD_PUBLIC_SYMBOLS = {}
 cdef dict[str, object] PYX_PRIVATE_SYMBOLS = {}
-cdef tuple[str, ...] SYMBOL_SKIP = ("main", "main_c")
+cdef tuple[str, ...] SYMBOL_SKIP = ("main_py", "main_c")
 
 cdef object RGX_SANITIZE = re.compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
 cdef object RGX_IS_LOCAL_CIMPORT = re.compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
