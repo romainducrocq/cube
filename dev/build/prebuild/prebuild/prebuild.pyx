@@ -7,8 +7,8 @@ from re import sub as re_sub
 from graphlib import TopologicalSorter as graphlib_TopologicalSorter
 
 
-cdef str PYX_TARGET = "ccc"
-cdef str DIR_TARGET = f"{os_path.dirname(os_path.dirname(os_path.dirname(os_getcwd())))}/{PYX_TARGET}/"
+cdef str PACKAGE_NAME = "ccc"
+cdef str DIR_TARGET = f"{os_path.dirname(os_path.dirname(os_path.dirname(os_getcwd())))}/{PACKAGE_NAME}/"
 cdef list[str] PYX_FILES = [f[:-4] for f in os_listdir(DIR_TARGET) if f.endswith(".pyx")]
 cdef list[str] SORT_INCLUDES = []
 
@@ -20,7 +20,7 @@ cdef dict[str, object] PYX_PRIVATE_SYMBOLS = {}
 cdef tuple[str, ...] SYMBOL_SKIP = ("main_c",)
 
 cdef object RGX_SANITIZE = re_compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
-cdef object RGX_IS_LOCAL_CIMPORT = re_compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
+cdef object RGX_IS_LOCAL_CIMPORT = re_compile(r"^from {0}.*cimport\b.*$".format(PACKAGE_NAME))
 cdef object RGX_IS_CLASS = re_compile(r"^(^cdef |^)class .*:$")
 cdef object RGX_IS_FUNC_PXD = re_compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*$")
 cdef object RGX_IS_FUNC_PYX = re_compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*:$")
@@ -30,7 +30,7 @@ cdef object RGX_IS_PY_MAIN = re_compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
 
 cdef str FILE_BUFFER = ""
 cdef object OUTPUT_FILE
-cdef str OUTPUT_DIR = f"../../{PYX_TARGET}/"
+cdef str OUTPUT_DIR = f"../../{PACKAGE_NAME}/"
 
 
 """ file open """
@@ -273,7 +273,7 @@ cdef void _main(list[str] args):
     global PYX_FILES
     global PYX_ID
     global OUTPUT_FILE
-    OUTPUT_FILE = open(f"{OUTPUT_DIR}{PYX_TARGET}.pyx", "w")
+    OUTPUT_FILE = open(f"{OUTPUT_DIR}{PACKAGE_NAME}.pyx", "w")
 
     sort_includes()
 
