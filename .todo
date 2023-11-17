@@ -1,7 +1,4 @@
 cython:
-- test performance with in / expect -> static set instead of tuple (seems not relevant)
-- fopen: https://gist.github.com/pydemo/0b85bd5d1c017f6873422e02aeb9618a
-- see if possible to pass union / fused type to cpdef intermediate_three_address_generator.represent_instructions(AST node)
 - see if better to refactor every return scope into sub functions:
     => make use of static typing declaration
     => declare only cdef needed for scope
@@ -14,3 +11,12 @@ cython:
         if isinstance(node, type2):
             _do_something_type2(node)
             ...
+
+- for c build:
+    - add readme with code limitations
+    - add ./configure
+        - download + install python from sources with --enable-shared
+        - auto replace /opt/Python3.9.18/ with path in build files
+    - debug exceptions
+    - if ok: add to build / install
+    - update driver to chose the version that is installed in /ccc/
