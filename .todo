@@ -20,3 +20,7 @@ cython:
     - debug exceptions
     - if ok: add to build / install
     - update driver to chose the version that is installed in /ccc/
+
+- see if can remove deepcopy:
+    - int => cdef int x_new = x_old + 0
+    - str => cdef str s_new = s_old + ""

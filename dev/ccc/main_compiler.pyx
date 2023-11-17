@@ -36,9 +36,9 @@ cdef void debug(str string = "", str end="\n"):
 
 cdef void compile(str filename, int opt_exit, int opt_s):
 
-    print("-- Start lexing...")
+    print("-- Start lexer...")
     cdef list[Token] tokens = lexing(filename)
-    print("-- Exit lexing: OK")
+    print("-- Exit lexer: OK")
     cdef int e
     cdef Token token
     if opt_exit == OPT.get('lex'):
@@ -47,9 +47,9 @@ cdef void compile(str filename, int opt_exit, int opt_s):
                   str(token.token_kind) + ')')
         return
 
-    print("-- Start parsing...")
+    print("-- Start parser...")
     cdef AST c_ast = parsing(tokens)
-    print("-- Exit parsing: OK")
+    print("-- Exit parser: OK")
     if opt_exit == OPT.get('parse'):
         debug(ast_pretty_string(c_ast))
         return
