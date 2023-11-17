@@ -140,13 +140,6 @@ cdef void entry(list[str] args):
     compile(filename, opt_exit, opt_s)
 
 
-cpdef void main_py():
-
-    entry(sys.argv)
-
-    exit(0)
-
-
 cdef public main_c(int argc, char **argv):
     cdef int i
     cdef list[str] args = []
@@ -154,5 +147,12 @@ cdef public main_c(int argc, char **argv):
         args.append(str(argv[i].decode("UTF-8")))
 
     entry(args)
+
+    exit(0)
+
+
+cpdef void main_py():
+
+    entry(sys.argv)
 
     exit(0)

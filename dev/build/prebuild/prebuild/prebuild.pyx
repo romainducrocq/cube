@@ -13,7 +13,7 @@ cdef list[str] PXD_VARIABLES = []
 cdef dict[str, list[str]] PXD_CLASSES = {}
 cdef dict[str, object] PXD_PUBLIC_SYMBOLS = {}
 cdef dict[str, object] PYX_PRIVATE_SYMBOLS = {}
-cdef tuple[str, ...] SYMBOL_SKIP = ("main_py", "main_c")
+cdef tuple[str, ...] SYMBOL_SKIP = ("main_c",)
 
 cdef object RGX_SANITIZE = re.compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
 cdef object RGX_IS_LOCAL_CIMPORT = re.compile(r"^from {0}.*cimport\b.*$".format(PYX_TARGET))
@@ -22,6 +22,7 @@ cdef object RGX_IS_FUNC_PXD = re.compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*$")
 cdef object RGX_IS_FUNC_PYX = re.compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*:$")
 cdef object RGX_IS_GLOB_VAR = re.compile(r"^cdef .*[^:$]$")
 cdef object RGX_IS_CLASS_VAR = re.compile(r"^\s{4}cdef .*[^:$]$")
+cdef object RGX_IS_PY_MAIN = re.compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
 
 cdef str FILE_BUFFER = ""
 cdef object OUTPUT_FILE
@@ -146,7 +147,7 @@ cdef str get_variable_symbol(str line):
 
 
 cdef str get_unique_id(str pyx_file, str symbol):
-    return f"{pyx_file}_{symbol}_{PYX_ID}"
+    return f"{pyx_file}{PYX_ID}_{symbol}"
 
 
 cdef void extract_header(str pxd_file):
@@ -223,6 +224,8 @@ cdef void process_source(str pyx_file):
         line = sanitize_line(line)
         if re.match(RGX_IS_LOCAL_CIMPORT, line):
             continue
+        if re.match(RGX_IS_PY_MAIN, line):
+            break
 
         append_file_buffer(line)
         if re.match(RGX_IS_CLASS, line):
