@@ -97,29 +97,46 @@ cdef str shift_args(list[str] argv):
 cdef tuple[str, int, int] arg_parse(list[str] argv):
 
     _ = shift_args(argv)
-    if not argv:
-        raise CompilerError(
-            f"No file was provided in args")
 
-    cdef str filename = shift_args(argv)
+    cdef str arg
+    cdef list[str] argv_opts = []
+    while True:
+        arg = shift_args(argv)
+        if not arg in (
+            "--codeemit",
+            "--codegen",
+            "--tacky",
+            "--validate",
+            "--parse",
+            "--lex",
+            "-S"
+        ):
+            break
+        argv_opts.append(arg)
 
     cdef int opt_exit = OPT.get('none')
-    if "--codeemit" in argv:
+    if "--codeemit" in argv_opts:
         opt_exit = OPT.get('codeemit')
-    elif "--codegen" in argv:
+    elif "--codegen" in argv_opts:
         opt_exit = OPT.get('codegen')
-    elif "--tacky" in argv:
+    elif "--tacky" in argv_opts:
         opt_exit = OPT.get('tacky')
-    elif "--validate" in argv:
+    elif "--validate" in argv_opts:
         opt_exit = OPT.get('validate')
-    elif "--parse" in argv:
+    elif "--parse" in argv_opts:
         opt_exit = OPT.get('parse')
-    elif "--lex" in argv:
+    elif "--lex" in argv_opts:
         opt_exit = OPT.get('lex')
 
     cdef int opt_s = OPT.get('none')
-    if "-S" in argv:
+    if "-S" in argv_opts:
         opt_s = OPT.get('S')
+
+    cdef str filename = arg
+
+    if not filename:
+        raise CompilerError(
+            f"No file was provided in args")
 
     return filename, opt_exit, opt_s
 
