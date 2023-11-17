@@ -7,7 +7,7 @@ from re import sub as re_sub
 from graphlib import TopologicalSorter as graphlib_TopologicalSorter
 
 
-cdef str PACKAGE_NAME = "ccc"
+cdef str PACKAGE_NAME="ccc"
 cdef str DIR_TARGET = f"{os_path.dirname(os_path.dirname(os_path.dirname(os_getcwd())))}/{PACKAGE_NAME}/"
 cdef list[str] PYX_FILES = [f[:-4] for f in os_listdir(DIR_TARGET) if f.endswith(".pyx")]
 cdef list[str] SORT_INCLUDES = []

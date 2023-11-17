@@ -2,7 +2,7 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
-PACKAGE_NAME = "ccc"
+PACKAGE_NAME="ccc"
 
 ext_modules = [
     Extension(f"{PACKAGE_NAME}.main_compiler",  ["./main_compiler.pyx"]),
