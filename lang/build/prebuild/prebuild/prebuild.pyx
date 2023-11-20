@@ -7,15 +7,17 @@ from re import sub as re_sub
 from graphlib import TopologicalSorter as graphlib_TopologicalSorter
 
 
-cdef str PACKAGE_NAME="ccc"
-cdef str OUTPUT_DIR = f"../../{PACKAGE_NAME}/"
-cdef str DIR_TARGET = f"{os_path.dirname(os_path.dirname(os_path.dirname(os_getcwd())))}/{PACKAGE_NAME}/"
-cdef list[str] PYX_FILES = [f[:-4] for f in os_listdir(DIR_TARGET) if f.endswith(".pyx")]
+# init
+cdef str PACKAGE_NAME
+cdef str OUTPUT_DIR
+cdef str DIR_TARGET
+cdef list[str] PYX_FILES
+
 cdef list[str] SORT_INCLUDES = []
 cdef tuple[str, ...] SYMBOL_SKIP = ("main_c",)
 
+cdef object RGX_IS_LOCAL_CIMPORT  # init
 cdef object RGX_SANITIZE = re_compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
-cdef object RGX_IS_LOCAL_CIMPORT = re_compile(r"^from {0}.*cimport\b.*$".format(PACKAGE_NAME))
 cdef object RGX_IS_CLASS = re_compile(r"^(^cdef |^)class .*:$")
 cdef object RGX_IS_FUNC_PXD = re_compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*$")
 cdef object RGX_IS_FUNC_PYX = re_compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*:$")
@@ -281,9 +283,29 @@ cdef void process_source(str pyx_file):
 """  main """
 
 
+cdef void init():
+    global PACKAGE_NAME
+    global OUTPUT_DIR
+    global DIR_TARGET
+    global PYX_FILES
+    global RGX_IS_LOCAL_CIMPORT
+
+    file_open_read(f"{os_path.dirname(os_path.dirname(os_getcwd()))}/package_name.txt")
+    _, PACKAGE_NAME = read_line()
+    file_close_read()
+
+    OUTPUT_DIR = f"../../{PACKAGE_NAME}/"
+    DIR_TARGET = f"{os_path.dirname(os_path.dirname(os_path.dirname(os_getcwd())))}/{PACKAGE_NAME}/"
+    PYX_FILES = [f[:-4] for f in os_listdir(DIR_TARGET) if f.endswith(".pyx")]
+
+    RGX_IS_LOCAL_CIMPORT = re_compile(r"^from {0}.*cimport\b.*$".format(PACKAGE_NAME))
+
+
 cdef void entry(list[str] args):
     global PYX_FILES
     global pyx_id
+
+    init()
 
     file_open_write(f"{OUTPUT_DIR}{PACKAGE_NAME}.pyx")
 

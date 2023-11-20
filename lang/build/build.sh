@@ -45,6 +45,8 @@ function compile () {
 }
 
 function install () {
+    cp ../../${PACKAGE_NAME}/package_name.txt ./${PACKAGE_NAME}/
+    if [ ${?} -ne 0 ]; then exit 1; fi
     cp ../../${PACKAGE_NAME}/driver.sh ./${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
     cp ../../${PACKAGE_NAME}/configure.sh ./${PACKAGE_NAME}/
