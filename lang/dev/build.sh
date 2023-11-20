@@ -27,12 +27,14 @@ function compile () {
 function install () {
     cp ../../${PACKAGE_NAME}/driver.sh ./${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
+    cp ../../${PACKAGE_NAME}/make.sh ./${PACKAGE_NAME}/
+    if [ ${?} -ne 0 ]; then exit 1; fi
     cp ../../${PACKAGE_NAME}/install.sh ./${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
-    rm -r ../../${PACKAGE_NAME}/
+    rm -r ../../${PACKAGE_NAME}/*
     if [ ${?} -ne 0 ]; then exit 1; fi
 
-    cp -r ./${PACKAGE_NAME}/ ../../
+    cp -r ./${PACKAGE_NAME}/* ../../${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
