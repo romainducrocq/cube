@@ -1,6 +1,9 @@
 #!/bin/bash
 
 PACKAGE_NAME="ccc"
+PYTHON_VERSION="3.9"
+CYTHON_VERSION="3.0.5"
+
 PACKAGE_DIR=$(pwd)
 
 sudo apt-get update
@@ -20,22 +23,22 @@ if [ ! -d "$HOME/.${PACKAGE_NAME}/" ]; then
     mkdir ~/.${PACKAGE_NAME}/
 fi
 
-if [ ! -d "$HOME/.${PACKAGE_NAME}/Python-3.9/" ]; then
+if [ ! -d "$HOME/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/" ]; then
     PATCH=0
     while \
-    wget -q --method=HEAD https://www.python.org/ftp/python/3.9.$(( $PATCH + 1 ))/Python-3.9.$(( $PATCH + 1 )).tar.xz
+    wget -q --method=HEAD https://www.python.org/ftp/python/${PYTHON_VERSION}.$(( $PATCH + 1 ))/Python-${PYTHON_VERSION}.$(( $PATCH + 1 )).tar.xz
     do
         PATCH=$(( $PATCH + 1 ));
     done
 
-    wget https://www.python.org/ftp/python/3.9.${PATCH}/Python-3.9.${PATCH}.tar.xz
+    wget https://www.python.org/ftp/python/${PYTHON_VERSION}.${PATCH}/Python-${PYTHON_VERSION}.${PATCH}.tar.xz
     if [ ${?} -ne 0 ]; then exit 1; fi
 
-    tar -xvf Python-3.9.${PATCH}.tar.xz -C ~/.${PACKAGE_NAME}/
+    tar -xvf Python-${PYTHON_VERSION}.${PATCH}.tar.xz -C ~/.${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
 
-    mv ~/.${PACKAGE_NAME}/Python-3.9.${PATCH}/ ~/.${PACKAGE_NAME}/Python-3.9/
-    cd ~/.${PACKAGE_NAME}/Python-3.9/
+    mv ~/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}.${PATCH}/ ~/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/
+    cd ~/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/
 
     ./configure --enable-shared
     if [ ${?} -ne 0 ]; then exit 1; fi
@@ -43,21 +46,26 @@ if [ ! -d "$HOME/.${PACKAGE_NAME}/Python-3.9/" ]; then
     make
     if [ ${?} -ne 0 ]; then exit 1; fi
 
-    which python3.9
+    which python${PYTHON_VERSION}
     if [ ${?} -ne 0 ]; then
         make altinstall
         if [ ${?} -ne 0 ]; then exit 1; fi
     fi
 fi
 
-python3.9 -m pip install Cython==3.0.5
+python${PYTHON_VERSION} -m pip install Cython==${CYTHON_VERSION}
 if [ ${?} -ne 0 ]; then exit 1; fi
 
 cd ${PACKAGE_DIR}
+
 echo -n "${PACKAGE_NAME}" > ./package_name.txt
+if [ ${?} -ne 0 ]; then exit 1; fi
+echo -n "${PYTHON_VERSION}" > ./python_version.txt
 if [ ${?} -ne 0 ]; then exit 1; fi
 
 echo -n "${PACKAGE_NAME}" > ../lang/build/package_name.txt
+if [ ${?} -ne 0 ]; then exit 1; fi
+echo -n "${PYTHON_VERSION}" > ../lang/build/python_version.txt
 if [ ${?} -ne 0 ]; then exit 1; fi
 
 exit 0

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PACKAGE_NAME="$(cat "$(dirname "$(readlink -f "$0")")/package_name.txt")"
-PYTHON_DIR="$HOME/.${PACKAGE_NAME}/Python-3.9/"
+PYTHON_VERSION="$(cat "$(dirname "$(readlink -f "$0")")/python_version.txt")"
 
 function usage () {
     echo ${@} |\
@@ -64,7 +64,7 @@ function compile () {
         $HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME} ${ARGV} ${FILE}.i
         if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
     else
-        ${PYTHON_DIR}/python -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${ARGV} ${FILE}.i
+        python${PYTHON_VERSION} -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${ARGV} ${FILE}.i
         if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
     fi
 }
