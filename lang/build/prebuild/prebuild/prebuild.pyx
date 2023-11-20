@@ -82,19 +82,19 @@ cdef void file_open_write(str filename):
 cdef tuple[bint, str] read_line():
 
     cdef size_t l = 0
-    cdef char *cline = NULL
-    cdef ssize_t read = getline(&cline, &l, c_file_in)
+    cdef char *c_line = NULL
+    cdef ssize_t read = getline(&c_line, &l, c_file_in)
 
     if read == -1:
         return True, ''
 
-    return False, str(cline.decode("UTF-8"))
+    return False, str(c_line.decode("UTF-8"))
 
 
-cdef void write_chunk(bytes chunk_stream, size_t chunk_size_t):
+cdef void write_chunk(bytes chunk_fp, size_t chunk_l):
 
-    cdef char *c_chunk_stream = chunk_stream
-    fwrite(c_chunk_stream, sizeof(char), chunk_size_t, c_file_out)
+    cdef char *c_chunk_fp = chunk_fp
+    fwrite(c_chunk_fp, sizeof(char), chunk_l, c_file_out)
 
 
 cdef void write_file(str stream, int chunk_size = 4096):
@@ -102,7 +102,8 @@ cdef void write_file(str stream, int chunk_size = 4096):
 
     stream_buf += stream
     while len(stream_buf) >= chunk_size:
-        write_chunk(stream_buf[:chunk_size].encode("UTF-8"), chunk_size)
+        write_chunk(stream_buf[:chunk_size].encode("UTF-8"),
+                    chunk_size)
 
         stream_buf = stream_buf[chunk_size:]
 

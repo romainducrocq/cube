@@ -1,7 +1,7 @@
 from re import compile as re_compile
 from re import finditer as re_finditer
 
-from ccc.util_fopen cimport file_open, get_line, file_close
+from ccc.util_fopen cimport file_open_read, read_line, file_close_read
 from ccc.util_iota_enum cimport IotaEnum
 
 
@@ -124,13 +124,13 @@ cdef list[Token] lexing(str filename):
 
     cdef list[Token] tokens = []
 
-    file_open(filename)
+    file_open_read(filename)
 
     cdef bint eof
     cdef str line
     cdef object match
     while True:
-        eof, line = get_line()
+        eof, line = read_line()
         if eof:
             break
 
@@ -148,6 +148,6 @@ cdef list[Token] lexing(str filename):
 
             tokens.append(Token(token=match.group(), token_kind=TOKEN_KIND.get(match.lastgroup)))
 
-    file_close()
+    file_close_read()
 
     return tokens
