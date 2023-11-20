@@ -1,7 +1,7 @@
 #!/bin/bash
 
-PACKAGE_NAME="$(cat "$(dirname "$(readlink -f "$0")")/package_name.txt")"
-PYTHON_VERSION="$(cat "$(dirname "$(readlink -f "$0")")/python_version.txt")"
+PACKAGE_NAME="$(cat $(dirname $(readlink -f ${0}))/package_name.txt)"
+PYTHON_VERSION="$(cat $(dirname $(readlink -f ${0}))/python_version.txt)"
 
 function usage () {
     echo ${@} |\

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGE_NAME="$(cat "$(dirname "$(readlink -f "$0")")/package_name.txt")"
+PACKAGE_NAME="$(cat ./package_name.txt)"
 
 if [ ! -d "$HOME/.${PACKAGE_NAME}/" ]; then
     mkdir ~/.${PACKAGE_NAME}/
