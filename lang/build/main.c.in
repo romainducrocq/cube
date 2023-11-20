@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
     PyImport_AppendInittab("PACKAGE_NAME", PyInit_PACKAGE_NAME);
     Py_Initialize();
     PyImport_ImportModule("PACKAGE_NAME");
-    main_c(argc, argv);
+    int ret = main_c(argc, argv);
     Py_Finalize();
-    return 0;
+    return ret;
 }

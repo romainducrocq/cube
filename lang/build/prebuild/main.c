@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
     PyImport_AppendInittab("prebuild", PyInit_prebuild);
     Py_Initialize();
     PyImport_ImportModule("prebuild");
-    main_c(argc, argv);
+    int ret = main_c(argc, argv);
     Py_Finalize();
-    return 0;
+    return ret;
 }

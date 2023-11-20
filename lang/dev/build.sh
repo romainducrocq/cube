@@ -33,6 +33,7 @@ function install () {
     if [ ${?} -ne 0 ]; then exit 1; fi
 
     cp -r ./${PACKAGE_NAME}/ ../../
+    if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
 cd ../${PACKAGE_NAME}/

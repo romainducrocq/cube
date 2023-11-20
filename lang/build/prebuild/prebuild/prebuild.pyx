@@ -298,7 +298,7 @@ cdef void entry(list[str] args):
     file_close_write()
 
 
-cdef public main_c(int argc, char **argv):
+cdef public int main_c(int argc, char **argv):
     cdef int i
     cdef list[str] args = []
     for i in range(argc):

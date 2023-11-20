@@ -55,6 +55,7 @@ function install () {
     cp -r ./${PACKAGE_NAME}/ ../../
     if [ ${?} -ne 0 ]; then exit 1; fi
     rm -r ../../${PACKAGE_NAME}/${PACKAGE_NAME}.pyx
+    if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
 requirements

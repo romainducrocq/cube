@@ -29,7 +29,9 @@ function compile () {
 function prebuild () {
     cd ${PYX_TARGET}/
     export LD_LIBRARY_PATH=${PYTHON_DIR}
-    ./${PYX_TARGET} ${@}
+    ./${PYX_TARGET}
+    if [ ${?} -ne 0 ]; then cd ../; clean; exit 1; fi
+    cd ../
 }
 
 cythonize
