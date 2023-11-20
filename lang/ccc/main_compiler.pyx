@@ -153,13 +153,6 @@ cdef public int main_c(int argc, char **argv):
 
 
 cpdef void main_py():
-    import platform
     import sys
-
-    if (int(platform.python_version().split('.')[0]) < 3 or
-            (int(platform.python_version().split('.')[0]) >= 3 and
-             int(platform.python_version().split('.')[1]) < 9)):
-        raise CompilerError(
-            f"Python version too old, >= 3.9 required but {platform.python_version()} used")
 
     entry(sys.argv)

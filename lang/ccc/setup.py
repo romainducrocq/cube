@@ -7,6 +7,10 @@ file_in = open(f"{path.dirname(getcwd())}/build/package_name.txt", "r", encoding
 PACKAGE_NAME = file_in.read()
 file_in.close()
 
+file_in = open(f"{path.dirname(getcwd())}/build/python_version.txt", "r", encoding="utf-8")
+PYTHON_VERSION = file_in.read()
+file_in.close()
+
 ext_modules = [
     Extension(f"{PACKAGE_NAME}.main_compiler",  ["./main_compiler.pyx"]),
     Extension(f"{PACKAGE_NAME}.util_ast", ["./util_ast.pyx"]),
@@ -30,7 +34,7 @@ setup(
     name=f"{PACKAGE_NAME}",
     version="0.1",
     license="MIT",
-    python_requires="==3.9",
+    python_requires=f"=={PYTHON_VERSION}",
     cmdclass={"build_ext": build_ext},
     ext_modules=ext_modules
 )
