@@ -70,8 +70,12 @@ FILE:            .c file to compile
 ## Code format restrictions
 
 *The source code is preprocessed and cythonized before being compiled. <ins>It must strictly follow these formatting rules</ins>:*
-- Submodules are not supported, all {`pyx`,`pxd`} files must be in `lang/ccc/`.
-- rule 2
+- Submodules are not supported, all {`.pyx`,`.pxd`} files must be in `lang/ccc/` package.
+- All `.pyx` source files must be added to `lang/ccc/setup.py`.
+- Every `.pyx` source file must have a `pxd` declaration file with same name, even if empty.
+- All {`.pyx`,`.pxd`} files must be named with format <package_name>_<file_name>.{`.pyx`,`.pxd`}.
+- `.py` source files are nor supported, only `.pyx` source files can be added to project.
+
 
 ****
 
