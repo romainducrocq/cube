@@ -53,14 +53,14 @@ function compile () {
     FILE=${1}
     ARGV=${@:2}
 
-    if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]] ; then
-        export PYTHONPATH="$PYTHONPATH:$HOME/.python"
+    if [[ ! "${PYTHONPATH}" == *":$HOME/.${PACKAGE_NAME}:"* ]] ; then
+        export PYTHONPATH="$PYTHONPATH:$HOME/.${PACKAGE_NAME}"
     fi
 
     echo "Compile    -> ${FILE}.i"
 
-    if [ -f "$HOME/.python/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
-        $HOME/.python/${PACKAGE_NAME}/${PACKAGE_NAME} ${FILE}.i ${ARGV}
+    if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
+        $HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME} ${FILE}.i ${ARGV}
         if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
     else
         python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${FILE}.i ${ARGV}

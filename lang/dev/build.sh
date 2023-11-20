@@ -16,8 +16,8 @@ function requirements () {
 }
 
 function compile () {
-    if [[ ! "${PYTHONPATH}" == *":$HOME/.python:"* ]]; then
-        export PYTHONPATH="$PYTHONPATH:$HOME/.python"
+    if [[ ! "${PYTHONPATH}" == *":$HOME/.${PACKAGE_NAME}:"* ]]; then
+        export PYTHONPATH="$PYTHONPATH:$HOME/.${PACKAGE_NAME}"
     fi
 
     python3.9 setup.py build_ext --inplace
