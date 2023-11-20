@@ -41,10 +41,11 @@ cdef extern from "stdio.h":
     FILE *fopen(const char *, const char *)
     int fclose(FILE *)
     ssize_t getline(char **, size_t *, FILE *)
+    size_t fwrite(const void *, size_t, size_t, FILE *)
 
 
 cdef FILE *c_file_in = NULL
-cdef object file_out
+cdef FILE *c_file_out = NULL
 cdef str stream_buf = ""
 
 
@@ -63,10 +64,19 @@ cdef void file_open_read(str filename):
 
 
 cdef void file_open_write(str filename):
-    global file_out
+    global c_file_out
     global stream_buf
-    file_out = open(filename, "w", encoding="utf-8")
+    c_file_out = NULL
     stream_buf = ""
+
+    cdef bytes b_filename = filename.encode("UTF-8")
+    cdef char *c_filename = b_filename
+
+    c_file_out = fopen(c_filename, "wb")
+    if c_file_out == NULL:
+
+        raise RuntimeError(
+            f"File {filename} does not exist")
 
 
 cdef tuple[bint, str] read_line():
@@ -81,12 +91,19 @@ cdef tuple[bint, str] read_line():
     return False, str(cline.decode("UTF-8"))
 
 
+cdef void write_chunk(bytes chunk_stream, size_t chunk_size_t):
+
+    cdef char *c_chunk_stream = chunk_stream
+    fwrite(c_chunk_stream, sizeof(char), chunk_size_t, c_file_out)
+
+
 cdef void write_file(str stream, int chunk_size = 4096):
     global stream_buf
 
     stream_buf += stream
     while len(stream_buf) >= chunk_size:
-        file_out.write(stream_buf[:chunk_size])
+        write_chunk(stream_buf[:chunk_size].encode("UTF-8"), chunk_size)
+
         stream_buf = stream_buf[chunk_size:]
 
 
@@ -97,8 +114,8 @@ cdef void file_close_read():
 
 cdef void file_close_write():
 
-    file_out.write(stream_buf)
-    file_out.close()
+    write_chunk(stream_buf.encode("UTF-8"), len(stream_buf))
+    fclose(c_file_out)
 
 
 """  sort dependencies """
