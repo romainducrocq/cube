@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGE_NAME="ccc"
+PACKAGE_NAME="$(cat ./package_name.txt)"
 
 function usage () {
     echo ${@} |\

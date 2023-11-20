@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PYTHON_DIR="/opt/Python-3.9.18/"
-PACKAGE_NAME="ccc"
+PACKAGE_NAME="$(cat ./package_name.txt)"
 
 function clean () {
     if [ -f "main.o" ]; then rm main.o; fi

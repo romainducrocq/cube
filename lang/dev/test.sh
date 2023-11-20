@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGE_NAME="ccc"
+PACKAGE_NAME="$(cat ../build/package_name.txt)"
 
 LIGHT_RED='\033[1;31m'
 LIGHT_GREEN='\033[1;32m'

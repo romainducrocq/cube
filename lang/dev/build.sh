@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGE_NAME="ccc"
+PACKAGE_NAME="$(cat ../build/package_name.txt)"
 
 function clean () {
     if [[ "${1}" == "--clean" ]]; then

@@ -54,6 +54,9 @@ python3.9 -m pip install Cython==3.0.5
 if [ ${?} -ne 0 ]; then exit 1; fi
 
 cd ${PACKAGE_DIR}
+echo -n "${PACKAGE_NAME}" > ./package_name.txt
+if [ ${?} -ne 0 ]; then exit 1; fi
+
 echo -n "${PACKAGE_NAME}" > ../lang/build/package_name.txt
 if [ ${?} -ne 0 ]; then exit 1; fi
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGE_NAME="ccc"
+PACKAGE_NAME="$(cat ../build/package_name.txt)"
 
 function test () {
     echo ""
