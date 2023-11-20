@@ -33,7 +33,7 @@ cd ccc/
 ./configure.sh
 cd ../lang/dev/
 ./build.sh
-../../ccc/
+cd ../../ccc/
 ./install.sh
 ```
 
