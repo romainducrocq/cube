@@ -28,8 +28,7 @@ cdef object RGX_IS_GLOB_VAR = re_compile(r"^cdef .*[^:$]$")
 cdef object RGX_IS_CLASS_VAR = re_compile(r"^\s{4}cdef .*[^:$]$")
 cdef object RGX_IS_PY_MAIN = re_compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
 
-cdef str FILE_BUFFER = ""
-cdef object OUTPUT_FILE
+cdef str file_buf = ""
 cdef str OUTPUT_DIR = f"../../{PACKAGE_NAME}/"
 
 
@@ -43,38 +42,37 @@ cdef extern from "stdio.h":
     ssize_t getline(char **, size_t *, FILE *)
 
 
-class FileError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(FileError, self).__init__(message)
-
-
-cdef FILE *cfile = NULL
+cdef FILE *c_file_in = NULL
+cdef object file_out
+cdef str stream_buf = ""
 
 
 cdef void file_open_read(str filename):
-    file_open(filename, "rb")
-
-
-cdef void file_open(str filename, str mode):
-    global cfile
-    cfile = NULL
+    global c_file_in
+    c_file_in = NULL
 
     cdef bytes b_filename = filename.encode("UTF-8")
     cdef char *c_filename = b_filename
 
-    cfile = fopen(c_filename, mode.encode("UTF-8"))
-    if cfile == NULL:
+    c_file_in = fopen(c_filename, "rb")
+    if c_file_in == NULL:
 
-        raise FileError(
+        raise RuntimeError(
             f"File {filename} does not exist")
 
 
-cdef tuple[bint, str] get_line():
+cdef void file_open_write(str filename):
+    global file_out
+    global stream_buf
+    file_out = open(filename, "w", encoding="utf-8")
+    stream_buf = ""
+
+
+cdef tuple[bint, str] read_line():
 
     cdef size_t l = 0
     cdef char *cline = NULL
-    cdef ssize_t read = getline(&cline, &l, cfile)
+    cdef ssize_t read = getline(&cline, &l, c_file_in)
 
     if read == -1:
         return True, ''
@@ -82,14 +80,24 @@ cdef tuple[bint, str] get_line():
     return False, str(cline.decode("UTF-8"))
 
 
-cdef void file_close():
+cdef void write_file(str stream, int chunk_size = 4096):
+    global stream_buf
 
-    fclose(cfile)
+    stream_buf += stream
+    while len(stream_buf) >= chunk_size:
+        file_out.write(stream_buf[:chunk_size])
+        stream_buf = stream_buf[chunk_size:]
 
 
-cdef str sanitize_line(str line):
-    line = line.split("#")[0]
-    return re_sub(RGX_SANITIZE, "", line)
+cdef void file_close_read():
+
+    fclose(c_file_in)
+
+
+cdef void file_close_write():
+
+    file_out.write(stream_buf)
+    file_out.close()
 
 
 """  sort dependencies """
@@ -113,7 +121,7 @@ cdef void sort_includes():
         file_open_read(filename)
 
         while True:
-            eof, line = get_line()
+            eof, line = read_line()
             if eof:
                 break
 
@@ -122,12 +130,17 @@ cdef void sort_includes():
                 line = line.split(".")[1].split(" ")[0]
                 pxd_includes[pyx_file].add(line)
 
-        file_close()
+        file_close_read()
 
     SORT_INCLUDES = list(graphlib_TopologicalSorter(pxd_includes).static_order())
 
 
 """  extract header  """
+
+
+cdef str sanitize_line(str line):
+    line = line.split("#")[0]
+    return re_sub(RGX_SANITIZE, "", line)
 
 
 cdef str get_class_symbol(str line):
@@ -170,7 +183,7 @@ cdef void extract_header(str pxd_file):
     cdef str clss
     cdef str symbol
     while True:
-        eof, line = get_line()
+        eof, line = read_line()
         if eof:
             break
 
@@ -191,22 +204,22 @@ cdef void extract_header(str pxd_file):
         elif re_match(RGX_IS_CLASS_VAR, line):
             PXD_CLASSES[clss].append(line)
 
-    file_close()
+    file_close_read()
 
 
 """  process source  """
 
 
 cdef void append_file_buffer(str line):
-    global FILE_BUFFER
-    FILE_BUFFER += line + "\n"
+    global file_buf
+    file_buf += line + "\n"
 
 
 cdef void process_source(str pyx_file):
     global PYX_PRIVATE_SYMBOLS
-    global FILE_BUFFER
+    global file_buf
     PYX_PRIVATE_SYMBOLS = {}
-    FILE_BUFFER = ""
+    file_buf = ""
 
     cdef str filename = f"{DIR_TARGET}{pyx_file}.pyx"
     file_open_read(filename)
@@ -221,7 +234,7 @@ cdef void process_source(str pyx_file):
     cdef str symbol
     cdef str unique_id
     while True:
-        eof, line = get_line()
+        eof, line = read_line()
         if eof:
             break
 
@@ -255,25 +268,25 @@ cdef void process_source(str pyx_file):
             if not unique_id in PXD_PUBLIC_SYMBOLS:
                 PYX_PRIVATE_SYMBOLS[unique_id] = re_compile(r"\b{0}\b".format(symbol))
 
-    file_close()
+    file_close_read()
 
     for unique_id in PXD_PUBLIC_SYMBOLS:
-        FILE_BUFFER = re_sub(PXD_PUBLIC_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
+        file_buf = re_sub(PXD_PUBLIC_SYMBOLS[unique_id], unique_id, file_buf)
 
     for unique_id in PYX_PRIVATE_SYMBOLS:
-        FILE_BUFFER = re_sub(PYX_PRIVATE_SYMBOLS[unique_id], unique_id, FILE_BUFFER)
+        file_buf = re_sub(PYX_PRIVATE_SYMBOLS[unique_id], unique_id, file_buf)
 
-    OUTPUT_FILE.write(FILE_BUFFER)
+    write_file(file_buf)
 
 
 """  main """
 
 
-cdef void _main(list[str] args):
+cdef void entry(list[str] args):
     global PYX_FILES
     global PYX_ID
-    global OUTPUT_FILE
-    OUTPUT_FILE = open(f"{OUTPUT_DIR}{PACKAGE_NAME}.pyx", "w")
+
+    file_open_write(f"{OUTPUT_DIR}{PACKAGE_NAME}.pyx")
 
     sort_includes()
 
@@ -283,7 +296,7 @@ cdef void _main(list[str] args):
         extract_header(pyx_file)
         process_source(pyx_file)
 
-    OUTPUT_FILE.close()
+    file_close_write()
 
 
 cdef public main_c(int argc, char **argv):
@@ -292,4 +305,4 @@ cdef public main_c(int argc, char **argv):
     for i in range(argc):
         args.append(str(argv[i].decode("UTF-8")))
 
-    _main(args)
+    entry(args)
