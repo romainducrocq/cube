@@ -5,12 +5,6 @@ from ccc.intermediate_tac_ast cimport *
 from ccc.intermediate_name cimport represent_label_identifier, represent_variable_identifier
 
 
-class ThreeAddressCodeGeneratorError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(ThreeAddressCodeGeneratorError, self).__init__(message)
-
-
 cdef TIdentifier represent_identifier(TIdentifier node):
     # <identifier> = Built-in identifier type
     return TIdentifier(copy_deepcopy(node.str_t))
@@ -57,7 +51,7 @@ cdef TacBinaryOp represent_binary_op(CBinaryOp node):
     if isinstance(node, CGreaterOrEqual):
         return TacGreaterOrEqual()
 
-    raise ThreeAddressCodeGeneratorError(
+    raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
@@ -70,7 +64,7 @@ cdef TacUnaryOp represent_unary_op(CUnaryOp node):
     if isinstance(node, CNot):
         return TacNot()
 
-    raise ThreeAddressCodeGeneratorError(
+    raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
@@ -86,7 +80,7 @@ cdef TacValue represent_value(CExp node, bint outer = True):
             name = represent_identifier(node.name)
             return TacVariable(name)
 
-        raise ThreeAddressCodeGeneratorError(
+        raise RuntimeError(
             "An error occurred in three address code representation, not all nodes were visited")
 
     name = represent_variable_identifier(node)
@@ -172,7 +166,7 @@ cdef TacValue represent_exp_instructions(CExp node):
             instructions.append(TacLabel(label_false))
             return dst
 
-    raise ThreeAddressCodeGeneratorError(
+    raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
@@ -188,7 +182,7 @@ cdef void represent_statement_instructions(CStatement node):
         instructions.append(TacReturn(val))
         return
 
-    raise ThreeAddressCodeGeneratorError(
+    raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
@@ -202,7 +196,7 @@ cdef void represent_declaration_instructions(CDeclaration node):
             instructions.append(TacCopy(src, dst))
         return
 
-    raise ThreeAddressCodeGeneratorError(
+    raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
@@ -222,7 +216,7 @@ cdef void represent_list_instructions(list[CBlockItem] list_node):
             represent_declaration_instructions(item_node.declaration)
         else:
 
-            raise ThreeAddressCodeGeneratorError(
+            raise RuntimeError(
                 "An error occurred in three address code representation, not all nodes were visited")
 
     instructions.append(TacReturn(TacConstant(TInt(0))))
@@ -236,7 +230,7 @@ cdef TacFunctionDef represent_function_def(CFunctionDef node):
         represent_list_instructions(node.body)
         return TacFunction(name, instructions)
 
-    raise ThreeAddressCodeGeneratorError(
+    raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
@@ -247,7 +241,7 @@ cdef TacProgram represent_program(AST node):
         function_def = represent_function_def(node.function_def)
         return TacProgram(function_def)
 
-    raise ThreeAddressCodeGeneratorError(
+    raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
@@ -256,7 +250,7 @@ cdef AST three_address_code_representation(AST c_ast):
     cdef AST tac_ast = represent_program(c_ast)
 
     if not tac_ast:
-        raise ThreeAddressCodeGeneratorError(
+        raise RuntimeError(
             "An error occurred in three address code representation, Asm was not generated")
 
     return tac_ast

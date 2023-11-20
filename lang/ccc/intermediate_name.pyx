@@ -2,12 +2,6 @@ from ccc.parser_c_ast cimport TIdentifier, CExp
 from ccc.parser_c_ast cimport CVar, CConstant, CUnary, CBinary
 
 
-class NameManagerError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(NameManagerError, self).__init__(message)
-
-
 cdef int label_counter = 0
 cdef int variable_counter = 0
 
@@ -44,7 +38,7 @@ cdef TIdentifier represent_variable_identifier(CExp node):
         variable = "binary"
     else:
 
-        raise NameManagerError(
+        raise RuntimeError(
             f"An error occurred in name management, unmanaged type {type(node)}")
 
     variable_counter += 1

@@ -5,12 +5,6 @@ from ccc.util_fopen cimport file_open, get_line, file_close
 from ccc.util_iota_enum cimport IotaEnum
 
 
-class LexerError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(LexerError, self).__init__(message)
-
-
 cdef class Token:
 
     def __init__(self, token: str, token_kind: int):
@@ -142,11 +136,11 @@ cdef list[Token] lexing(str filename):
 
         for match in re_finditer(TOKEN_PATTERN, line):
             if match.lastgroup is None:
-                raise LexerError(
+                raise RuntimeError(
                     f"No token found in line: {line}")
 
             if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('error'):
-                raise LexerError(
+                raise RuntimeError(
                     f"Invalid token \"{match.group()}\" found in line: {line}")
 
             if TOKEN_KIND.get(match.lastgroup) == TOKEN_KIND.get('skip'):

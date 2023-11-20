@@ -1,12 +1,6 @@
 from ccc.parser_lexer cimport TOKEN_KIND
 
 
-class PrecedenceManagerError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(PrecedenceManagerError, self).__init__(message)
-
-
 cdef dict[int, int] TOKEN_PRECEDENCE = {
     TOKEN_KIND.get('binop_multiplication'): 50,
     TOKEN_KIND.get('binop_division'): 50,
@@ -47,7 +41,7 @@ cdef int parse_token_precedence(int token_kind):
         precedence = TOKEN_PRECEDENCE[token_kind]
     except KeyError:
 
-        raise PrecedenceManagerError(
+        raise RuntimeError(
             f"""An error occurred in precedence management, unmanaged token {
                 list(TOKEN_KIND.iter().keys())[list(TOKEN_KIND.iter().values()).index(token_kind)]}""")
 

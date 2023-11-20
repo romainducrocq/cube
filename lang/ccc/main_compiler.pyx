@@ -11,12 +11,6 @@ from ccc.intermediate_three_address_generator cimport three_address_code_represe
 cdef bint DEBUG = True
 
 
-class CompilerError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(CompilerError, self).__init__(message)
-
-
 cdef IotaEnum OPT = IotaEnum((
     "none",
     "--lex",
@@ -127,7 +121,7 @@ cdef tuple[str, int, int] arg_parse(list[str] argv):
     cdef str filename = arg
 
     if not filename:
-        raise CompilerError(
+        raise RuntimeError(
             f"No file was provided in args")
 
     return filename, opt_exit, opt_s

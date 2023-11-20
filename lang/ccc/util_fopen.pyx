@@ -5,12 +5,6 @@ cdef extern from "stdio.h":
     ssize_t getline(char **, size_t *, FILE *)
 
 
-class FileError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(FileError, self).__init__(message)
-
-
 cdef FILE *cfile = NULL
 
 
@@ -24,7 +18,7 @@ cdef void file_open(str filename):
     cfile = fopen(c_filename, "rb")
     if cfile == NULL:
 
-        raise FileError(
+        raise RuntimeError(
             f"File {filename} does not exist")
 
 

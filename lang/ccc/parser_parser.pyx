@@ -3,12 +3,6 @@ from ccc.parser_lexer cimport TOKEN_KIND, Token
 from ccc.parser_precedence cimport parse_token_precedence
 
 
-class ParserError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(ParserError, self).__init__(message)
-
-
 cdef list[Token] tokens = []
 cdef Token next_token = Token('', TOKEN_KIND.get('error'))
 cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
@@ -16,7 +10,7 @@ cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
 
 cdef void expect_next_is(Token _next_token, int expected_token):
     if _next_token.token_kind != expected_token:
-        raise ParserError(
+        raise RuntimeError(
             f"""Expected token {
                 list(TOKEN_KIND.iter().keys())[
                        list(TOKEN_KIND.iter().values()).index(expected_token)
@@ -25,7 +19,7 @@ cdef void expect_next_is(Token _next_token, int expected_token):
 
 cdef void expect_next_in(Token _next_token, tuple[int, ...] expected_tokens):
     if _next_token.token_kind not in expected_tokens:
-        raise ParserError(
+        raise RuntimeError(
             f"""Expected token in kinds { tuple([
                 list(TOKEN_KIND.iter().keys())[
                        list(TOKEN_KIND.iter().values()).index(expected_token)
@@ -332,11 +326,11 @@ cdef AST parsing(list[Token] lex_tokens):
             break
 
     if tokens:
-        raise ParserError(
+        raise RuntimeError(
             "An error occurred in parser, not all Tokens were consumed")
 
     if not c_ast:
-        raise ParserError(
+        raise RuntimeError(
             "An error occurred in parser, Ast was not parsed")
 
     return c_ast

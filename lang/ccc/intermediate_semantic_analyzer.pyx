@@ -5,12 +5,6 @@ from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignmen
 from ccc.intermediate_name cimport resolve_variable_identifier
 
 
-class SemanticAnalyzerError(RuntimeError):
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super(SemanticAnalyzerError, self).__init__(message)
-
-
 cdef dict[str, str] variable_map = {}
 
 
@@ -21,7 +15,7 @@ cdef void resolve_statement(CStatement node):
     if isinstance(node, CNull):
         return
 
-    raise SemanticAnalyzerError(
+    raise RuntimeError(
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
@@ -32,7 +26,7 @@ cdef void resolve_declaration(CDeclaration node):
     if isinstance(node, CDecl):
         if node.name.str_t in variable_map:
 
-            raise SemanticAnalyzerError(
+            raise RuntimeError(
                 f"Variable {node.name.str_t} was already declared in this scope")
 
         name = resolve_variable_identifier(node.name)
@@ -42,7 +36,7 @@ cdef void resolve_declaration(CDeclaration node):
             resolve_expression(node.init)
         return
 
-    raise SemanticAnalyzerError(
+    raise RuntimeError(
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
@@ -56,7 +50,7 @@ cdef void resolve_expression(CExp node):
             node.name = name
         else:
 
-            raise SemanticAnalyzerError(
+            raise RuntimeError(
                 f"Variable {node.name.str_t} was not declared in this scope")
         return
     if isinstance(node, CUnary):
@@ -69,14 +63,14 @@ cdef void resolve_expression(CExp node):
     if isinstance(node, (CAssignment, CAssignmentCompound)):
         if not isinstance(node.exp_left, CVar):
 
-            raise SemanticAnalyzerError(
+            raise RuntimeError(
                 f"Left expression {type(node.exp_left)} is an invalid lvalue")
 
         resolve_expression(node.exp_left)
         resolve_expression(node.exp_right)
         return
 
-    raise SemanticAnalyzerError(
+    raise RuntimeError(
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
@@ -95,7 +89,7 @@ cdef void resolve_variable(AST node):
                     resolve_declaration(block_item.declaration)
                 else:
 
-                    raise SemanticAnalyzerError(
+                    raise RuntimeError(
                         "An error occurred in semantic analysis, not all nodes were visited")
 
         else:
