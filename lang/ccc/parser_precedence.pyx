@@ -36,13 +36,9 @@ cdef dict[int, int] TOKEN_PRECEDENCE = {
 
 cdef int parse_token_precedence(int token_kind):
 
-    cdef int precedence
-    try:
-        precedence = TOKEN_PRECEDENCE[token_kind]
-    except KeyError:
+    if token_kind in TOKEN_PRECEDENCE:
+        return TOKEN_PRECEDENCE[token_kind]
 
-        raise RuntimeError(
-            f"""An error occurred in precedence management, unmanaged token {
-                list(TOKEN_KIND.iter().keys())[list(TOKEN_KIND.iter().values()).index(token_kind)]}""")
-
-    return precedence
+    raise RuntimeError(
+        f"""An error occurred in precedence management, unmanaged token {
+            list(TOKEN_KIND.iter().keys())[list(TOKEN_KIND.iter().values()).index(token_kind)]}""")
