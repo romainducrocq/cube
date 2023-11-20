@@ -69,7 +69,7 @@ FILE:            .c file to compile
 
 ## Code format restrictions
 
-*The source code is preprocessed and cythonized before being compiled. <span style="color:red">It must strictly follow these formatting rules</span>:*
+*The source code is preprocessed and cythonized before being compiled. <ins>It must strictly follow these formatting rules</ins>:*
 - rule 1
 - rule 2
 
