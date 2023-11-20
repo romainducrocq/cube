@@ -70,10 +70,10 @@ FILE:            .c file to compile
 ## Code format restrictions
 
 *The source code is preprocessed and cythonized before being compiled. <ins>It must strictly follow these formatting rules</ins>:*
-- All {`.pyx`,`.pxd`} files must be in `lang/ccc/` package, submodules are not supported.
+- All `.{pyx,pxd}` files must be in `lang/ccc/` package, submodules are not supported.
 - All `.pyx` source files must be added to `lang/ccc/setup.py`.
 - Every `.pyx` source file must have a `pxd` declaration file with same name, even if empty.
-- All {`.pyx`,`.pxd`} files must be named with format <package_name>_<file_name>.{`.pyx`,`.pxd`}.
+- All `.{pyx,pxd}` files must be named with format `<package_name>_<file_name>.{pyx,pxd}`.
 - Only `.pyx` source files can be added to project, `.py` source files are not supported.
 - All local imports must have format `from <package_name>.<file_name> cimport <a_class>, <a_func>`.
 - All comments must be hashtags comments `#`, triple quotes `"""` comments are not supported.
@@ -84,7 +84,11 @@ FILE:            .c file to compile
 - All global variables must be declared with `cdef` (`cdef object` must be used for python objects).
 - All classes declared in a `.pxd` declaration file must be declared with `cdef class`.
 - All functions declared in a `.pxd` declaration file must be declared with `cdef` or `cpdef`.
-
+- Standard exceptions must be used (`RuntimeError`, ...), custom exceptions are not supported.
+- Python entry point `main.py` in `lang/ccc/<file_main>.{pyx,pxd}` must be declared with `cpdef`.
+- Python entry point `main.py` must be at the end of file, everything from here on is ignored. 
+- C entry point `main_c` in `lang/ccc/<file_main>.pyx` must be the only public symbol.
+- Avoid python `import` as much as possible, it makes the generated code bulky and slower. 
 
 ****
 
