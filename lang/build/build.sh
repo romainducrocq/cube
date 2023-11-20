@@ -13,6 +13,7 @@ function requirements () {
 }
 
 function prebuild () {
+    mkdir -p ./${PACKAGE_NAME}/
     cd prebuild/
     ./build.sh
     if [ ${?} -ne 0 ]; then cd ../; clean; exit 1; fi
