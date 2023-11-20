@@ -70,7 +70,7 @@ FILE:            .c file to compile
 ## Code format restrictions
 
 *The source code is preprocessed and cythonized before being compiled. <ins>It must strictly follow these formatting rules</ins>:*
-- rule 1
+- Submodules are not supported, all {`pyx`,`pxd`} files must be in `lang/ccc/`.
 - rule 2
 
 ****
