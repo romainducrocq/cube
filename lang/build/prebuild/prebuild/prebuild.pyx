@@ -8,15 +8,10 @@ from graphlib import TopologicalSorter as graphlib_TopologicalSorter
 
 
 cdef str PACKAGE_NAME="ccc"
+cdef str OUTPUT_DIR = f"../../{PACKAGE_NAME}/"
 cdef str DIR_TARGET = f"{os_path.dirname(os_path.dirname(os_path.dirname(os_getcwd())))}/{PACKAGE_NAME}/"
 cdef list[str] PYX_FILES = [f[:-4] for f in os_listdir(DIR_TARGET) if f.endswith(".pyx")]
 cdef list[str] SORT_INCLUDES = []
-
-cdef int PYX_ID = 0
-cdef list[str] PXD_VARIABLES = []
-cdef dict[str, list[str]] PXD_CLASSES = {}
-cdef dict[str, object] PXD_PUBLIC_SYMBOLS = {}
-cdef dict[str, object] PYX_PRIVATE_SYMBOLS = {}
 cdef tuple[str, ...] SYMBOL_SKIP = ("main_c",)
 
 cdef object RGX_SANITIZE = re_compile(r"[^\s*]\s{2,}|\n|\r|\t|\f|\v")
@@ -28,8 +23,12 @@ cdef object RGX_IS_GLOB_VAR = re_compile(r"^cdef .*[^:$]$")
 cdef object RGX_IS_CLASS_VAR = re_compile(r"^\s{4}cdef .*[^:$]$")
 cdef object RGX_IS_PY_MAIN = re_compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
 
+cdef int pyx_id = 0
+cdef list[str] pxd_variables = []
+cdef dict[str, list[str]] pxd_classes = {}
+cdef dict[str, object] pxd_public_symbols = {}
+cdef dict[str, object] pyx_private_symbols = {}
 cdef str file_buf = ""
-cdef str OUTPUT_DIR = f"../../{PACKAGE_NAME}/"
 
 
 """ file open """
@@ -164,16 +163,16 @@ cdef str get_variable_symbol(str line):
 
 
 cdef str get_unique_id(str pyx_file, str symbol):
-    return f"{pyx_file}{PYX_ID}_{symbol}"
+    return f"{pyx_file}{pyx_id}_{symbol}"
 
 
 cdef void extract_header(str pxd_file):
     global PYX_FILES
-    global PXD_PUBLIC_SYMBOLS
-    global PXD_VARIABLES
-    global PXD_CLASSES
-    PXD_VARIABLES = []
-    PXD_CLASSES = {}
+    global pxd_public_symbols
+    global pxd_variables
+    global pxd_classes
+    pxd_variables = []
+    pxd_classes = {}
 
     cdef str filename = f"{DIR_TARGET}{pxd_file}.pxd"
     file_open_read(filename)
@@ -190,19 +189,19 @@ cdef void extract_header(str pxd_file):
         line = sanitize_line(line)
         if re_match(RGX_IS_CLASS, line):
             clss = get_class_symbol(line)
-            PXD_CLASSES[clss] = []
-            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, clss)] = re_compile(r"\b{0}\b".format(clss))
+            pxd_classes[clss] = []
+            pxd_public_symbols[get_unique_id(pxd_file, clss)] = re_compile(r"\b{0}\b".format(clss))
         elif re_match(RGX_IS_FUNC_PXD, line):
             symbol = get_function_symbol(line)
             if symbol in SYMBOL_SKIP:
                 continue
-            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re_compile(r"\b{0}\b".format(symbol))
+            pxd_public_symbols[get_unique_id(pxd_file, symbol)] = re_compile(r"\b{0}\b".format(symbol))
         elif re_match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
-            PXD_PUBLIC_SYMBOLS[get_unique_id(pxd_file, symbol)] = re_compile(r"\b{0}\b".format(symbol))
-            PXD_VARIABLES.append(line)
+            pxd_public_symbols[get_unique_id(pxd_file, symbol)] = re_compile(r"\b{0}\b".format(symbol))
+            pxd_variables.append(line)
         elif re_match(RGX_IS_CLASS_VAR, line):
-            PXD_CLASSES[clss].append(line)
+            pxd_classes[clss].append(line)
 
     file_close_read()
 
@@ -216,9 +215,9 @@ cdef void append_file_buffer(str line):
 
 
 cdef void process_source(str pyx_file):
-    global PYX_PRIVATE_SYMBOLS
+    global pyx_private_symbols
     global file_buf
-    PYX_PRIVATE_SYMBOLS = {}
+    pyx_private_symbols = {}
     file_buf = ""
 
     cdef str filename = f"{DIR_TARGET}{pyx_file}.pyx"
@@ -226,7 +225,7 @@ cdef void process_source(str pyx_file):
 
     append_file_buffer("")
     cdef str line
-    for line in PXD_VARIABLES:
+    for line in pxd_variables:
         append_file_buffer(line)
     append_file_buffer("")
 
@@ -248,10 +247,10 @@ cdef void process_source(str pyx_file):
         if re_match(RGX_IS_CLASS, line):
             symbol = get_class_symbol(line)
             unique_id = get_unique_id(pyx_file, symbol)
-            if not unique_id in PXD_PUBLIC_SYMBOLS:
-                PYX_PRIVATE_SYMBOLS[unique_id] = re_compile(r"\b{0}\b".format(symbol))
-            if symbol in PXD_CLASSES:
-                for line in PXD_CLASSES[symbol]:
+            if not unique_id in pxd_public_symbols:
+                pyx_private_symbols[unique_id] = re_compile(r"\b{0}\b".format(symbol))
+            if symbol in pxd_classes:
+                for line in pxd_classes[symbol]:
                     append_file_buffer(line)
                 append_file_buffer("")
                 append_file_buffer("")
@@ -260,21 +259,21 @@ cdef void process_source(str pyx_file):
             if symbol in SYMBOL_SKIP:
                 continue
             unique_id = get_unique_id(pyx_file, symbol)
-            if not unique_id in PXD_PUBLIC_SYMBOLS:
-                PYX_PRIVATE_SYMBOLS[unique_id] = re_compile(r"\b{0}\b".format(symbol))
+            if not unique_id in pxd_public_symbols:
+                pyx_private_symbols[unique_id] = re_compile(r"\b{0}\b".format(symbol))
         elif re_match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
             unique_id = get_unique_id(pyx_file, symbol)
-            if not unique_id in PXD_PUBLIC_SYMBOLS:
-                PYX_PRIVATE_SYMBOLS[unique_id] = re_compile(r"\b{0}\b".format(symbol))
+            if not unique_id in pxd_public_symbols:
+                pyx_private_symbols[unique_id] = re_compile(r"\b{0}\b".format(symbol))
 
     file_close_read()
 
-    for unique_id in PXD_PUBLIC_SYMBOLS:
-        file_buf = re_sub(PXD_PUBLIC_SYMBOLS[unique_id], unique_id, file_buf)
+    for unique_id in pxd_public_symbols:
+        file_buf = re_sub(pxd_public_symbols[unique_id], unique_id, file_buf)
 
-    for unique_id in PYX_PRIVATE_SYMBOLS:
-        file_buf = re_sub(PYX_PRIVATE_SYMBOLS[unique_id], unique_id, file_buf)
+    for unique_id in pyx_private_symbols:
+        file_buf = re_sub(pyx_private_symbols[unique_id], unique_id, file_buf)
 
     write_file(file_buf)
 
@@ -284,14 +283,14 @@ cdef void process_source(str pyx_file):
 
 cdef void entry(list[str] args):
     global PYX_FILES
-    global PYX_ID
+    global pyx_id
 
     file_open_write(f"{OUTPUT_DIR}{PACKAGE_NAME}.pyx")
 
     sort_includes()
 
     cdef str pyx_file
-    for PYX_ID, pyx_file in enumerate(SORT_INCLUDES):
+    for pyx_id, pyx_file in enumerate(SORT_INCLUDES):
 
         extract_header(pyx_file)
         process_source(pyx_file)
