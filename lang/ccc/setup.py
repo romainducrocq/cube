@@ -1,8 +1,11 @@
+from os import path, getcwd
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
-PACKAGE_NAME="ccc"
+file_in = open(f"{path.dirname(getcwd())}/build/package_name.txt", "r", encoding="utf-8")
+PACKAGE_NAME = file_in.read()
+file_in.close()
 
 ext_modules = [
     Extension(f"{PACKAGE_NAME}.main_compiler",  ["./main_compiler.pyx"]),
