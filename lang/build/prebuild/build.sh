@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PYTHON_DIR="/opt/Python-3.9.18/"
+PACKAGE_NAME="$(cat ../package_name.txt)"
+PYTHON_DIR="$HOME/.${PACKAGE_NAME}/Python-3.9/"
 PYX_TARGET="prebuild"
 
 function clean () {
