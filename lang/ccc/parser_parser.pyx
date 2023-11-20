@@ -30,21 +30,23 @@ cdef void expect_next_in(Token _next_token, tuple[int, ...] expected_tokens):
 cdef Token pop_next():
     global next_token
 
-    try:
+    if tokens:
         next_token = tokens.pop(0)
         return next_token
-    except IndexError:
-        raise StopIteration
+
+    raise RuntimeError(
+        "An error occurred in parser, all Tokens were consumed before end of program")
 
 
 cdef Token peek_next():
     global peek_token
 
-    try:
+    if tokens:
         peek_token = tokens[0]
         return peek_token
-    except IndexError:
-        raise StopIteration
+
+    raise RuntimeError(
+        "An error occurred in parser, all Tokens were consumed before end of program")
 
 
 cdef TIdentifier parse_identifier():
@@ -314,16 +316,10 @@ cdef AST parsing(list[Token] lex_tokens):
     global next_token
     global peek_token
     tokens = lex_tokens
+    next_token = Token('', TOKEN_KIND.get('error'))
+    peek_token = Token('', TOKEN_KIND.get('error'))
 
-    cdef AST c_ast
-    while True:
-        try:
-            next_token: Token = Token('', TOKEN_KIND.get('error'))
-            peek_token: Token = Token('', TOKEN_KIND.get('error'))
-            c_ast = parse_program()
-
-        except StopIteration:
-            break
+    cdef AST c_ast = parse_program()
 
     if tokens:
         raise RuntimeError(
