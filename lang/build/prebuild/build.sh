@@ -4,7 +4,10 @@ PYTHON_DIR="/opt/Python-3.9.18/"
 PYX_TARGET="prebuild"
 
 function clean () {
-    rm *.o ${PYX_TARGET}/*.c ${PYX_TARGET}/*.h
+    if [ -f "main.o" ]; then rm main.o; fi
+    if [ -f "${PYX_TARGET}.o" ]; then rm ${PYX_TARGET}.o; fi
+    if [ -f "${PYX_TARGET}/${PYX_TARGET}.c" ]; then rm ${PYX_TARGET}/${PYX_TARGET}.c; fi
+    if [ -f "${PYX_TARGET}/${PYX_TARGET}.h" ]; then rm ${PYX_TARGET}/${PYX_TARGET}.h; fi
 }
 
 function cythonize () {

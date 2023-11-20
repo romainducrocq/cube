@@ -4,7 +4,11 @@ PYTHON_DIR="/opt/Python-3.9.18/"
 PACKAGE_NAME="ccc"
 
 function clean () {
-    rm *.o ${PACKAGE_NAME}/*.c ${PACKAGE_NAME}/*.h
+    if [ -f "main.o" ]; then rm main.o; fi
+    if [ -f "main.c" ]; then rm main.c; fi
+    if [ -f "${PACKAGE_NAME}.o" ]; then rm ${PACKAGE_NAME}.o; fi
+    if [ -f "${PACKAGE_NAME}/${PACKAGE_NAME}.c" ]; then rm ${PACKAGE_NAME}/${PACKAGE_NAME}.c; fi
+    if [ -f "${PACKAGE_NAME}/${PACKAGE_NAME}.h" ]; then rm ${PACKAGE_NAME}/${PACKAGE_NAME}.h; fi
 }
 
 function requirements () {
@@ -18,6 +22,10 @@ function prebuild () {
     ./build.sh
     if [ ${?} -ne 0 ]; then cd ../; clean; exit 1; fi
     cd ../
+}
+
+function gen_main () {
+    sed -e "s/PACKAGE_NAME/${PACKAGE_NAME}/g" ./main.c.in > ./main.c
 }
 
 function cythonize () {
@@ -51,6 +59,7 @@ function install () {
 
 requirements
 prebuild
+gen_main
 cythonize
 compile
 clean

@@ -5,8 +5,8 @@ PACKAGE_NAME="ccc"
 function clean () {
     if [[ "${1}" == "--clean" ]]; then
         rm *.c
-        rm -r ./${PACKAGE_NAME}/
-        rm -r ./build/
+        if [ -d "./build/" ]; then rm -r ./build/; fi
+        if [ -d "./${PACKAGE_NAME}/" ]; then rm -r ./${PACKAGE_NAME}/; fi
     fi
 }
 
