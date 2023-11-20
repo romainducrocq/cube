@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PACKAGE_NAME="$(cat ../build/package_name.txt)"
+PYTHON_VERSION="$(cat ../build/python_version.txt)"
 
 function clean () {
     if [[ "${1}" == "--clean" ]]; then
@@ -10,17 +11,12 @@ function clean () {
     fi
 }
 
-function requirements () {
-    python3.9 -m pip install Cython==3.0.5
-    if [ ${?} -ne 0 ]; then exit 1; fi
-}
-
 function compile () {
     if [[ ! "${PYTHONPATH}" == *":$HOME/.${PACKAGE_NAME}:"* ]]; then
         export PYTHONPATH="$PYTHONPATH:$HOME/.${PACKAGE_NAME}"
     fi
 
-    python3.9 setup.py build_ext --inplace
+    python${PYTHON_VERSION} setup.py build_ext --inplace
     if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
@@ -44,7 +40,6 @@ function install () {
 
 cd ../${PACKAGE_NAME}/
 clean ${1}
-requirements
 compile
 install
 

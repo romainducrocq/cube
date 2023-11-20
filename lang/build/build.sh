@@ -1,7 +1,8 @@
 #!/bin/bash
 
 PACKAGE_NAME="$(cat ./package_name.txt)"
-PYTHON_DIR="$HOME/.${PACKAGE_NAME}/Python-3.9/"
+PYTHON_VERSION="$(cat ./python_version.txt)"
+PYTHON_DIR="$HOME/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/"
 
 function clean () {
     if [ -f "main.o" ]; then rm main.o; fi
@@ -11,21 +12,14 @@ function clean () {
     if [ -f "${PACKAGE_NAME}/${PACKAGE_NAME}.h" ]; then rm ${PACKAGE_NAME}/${PACKAGE_NAME}.h; fi
 }
 
-function requirements () {
-    python3.9 -m pip install Cython==3.0.5
-    if [ ${?} -ne 0 ]; then exit 1; fi
-}
-
 function prebuild () {
     mkdir -p ./${PACKAGE_NAME}/
     cd prebuild/
     ./build.sh
     if [ ${?} -ne 0 ]; then cd ../; clean; exit 1; fi
     cd ../
-}
-
-function gen_main () {
     sed -e "s/PACKAGE_NAME/${PACKAGE_NAME}/g" ./main.c.in > ./main.c
+    if [ ${?} -ne 0 ]; then clean; exit 1; fi
 }
 
 function cythonize () {
@@ -40,7 +34,7 @@ function compile () {
     gcc -I${PYTHON_DIR} -I${PYTHON_DIR}Include -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall \
         -c ${PACKAGE_NAME}/*.c main.c
     if [ ${?} -ne 0 ]; then clean; exit 1; fi
-    gcc *.o -o ${PACKAGE_NAME}/${PACKAGE_NAME} -L${PYTHON_DIR} -lpython3.9 -lcrypt -lpthread -ldl  -lutil -lm -lm
+    gcc *.o -o ${PACKAGE_NAME}/${PACKAGE_NAME} -L${PYTHON_DIR} -lpython${PYTHON_VERSION} -lcrypt -lpthread -ldl  -lutil -lm -lm
     if [ ${?} -ne 0 ]; then clean; exit 1; fi
 }
 
@@ -64,9 +58,7 @@ function install () {
     if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
-requirements
 prebuild
-gen_main
 cythonize
 compile
 clean

@@ -11,3 +11,4 @@ __pycache__/
 /lang/ccc/build/
 /lang/build/
 package_name.txt
+python_version.txt

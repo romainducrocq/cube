@@ -1,7 +1,8 @@
 #!/bin/bash
 
 PACKAGE_NAME="$(cat ../package_name.txt)"
-PYTHON_DIR="$HOME/.${PACKAGE_NAME}/Python-3.9/"
+PYTHON_VERSION="$(cat ../python_version.txt)"
+PYTHON_DIR="$HOME/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/"
 PYX_TARGET="prebuild"
 
 function clean () {
@@ -23,7 +24,7 @@ function compile () {
     gcc -I${PYTHON_DIR} -I${PYTHON_DIR}Include -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall \
         -c ${PYX_TARGET}/*.c main.c
     if [ ${?} -ne 0 ]; then clean; exit 1; fi
-    gcc *.o -o ${PYX_TARGET}/${PYX_TARGET} -L${PYTHON_DIR} -lpython3.9 -lcrypt -lpthread -ldl  -lutil -lm -lm
+    gcc *.o -o ${PYX_TARGET}/${PYX_TARGET} -L${PYTHON_DIR} -lpython${PYTHON_VERSION} -lcrypt -lpthread -ldl  -lutil -lm -lm
     if [ ${?} -ne 0 ]; then clean; exit 1; fi
 }
 
