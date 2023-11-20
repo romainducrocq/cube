@@ -14,13 +14,13 @@ function file () {
 
 function ret_gcc () {
     FILE=${1}
-    gcc ${FILE}.c -o ${FILE} > /dev/null 2>&1; ${1}
+    gcc ${FILE}.c -o ${FILE} > /dev/null 2>&1 && ${1}
     echo "${?}"
 }
 
 function ret_ccc () {
     FILE=${1}
-    ${PACKAGE_NAME} ${FILE}.c > /dev/null 2>&1;  ${1}
+    ${PACKAGE_NAME} ${FILE}.c > /dev/null 2>&1 && ${1}
     echo "${?}"
 }
 
