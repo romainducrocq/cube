@@ -37,6 +37,9 @@ if [ ! -d "$HOME/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/" ]; then
     tar -xvf Python-${PYTHON_VERSION}.${PATCH}.tar.xz -C ~/.${PACKAGE_NAME}/
     if [ ${?} -ne 0 ]; then exit 1; fi
 
+    rm Python-${PYTHON_VERSION}.${PATCH}.tar.xz
+    if [ ${?} -ne 0 ]; then exit 1; fi
+
     mv ~/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}.${PATCH}/ ~/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/
     cd ~/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/
 
@@ -45,12 +48,14 @@ if [ ! -d "$HOME/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/" ]; then
 
     make
     if [ ${?} -ne 0 ]; then exit 1; fi
+fi
 
-    which python${PYTHON_VERSION}
-    if [ ${?} -ne 0 ]; then
-        make altinstall
-        if [ ${?} -ne 0 ]; then exit 1; fi
-    fi
+which python${PYTHON_VERSION}
+if [ ${?} -ne 0 ]; then
+    cd ~/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/
+
+    sudo make altinstall
+    if [ ${?} -ne 0 ]; then exit 1; fi
 fi
 
 python${PYTHON_VERSION} -m pip install Cython==${CYTHON_VERSION}
