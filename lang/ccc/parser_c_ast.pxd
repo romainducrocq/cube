@@ -146,7 +146,8 @@ cdef class CDeclaration(AST):
 
 cdef class CDecl(CDeclaration):
     cdef public TIdentifier name
-    cdef public CExp init  # Optional
+    # Optional
+    cdef public CExp init
 
 
 cdef class CBlockItem(AST):
