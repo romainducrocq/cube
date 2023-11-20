@@ -12,7 +12,7 @@ function test () {
 
 cd ../../../writing-a-c-compiler-tests/
 find . -maxdepth 1 -type l -delete
-ln -s ../MOOC-NoStarch-Writing_a_C_Compiler/${PACKAGE_NAME}/* .
+ln -s ../LANG-CCC/${PACKAGE_NAME}/* .
 
 if [ ${#} -ne 0 ]; then
     test ${@}
