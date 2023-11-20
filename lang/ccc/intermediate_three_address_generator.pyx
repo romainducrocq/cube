@@ -12,18 +12,18 @@ class ThreeAddressCodeGeneratorError(RuntimeError):
 
 
 cdef TIdentifier represent_identifier(TIdentifier node):
-    """ <identifier> = Built-in identifier type """
+    # <identifier> = Built-in identifier type
     return TIdentifier(copy_deepcopy(node.str_t))
 
 
 cdef TInt represent_int(TInt node):
-    """ <int> = Built-in int type """
+    # <int> = Built-in int type
     return TInt(copy_deepcopy(node.int_t))
 
 cdef TacBinaryOp represent_binary_op(CBinaryOp node):
-    """ binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
-                        | BitShiftLeft | BitShiftRight | Equal | NotEqual | LessThan | LessOrEqual
-                        | GreaterThan | GreaterOrEqual """
+    # binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
+    #                 | BitShiftLeft | BitShiftRight | Equal | NotEqual | LessThan | LessOrEqual
+    #                 | GreaterThan | GreaterOrEqual
     if isinstance(node, CAdd):
         return TacAdd()
     if isinstance(node, CSubtract):
@@ -62,7 +62,7 @@ cdef TacBinaryOp represent_binary_op(CBinaryOp node):
 
 
 cdef TacUnaryOp represent_unary_op(CUnaryOp node):
-    """ unary_operator = Complement | Negate | Not """
+    # unary_operator = Complement | Negate | Not
     if isinstance(node, CComplement):
         return TacComplement()
     if isinstance(node, CNegate):
@@ -75,7 +75,7 @@ cdef TacUnaryOp represent_unary_op(CUnaryOp node):
 
 
 cdef TacValue represent_value(CExp node, bint outer = True):
-    """ val = Constant(int) | Var(identifier) """
+    # val = Constant(int) | Var(identifier)
     cdef TInt value
     cdef TIdentifier name
     if outer:
@@ -207,10 +207,10 @@ cdef void represent_declaration_instructions(CDeclaration node):
 
 
 cdef void represent_list_instructions(list[CBlockItem] list_node):
-    """ instruction = Return(val) | Unary(unary_operator, val src, val dst)
-                | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
-                | Jump(identifier target) | JumpIfZero(val condition, identifier target)
-                | JumpIfNotZero(val condition, identifier target) | Label(identifier name) """
+    # instruction = Return(val) | Unary(unary_operator, val src, val dst)
+    #             | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
+    #             | Jump(identifier target) | JumpIfZero(val condition, identifier target)
+    #             | JumpIfNotZero(val condition, identifier target) | Label(identifier name)
     global instructions
     instructions = []
 
@@ -229,7 +229,7 @@ cdef void represent_list_instructions(list[CBlockItem] list_node):
 
 
 cdef TacFunctionDef represent_function_def(CFunctionDef node):
-    """ function_definition = Function(identifier, instruction* body) """
+    # function_definition = Function(identifier, instruction* body)
     cdef TIdentifier name
     if isinstance(node, CFunction):
         name = represent_identifier(node.name)
@@ -241,7 +241,7 @@ cdef TacFunctionDef represent_function_def(CFunctionDef node):
 
 
 cdef TacProgram represent_program(AST node):
-    """ AST = Program(function_definition) """
+    # AST = Program(function_definition)
     cdef TacFunctionDef function_def
     if isinstance(node, CProgram):
         function_def = represent_function_def(node.function_def)

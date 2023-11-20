@@ -1,11 +1,9 @@
 cdef class AST:
-    """
-    AST node
-    """
+    # AST node
     pass
 
 cdef class TIdentifier(AST):
-    """ identifier str_t """
+    # identifier str_t
     def __cinit__(self):
         self._fields = ('str_t',)
 
@@ -14,7 +12,7 @@ cdef class TIdentifier(AST):
 
 
 cdef class TInt(AST):
-    """ int int_t """
+    # int int_t
     def __cinit__(self):
         self._fields = ('int_t',)
 
@@ -59,7 +57,8 @@ cdef void ast_set_child_node(object field, str name, int index, AST set_node):
         getattr(field, name)[index] = set_node
 
 
-""" pretty string """
+# pretty string
+
 
 cdef str string = ''
 cdef int indent = 0

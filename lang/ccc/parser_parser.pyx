@@ -54,20 +54,20 @@ cdef Token peek_next():
 
 
 cdef TIdentifier parse_identifier():
-    """ <identifier> ::= ? An identifier token ? """
+    # <identifier> ::= ? An identifier token ?
     expect_next_is(pop_next(), TOKEN_KIND.get('identifier'))
     return TIdentifier(next_token.token)
 
 
 cdef TInt parse_int():
-    """ <int> ::= ? A constant token ? """
+    # <int> ::= ? A constant token ?
     expect_next_is(pop_next(), TOKEN_KIND.get('constant'))
     return TInt(int(next_token.token))
 
 
 cdef CBinaryOp parse_binary_op():
-    """ <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
-                  | "<" | "<=" | ">" | ">=" """
+    # <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
+    #                 | "<" | "<=" | ">" | ">="
     expect_next_in(pop_next(), (TOKEN_KIND.get('unop_negation'),
                    TOKEN_KIND.get('binop_addition'),
                    TOKEN_KIND.get('binop_multiplication'),
@@ -145,7 +145,7 @@ cdef CBinaryOp parse_binary_op():
 
 
 cdef CUnaryOp parse_unary_op():
-    """ <unop> ::= "-" | "~" | "!" """
+    # <unop> ::= "-" | "~" | "!"
     expect_next_in(pop_next(), (TOKEN_KIND.get('unop_complement'),
                    TOKEN_KIND.get('unop_negation'),
                    TOKEN_KIND.get('unop_not')))
@@ -158,7 +158,7 @@ cdef CUnaryOp parse_unary_op():
 
 
 cdef CExp parse_factor():
-    """ <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" """
+    # <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")"
     expect_next_in(peek_next(),(TOKEN_KIND.get('constant'),
                    TOKEN_KIND.get('identifier'),
                    TOKEN_KIND.get('unop_complement'),
@@ -188,7 +188,7 @@ cdef CExp parse_factor():
 
 
 cdef CExp parse_exp(int min_precedence = 0):
-    """ <exp> ::= <factor> | <exp> <binop> <exp> """
+    # <exp> ::= <factor> | <exp> <binop> <exp>
     cdef int precedence
     cdef CBinaryOp binary_op
     cdef CExp exp_right
@@ -250,7 +250,7 @@ cdef CExp parse_exp(int min_precedence = 0):
 
 
 cdef CStatement parse_statement():
-    """ <statement> ::= "return" <exp> ";" | <exp> ";" | ";" """
+    # <statement> ::= "return" <exp> ";" | <exp> ";" | ";"
     if peek_token.token_kind == TOKEN_KIND.get('semicolon'):
         _ = pop_next()
         return CNull()
@@ -267,7 +267,7 @@ cdef CStatement parse_statement():
 
 
 cdef CDeclaration parse_declaration():
-    """ <declaration> ::= "int" <identifier> [ "=" <exp> ] ";" """
+    # <declaration> ::= "int" <identifier> [ "=" <exp> ] ";"
     expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
     cdef TIdentifier name = parse_identifier()
     cdef CExp init
@@ -281,7 +281,7 @@ cdef CDeclaration parse_declaration():
 
 
 cdef CBlockItem parse_block_item():
-    """ <block-item> ::= <statement> | <declaration> """
+    # <block-item> ::= <statement> | <declaration>
     cdef CDeclaration declaration
     if peek_token.token_kind == TOKEN_KIND.get('key_int'):
         declaration = parse_declaration()
@@ -293,7 +293,7 @@ cdef CBlockItem parse_block_item():
 
 
 cdef CFunctionDef parse_function_def():
-    """ <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}" """
+    # <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}"
     expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
     cdef TIdentifier name = parse_identifier()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
@@ -310,7 +310,7 @@ cdef CFunctionDef parse_function_def():
 
 
 cdef CProgram parse_program():
-    """ <program> ::= <function> """
+    # <program> ::= <function>
     cdef CFunctionDef function_def = parse_function_def()
     return CProgram(function_def)
 

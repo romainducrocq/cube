@@ -2,181 +2,175 @@ from ccc.util_ast cimport AST, TIdentifier, TInt
 
 
 cdef class CUnaryOp(AST):
-    """
-    unary_operator = Complement
-                   | Negate
-                   | Not
-    """
+    # unary_operator = Complement
+    #                | Negate
+    #                | Not
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CComplement(CUnaryOp):
-    """ Complement """
+    # Complement
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CNegate(CUnaryOp):
-    """ Negate """
+    # Negate
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CNot(CUnaryOp):
-    """ Not """
+    # Not
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CBinaryOp(AST):
-    """
-    binary_operator = Add
-                    | Subtract
-                    | Multiply
-                    | Divide
-                    | Remainder
-                    | BitAnd
-                    | BitOr
-                    | BitXor
-                    | BitShiftLeft
-                    | BitShiftRight
-                    | And
-                    | Or
-                    | Equal
-                    | NotEqual
-                    | LessThan
-                    | LessOrEqual
-                    | GreaterThan
-                    | GreaterOrEqual
-    """
+    # binary_operator = Add
+    #                 | Subtract
+    #                 | Multiply
+    #                 | Divide
+    #                 | Remainder
+    #                 | BitAnd
+    #                 | BitOr
+    #                 | BitXor
+    #                 | BitShiftLeft
+    #                 | BitShiftRight
+    #                 | And
+    #                 | Or
+    #                 | Equal
+    #                 | NotEqual
+    #                 | LessThan
+    #                 | LessOrEqual
+    #                 | GreaterThan
+    #                 | GreaterOrEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CAdd(CBinaryOp):
-    """ Add """
+    # Add
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CSubtract(CBinaryOp):
-    """ Subtract """
+    # Subtract
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CMultiply(CBinaryOp):
-    """ Multiply """
+    # Multiply
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CDivide(CBinaryOp):
-    """ Divide """
+    # Divide
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CRemainder(CBinaryOp):
-    """ Remainder """
+    # Remainder
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CBitAnd(CBinaryOp):
-    """ BitAnd """
+    # BitAnd
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CBitOr(CBinaryOp):
-    """ BitOr """
+    # BitOr
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CBitXor(CBinaryOp):
-    """ BitXor """
+    # BitXor
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CBitShiftLeft(CBinaryOp):
-    """ BitShiftLeft """
+    # BitShiftLeft
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CBitShiftRight(CBinaryOp):
-    """ BitShiftRight """
+    # BitShiftRight
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CAnd(CBinaryOp):
-    """ And """
+    # And
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class COr(CBinaryOp):
-    """ Or """
+    # Or
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CEqual(CBinaryOp):
-    """ Equal """
+    # Equal
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CNotEqual(CBinaryOp):
-    """ NotEqual """
+    # NotEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CLessThan(CBinaryOp):
-    """ LessThan """
+    # LessThan
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CLessOrEqual(CBinaryOp):
-    """ LessOrEqual """
+    # LessOrEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CGreaterThan(CBinaryOp):
-    """ GreaterThan """
+    # GreaterThan
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CGreaterOrEqual(CBinaryOp):
-    """ GreaterOrEqual """
+    # GreaterOrEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CExp(AST):
-    """
-    exp = Constant(int value)
-        | Var(identifier)
-        | Unary(unary_operator, exp)
-        | Binary(binary_operator, exp, exp)
-        | Assignment(exp, exp)
-        | AssignmentCompound(binary_operator, exp, exp)
-    """
+    # exp = Constant(int value)
+    #     | Var(identifier)
+    #     | Unary(unary_operator, exp)
+    #     | Binary(binary_operator, exp, exp)
+    #     | Assignment(exp, exp)
+    #     | AssignmentCompound(binary_operator, exp, exp)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CConstant(CExp):
-    """ Constant(int value) """
+    # Constant(int value)
     def __cinit__(self):
         self._fields = ('value',)
 
@@ -185,7 +179,7 @@ cdef class CConstant(CExp):
 
 
 cdef class CVar(CExp):
-    """ Var(identifier name) """
+    # Var(identifier name)
     def __cinit__(self):
         self._fields = ('name',)
 
@@ -194,7 +188,7 @@ cdef class CVar(CExp):
 
 
 cdef class CUnary(CExp):
-    """ Unary(unary_operator, exp) """
+    # Unary(unary_operator, exp)
     def __cinit__(self):
         self._fields = ('unary_op', 'exp')
 
@@ -204,7 +198,7 @@ cdef class CUnary(CExp):
 
 
 cdef class CBinary(CExp):
-    """ Binary(binary_operator, exp, exp) """
+    # Binary(binary_operator, exp, exp)
     def __cinit__(self):
         self._fields = ('binary_op', 'exp_left', 'exp_right')
 
@@ -215,7 +209,7 @@ cdef class CBinary(CExp):
 
 
 cdef class CAssignment(CExp):
-    """ Assignment(exp, exp) """
+    # Assignment(exp, exp)
     def __cinit__(self):
         self._fields = ('exp_left', 'exp_right')
 
@@ -225,7 +219,7 @@ cdef class CAssignment(CExp):
 
 
 cdef class CAssignmentCompound(CExp):
-    """ AssignmentCompound(binary_operator, exp, exp) """
+    # AssignmentCompound(binary_operator, exp, exp)
     def __cinit__(self):
         self._fields = ('binary_op', 'exp_left', 'exp_right')
 
@@ -236,17 +230,15 @@ cdef class CAssignmentCompound(CExp):
 
 
 cdef class CStatement(AST):
-    """
-    statement = Return(exp)
-              | Expression(exp)
-              | Null
-    """
+    # statement = Return(exp)
+    #           | Expression(exp)
+    #           | Null
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CReturn(CStatement):
-    """ Return(exp) """
+    # Return(exp)
     def __cinit__(self):
         self._fields = ('exp',)
 
@@ -255,7 +247,7 @@ cdef class CReturn(CStatement):
 
 
 cdef class CExpression(CStatement):
-    """ Expression(exp) """
+    # Expression(exp)
     def __cinit__(self):
         self._fields = ('exp',)
 
@@ -264,21 +256,19 @@ cdef class CExpression(CStatement):
 
 
 cdef class CNull(CStatement):
-    """ Null """
+    # Null
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CDeclaration(AST):
-    """
-    declaration = Declaration(identifier, exp?)
-    """
+    # declaration = Declaration(identifier, exp?)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CDecl(CDeclaration):
-    """ Declaration(identifier name, exp? init) """
+    # Declaration(identifier name, exp? init)
     def __cinit__(self):
         self._fields = ('name', 'init')
 
@@ -288,16 +278,14 @@ cdef class CDecl(CDeclaration):
 
 
 cdef class CBlockItem(AST):
-    """
-    block_item = S(statement)
-               | D(declaration)
-    """
+    # block_item = S(statement)
+    #            | D(declaration)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CS(CBlockItem):
-    """ S(statement) """
+    # S(statement)
     def __cinit__(self):
         self._fields = ('statement',)
 
@@ -306,7 +294,7 @@ cdef class CS(CBlockItem):
 
 
 cdef class CD(CBlockItem):
-    """ D(declaration) """
+    # D(declaration)
     def __cinit__(self):
         self._fields = ('declaration',)
 
@@ -315,15 +303,13 @@ cdef class CD(CBlockItem):
 
 
 cdef class CFunctionDef(AST):
-    """
-    function_definition = Function(identifier, block_item*)
-    """
+    # function_definition = Function(identifier, block_item*)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CFunction(CFunctionDef):
-    """ Function(identifier name, block_item* body) """
+    # Function(identifier name, block_item* body)
     def __cinit__(self):
         self._fields = ('name', 'body')
 
@@ -333,7 +319,7 @@ cdef class CFunction(CFunctionDef):
 
 
 cdef class CProgram(AST):
-    """ AST = Program(function_definition) """
+    # AST = Program(function_definition)
     def __cinit__(self):
         self._fields = ('function_def',)
 

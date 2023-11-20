@@ -2,163 +2,157 @@ from ccc.parser_c_ast cimport AST, TIdentifier, TInt
 
 
 cdef class TacUnaryOp(AST):
-    """
-    unary_operator = Complement
-                   | Negate
-                   | Not
-    """
+    # unary_operator = Complement
+    #                | Negate
+    #                | Not
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacComplement(TacUnaryOp):
-    """ Complement """
+    # Complement
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacNegate(TacUnaryOp):
-    """ Negate """
+    # Negate
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacNot(TacUnaryOp):
-    """ Not """
+    # Not
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacBinaryOp(AST):
-    """
-    binary_operator = Add
-                    | Subtract
-                    | Multiply
-                    | Divide
-                    | Remainder
-                    | BitAnd
-                    | BitOr
-                    | BitXor
-                    | BitShiftLeft
-                    | BitShiftRight
-                    | Equal
-                    | NotEqual
-                    | LessThan
-                    | LessOrEqual
-                    | GreaterThan
-                    | GreaterOrEqual
-    """
+    # binary_operator = Add
+    #                 | Subtract
+    #                 | Multiply
+    #                 | Divide
+    #                 | Remainder
+    #                 | BitAnd
+    #                 | BitOr
+    #                 | BitXor
+    #                 | BitShiftLeft
+    #                 | BitShiftRight
+    #                 | Equal
+    #                 | NotEqual
+    #                 | LessThan
+    #                 | LessOrEqual
+    #                 | GreaterThan
+    #                 | GreaterOrEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacAdd(TacBinaryOp):
-    """ Add """
+    # Add
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacSubtract(TacBinaryOp):
-    """ Subtract """
+    # Subtract
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacMultiply(TacBinaryOp):
-    """ Multiply """
+    # Multiply
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacDivide(TacBinaryOp):
-    """ Divide """
+    # Divide
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacRemainder(TacBinaryOp):
-    """ Remainder """
+    # Remainder
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacBitAnd(TacBinaryOp):
-    """ BitAnd """
+    # BitAnd
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacBitOr(TacBinaryOp):
-    """ BitOr """
+    # BitOr
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacBitXor(TacBinaryOp):
-    """ BitXor """
+    # BitXor
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacBitShiftLeft(TacBinaryOp):
-    """ BitShiftLeft """
+    # BitShiftLeft
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacBitShiftRight(TacBinaryOp):
-    """ BitShiftRight """
+    # BitShiftRight
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacEqual(TacBinaryOp):
-    """ Equal """
+    # Equal
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacNotEqual(TacBinaryOp):
-    """ NotEqual """
+    # NotEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacLessThan(TacBinaryOp):
-    """ LessThan """
+    # LessThan
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacLessOrEqual(TacBinaryOp):
-    """ LessOrEqual """
+    # LessOrEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacGreaterThan(TacBinaryOp):
-    """ GreaterThan """
+    # GreaterThan
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacGreaterOrEqual(TacBinaryOp):
-    """ GreaterOrEqual """
+    # GreaterOrEqual
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacValue(AST):
-    """
-    val = Constant(int)
-        | Var(identifier)
-    """
+    # val = Constant(int)
+    #     | Var(identifier)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacConstant(TacValue):
-    """ Constant(int) """
+    # Constant(int)
     def __cinit__(self):
         self._fields = ('value',)
 
@@ -167,7 +161,7 @@ cdef class TacConstant(TacValue):
 
 
 cdef class TacVariable(TacValue):
-    """ Var(identifier) """
+    # Var(identifier)
     def __cinit__(self):
         self._fields = ('name',)
 
@@ -176,22 +170,20 @@ cdef class TacVariable(TacValue):
 
 
 cdef class TacInstruction(AST):
-    """
-    instruction = Return(val)
-                | Unary(unary_operator, val src, val dst)
-                | Binary(binary_operator, val src1, val src2, val dst)
-                | Copy(val src, val dst)
-                | Jump(identifier target)
-                | JumpIfZero(val condition, identifier target)
-                | JumpIfNotZero(val condition, identifier target)
-                | Label(identifier name)
-    """
+    # instruction = Return(val)
+    #             | Unary(unary_operator, val src, val dst)
+    #             | Binary(binary_operator, val src1, val src2, val dst)
+    #             | Copy(val src, val dst)
+    #             | Jump(identifier target)
+    #             | JumpIfZero(val condition, identifier target)
+    #             | JumpIfNotZero(val condition, identifier target)
+    #             | Label(identifier name)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacReturn(TacInstruction):
-    """ Return(val) """
+    # Return(val)
     def __cinit__(self):
         self._fields = ('val',)
 
@@ -200,7 +192,7 @@ cdef class TacReturn(TacInstruction):
 
 
 cdef class TacUnary(TacInstruction):
-    """ Unary(unary_operator, val src, val dst) """
+    # Unary(unary_operator, val src, val dst)
     def __cinit__(self):
         self._fields = ('unary_op', 'src', 'dst')
 
@@ -211,7 +203,7 @@ cdef class TacUnary(TacInstruction):
 
 
 cdef class TacBinary(TacInstruction):
-    """ Binary(binary_operator, val src1, val src2, val dst) """
+    # Binary(binary_operator, val src1, val src2, val dst)
     def __cinit__(self):
         self._fields = ('binary_op', 'src1', 'src2', 'dst')
 
@@ -223,7 +215,7 @@ cdef class TacBinary(TacInstruction):
 
 
 cdef class TacCopy(TacInstruction):
-    """ Copy(val src, val dst) """
+    # Copy(val src, val dst)
     def __cinit__(self):
         self._fields = ('src', 'dst')
 
@@ -233,7 +225,7 @@ cdef class TacCopy(TacInstruction):
 
 
 cdef class TacJump(TacInstruction):
-    """ Jump(identifier target) """
+    # Jump(identifier target)
     def __cinit__(self):
         self._fields = ('target',)
 
@@ -242,7 +234,7 @@ cdef class TacJump(TacInstruction):
 
 
 cdef class TacJumpIfZero(TacInstruction):
-    """ JumpIfZero(val condition, identifier target) """
+    # JumpIfZero(val condition, identifier target)
     def __cinit__(self):
         self._fields = ('condition', 'target')
 
@@ -252,7 +244,7 @@ cdef class TacJumpIfZero(TacInstruction):
 
 
 cdef class TacJumpIfNotZero(TacInstruction):
-    """ JumpIfNotZero(val condition, identifier target) """
+    # JumpIfNotZero(val condition, identifier target)
     def __cinit__(self):
         self._fields = ('condition', 'target')
 
@@ -262,7 +254,7 @@ cdef class TacJumpIfNotZero(TacInstruction):
 
 
 cdef class TacLabel(TacInstruction):
-    """ Label(identifier name) """
+    # Label(identifier name)
     def __cinit__(self):
         self._fields = ('name',)
 
@@ -271,15 +263,13 @@ cdef class TacLabel(TacInstruction):
 
 
 cdef class TacFunctionDef(AST):
-    """
-    function_definition = Function(identifier, instruction* body)
-    """
+    # function_definition = Function(identifier, instruction* body)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacFunction(TacFunctionDef):
-    """ Function(identifier, instruction* body) """
+    # Function(identifier, instruction* body)
     def __cinit__(self):
         self._fields = ('name', 'body')
 
@@ -289,7 +279,7 @@ cdef class TacFunction(TacFunctionDef):
 
 
 cdef class TacProgram(AST):
-    """ AST = Program(function_definition) """
+    # AST = Program(function_definition)
     def __cinit__(self):
         self._fields = ('function_def',)
 
