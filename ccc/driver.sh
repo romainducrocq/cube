@@ -60,10 +60,10 @@ function compile () {
     echo "Compile    -> ${FILE}.i"
 
     if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
-        $HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME} ${FILE}.i ${ARGV}
+        $HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME} ${ARGV} ${FILE}.i
         if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
     else
-        python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${FILE}.i ${ARGV}
+        python3.9 -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${ARGV} ${FILE}.i
         if [ ${?} -ne 0 ]; then clean ${FILE}; exit 1; fi
     fi
 }

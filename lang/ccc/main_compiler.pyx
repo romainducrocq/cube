@@ -138,11 +138,12 @@ cdef void entry(list[str] args):
     cdef str filename
     cdef int opt_exit
     cdef int opt_s
+
     filename, opt_exit, opt_s = arg_parse(args)
     compile(filename, opt_exit, opt_s)
 
 
-cdef public main_c(int argc, char **argv):
+cdef public int main_c(int argc, char **argv):
     cdef int i
     cdef list[str] args = []
     for i in range(argc):
