@@ -10,12 +10,12 @@
 
 ## Development
 
-[x] Int constants  
-[x] Unary operators  
-[x] Binary operators  
-[x] Logical and relational operators  
-[x] Local variables  
-[ ] Cythonize  
+- [x] Int constants  
+- [x] Unary operators  
+- [x] Binary operators  
+- [x] Logical and relational operators  
+- [x] Local variables  
+- [ ] Cythonize  
 
 ## How To _
 
