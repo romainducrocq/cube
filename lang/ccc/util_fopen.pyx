@@ -70,6 +70,10 @@ cdef void write_file(str stream, int chunk_size = 4096):
         stream_buf = stream_buf[chunk_size:]
 
 
+cdef void write_line(str line):
+    write_file(line + "\n")
+
+
 cdef void file_close_read():
 
     fclose(c_file_in)

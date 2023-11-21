@@ -4,9 +4,7 @@ cdef void file_open_write(str filename)
 
 cdef tuple[bint, str] read_line()
 
-cdef void write_chunk(bytes chunk_fp, size_t chunk_l)
-
-cdef void write_file(str stream, int chunk_size)
+cdef void write_line(str line)
 
 cdef void file_close_read()
 
