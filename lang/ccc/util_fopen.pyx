@@ -1,4 +1,4 @@
-from libc.stdio cimport *
+from libc.stdio cimport FILE
 cdef extern from "stdio.h":
     FILE *fopen(const char *, const char *)
     int fclose(FILE *)
