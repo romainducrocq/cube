@@ -1,5 +1,6 @@
-cython:
-- see if better to refactor every return scope into sub functions:
+BACKLOG
+
+- refactor every nested if into sub functions:
     => make use of static typing declaration
     => declare only cdef needed for scope
     => readability
@@ -12,15 +13,7 @@ cython:
             _do_something_type2(node)
             ...
 
-- for c build:
-    - add readme with code limitations
-    - add ./configure
-        - download + install python from sources with --enable-shared
-        - auto replace /opt/Python3.9.18/ with path in build files
-    - debug exceptions
-    - if ok: add to build / install
-    - update driver to chose the version that is installed in /ccc/
-
-- see if can remove deepcopy:
-    - int => cdef int x_new = x_old + 0
-    - str => cdef str s_new = s_old + ""
+- regex findall in c (is slower?):
+    => https://gist.github.com/ianmackinnon/3294587
+    => https://gist.github.com/raoulduke/1babb0592e9062d8b330c57ea08862cb
+    => performance: http://romankleiner.blogspot.com/2015/06/cython-and-regular-expressions.html
