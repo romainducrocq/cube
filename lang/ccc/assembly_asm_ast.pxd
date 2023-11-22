@@ -62,7 +62,7 @@ cdef class AsmImm(AsmOperand):
 
 
 cdef class AsmRegister(AsmOperand):
-    cdef public AsmReg register
+    cdef public AsmReg reg
 
 
 cdef class AsmPseudo(AsmOperand):

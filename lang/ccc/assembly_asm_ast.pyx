@@ -113,12 +113,12 @@ cdef class AsmImm(AsmOperand):
 
 
 cdef class AsmRegister(AsmOperand):
-    # Register(reg register)
+    # Register(reg reg)
     def __cinit__(self):
-        self._fields = ('register',)
+        self._fields = ('reg',)
 
-    def __init__(self, AsmReg register):
-        self.register = register
+    def __init__(self, AsmReg reg):
+        self.reg = reg
 
 
 cdef class AsmPseudo(AsmOperand):
