@@ -31,7 +31,7 @@ REGISTER_NODE: Dict[int, type(AsmReg)] = {
     REGISTER_KIND.R11: AsmR11
 }
 
-
+clear
 def generate_register(register_kind: int) -> AsmReg:
     """ reg = AX | CX | DX | R10 | R11 """
 
