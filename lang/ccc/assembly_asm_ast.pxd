@@ -1,0 +1,193 @@
+from ccc.intermediate_tac_ast cimport AST, TIdentifier, TInt
+
+
+cdef class AsmReg(AST):
+    pass
+
+
+cdef class AsmAx(AsmReg):
+    pass
+
+
+cdef class AsmCx(AsmReg):
+    pass
+
+
+cdef class AsmDx(AsmReg):
+    pass
+
+
+cdef class AsmR10(AsmReg):
+    pass
+
+
+cdef class AsmR11(AsmReg):
+    pass
+
+
+cdef class AsmCondCode(AST):
+    pass
+
+
+cdef class AsmE(AsmCondCode):
+    pass
+
+
+cdef class AsmNE(AsmCondCode):
+    pass
+
+
+cdef class AsmG(AsmCondCode):
+    pass
+
+
+cdef class AsmGE(AsmCondCode):
+    pass
+
+
+cdef class AsmL(AsmCondCode):
+    pass
+
+
+cdef class AsmLE(AsmCondCode):
+    pass
+
+
+cdef class AsmOperand(AST):
+    pass
+
+
+cdef class AsmImm(AsmOperand):
+    cdef public TInt value
+
+
+cdef class AsmRegister(AsmOperand):
+    cdef public AsmReg register
+
+
+cdef class AsmPseudo(AsmOperand):
+    cdef public TIdentifier name
+
+
+cdef class AsmStack(AsmOperand):
+    cdef public TInt value
+
+
+cdef class AsmBinaryOp(AST):
+    pass
+
+
+cdef class AsmAdd(AsmBinaryOp):
+    pass
+
+
+cdef class AsmSub(AsmBinaryOp):
+    pass
+
+
+cdef class AsmMult(AsmBinaryOp):
+    pass
+
+
+cdef class AsmBitAnd(AsmBinaryOp):
+    pass
+
+
+cdef class AsmBitOr(AsmBinaryOp):
+    pass
+
+
+cdef class AsmBitXor(AsmBinaryOp):
+    pass
+
+
+cdef class AsmBitShiftLeft(AsmBinaryOp):
+    pass
+
+
+cdef class AsmBitShiftRight(AsmBinaryOp):
+    pass
+
+
+cdef class AsmUnaryOp(AST):
+    pass
+
+
+cdef class AsmNot(AsmUnaryOp):
+    pass
+
+
+cdef class AsmNeg(AsmUnaryOp):
+    pass
+
+
+cdef class AsmInstruction(AST):
+    pass
+
+
+cdef class AsmMov(AsmInstruction):
+    cdef public AsmOperand src
+    cdef public AsmOperand dst
+
+
+cdef class AsmUnary(AsmInstruction):
+    cdef public AsmUnaryOp unary_op
+    cdef public AsmOperand dst
+
+
+cdef class AsmBinary(AsmInstruction):
+    cdef public AsmBinaryOp binary_op
+    cdef public AsmOperand src
+    cdef public AsmOperand dst
+
+
+cdef class AsmCmp(AsmInstruction):
+    cdef public AsmOperand src
+    cdef public AsmOperand dst
+
+
+cdef class AsmIdiv(AsmInstruction):
+    cdef public AsmOperand src
+
+
+cdef class AsmCdq(AsmInstruction):
+    pass
+
+
+cdef class AsmJmp(AsmInstruction):
+    cdef public TIdentifier target
+
+
+cdef class AsmJmpCC(AsmInstruction):
+    cdef public AsmCondCode cond_code
+    cdef public TIdentifier target
+
+
+cdef class AsmSetCC(AsmInstruction):
+    cdef public AsmCondCode cond_code
+    cdef public AsmOperand dst
+
+
+cdef class AsmLabel(AsmInstruction):
+    cdef public TIdentifier name
+
+
+cdef class AsmAllocStack(AsmInstruction):
+    cdef public TInt value
+
+
+cdef class AsmRet(AsmInstruction):
+    pass
+
+
+cdef class AsmFunctionDef(AST):
+    pass
+
+
+cdef class AsmFunction(AsmFunctionDef):
+    cdef public TIdentifier name
+    cdef public list[AsmInstruction] instructions
+
+
+cdef class AsmProgram(AST):
+    cdef public AsmFunctionDef function_def
