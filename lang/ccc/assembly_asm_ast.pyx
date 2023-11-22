@@ -1,6 +1,6 @@
 from typing import List
 
-from ccc.util.__ast import *
+from ccc.intermediate_tac_ast cimport AST, TIdentifier, TInt
 
 __all__ = [
     'AsmReg',
