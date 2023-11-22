@@ -5,7 +5,7 @@ PYTHON_VERSION="$(cat ../build/python_version.txt)"
 
 function clean () {
     if [[ "${1}" == "--clean" ]]; then
-        rm *.c
+        rm *.c > /dev/null 2>&1
         if [ -d "./build/" ]; then rm -r ./build/; fi
         if [ -d "./${PACKAGE_NAME}/" ]; then rm -r ./${PACKAGE_NAME}/; fi
     fi
