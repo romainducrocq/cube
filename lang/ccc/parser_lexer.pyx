@@ -7,7 +7,7 @@ from ccc.util_iota_enum cimport IotaEnum
 
 cdef class Token:
 
-    def __init__(self, token: str, token_kind: int):
+    def __init__(self, str token, int token_kind):
         self.token = token
         self.token_kind = token_kind
 

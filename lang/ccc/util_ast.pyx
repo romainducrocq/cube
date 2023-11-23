@@ -16,7 +16,7 @@ cdef class TInt(AST):
     def __cinit__(self):
         self._fields = ('int_t',)
 
-    def __init__(self, int_t: int):
+    def __init__(self, int int_t):
         self.int_t = int_t
 
 
