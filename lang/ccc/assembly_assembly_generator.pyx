@@ -90,87 +90,130 @@ cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
 cdef list[AsmInstruction] instructions = []
 
 
-cdef void generate_instructions(TacInstruction node):
-    pass
+cdef void generate_label_instructions(TacLabel node):
+    cdef TIdentifier name = generate_identifier(node.name)
+    instructions.append(AsmLabel(name))
 
-#     def generate_instructions(node: AST) -> None:
-#         expect_next(node, TacInstruction)
-#         if isinstance(node, TacReturn):
-#             src: AsmOperand = generate_operand(node.val)
-#             dst: AsmOperand = generate_operand(REGISTER_KIND.AX)
-#             instructions.append(AsmMov(src, dst))
-#             instructions.append(AsmRet())
-#         elif isinstance(node, TacUnary):
-#             if isinstance(node.unary_op, TacNot):
-#                 imm_zero: AsmOperand = AsmImm(TInt(0))
-#                 cond_code: AsmCondCode = generate_condition_code(TacEqual())
-#                 src: AsmOperand = generate_operand(node.src)
-#                 cmp_dst: AsmOperand = generate_operand(node.dst)
-#                 instructions.append(AsmCmp(imm_zero, src))
-#                 instructions.append(AsmMov(deepcopy(imm_zero), cmp_dst))
-#                 instructions.append(AsmSetCC(cond_code, deepcopy(cmp_dst)))
-#             else:  # if isinstance(node.unary_op, (TacComplement, TacNegate)):
-#                 unary_op: AsmUnaryOp = generate_unary_op(node.unary_op)
-#                 src: AsmOperand = generate_operand(node.src)
-#                 src_dst: AsmOperand = generate_operand(node.dst)
-#                 instructions.append(AsmMov(src, src_dst))
-#                 instructions.append(AsmUnary(unary_op, deepcopy(src_dst)))
-#         elif isinstance(node, TacBinary):
-#             if isinstance(node.binary_op, (TacAdd, TacSubtract, TacMultiply, TacBitAnd, TacBitOr, TacBitXor,
-#                                            TacBitShiftLeft, TacBitShiftRight)):
-#                 binary_op: AsmBinaryOp = generate_binary_op(node.binary_op)
-#                 src1: AsmOperand = generate_operand(node.src1)
-#                 src2: AsmOperand = generate_operand(node.src2)
-#                 src1_dst: AsmOperand = generate_operand(node.dst)
-#                 instructions.append(AsmMov(src1, src1_dst))
-#                 instructions.append(AsmBinary(binary_op, src2, deepcopy(src1_dst)))
-#             elif isinstance(node.binary_op, (TacDivide, TacRemainder)):
-#                 src1: AsmOperand = generate_operand(node.src1)
-#                 src2: AsmOperand = generate_operand(node.src2)
-#                 dst: AsmOperand = generate_operand(node.dst)
-#                 src1_dst: AsmOperand = generate_operand(REGISTER_KIND.AX)
-#                 if isinstance(node.binary_op, TacDivide):
-#                     dst_src: AsmOperand = generate_operand(REGISTER_KIND.AX)
-#                 else:
-#                     dst_src: AsmOperand = generate_operand(REGISTER_KIND.DX)
-#                 instructions.append(AsmMov(src1, src1_dst))
-#                 instructions.append(AsmCdq())
-#                 instructions.append(AsmIdiv(src2))
-#                 instructions.append(AsmMov(dst_src, dst))
-#             else:  # if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual,
-#                 #                  TacGreaterThan, TacGreaterOrEqual)):
-#                 imm_zero: AsmOperand = AsmImm(TInt(0))
-#                 cond_code: AsmCondCode = generate_condition_code(node.binary_op)
-#                 src1: AsmOperand = generate_operand(node.src1)
-#                 src2: AsmOperand = generate_operand(node.src2)
-#                 cmp_dst: AsmOperand = generate_operand(node.dst)
-#                 instructions.append(AsmCmp(src2, src1))
-#                 instructions.append(AsmMov(imm_zero, cmp_dst))
-#                 instructions.append(AsmSetCC(cond_code, deepcopy(cmp_dst)))
-#         elif isinstance(node, TacJump):
-#             target: TIdentifier = generate_identifier(node.target)
-#             instructions.append(AsmJmp(target))
-#         elif isinstance(node, (TacJumpIfZero, TacJumpIfNotZero)):
-#             imm_zero: AsmOperand = AsmImm(TInt(0))
-#             if isinstance(node, TacJumpIfZero):
-#                 cond_code: AsmCondCode = generate_condition_code(TacEqual())
-#             else:
-#                 cond_code: AsmCondCode = generate_condition_code(TacNotEqual())
-#             target: TIdentifier = generate_identifier(node.target)
-#             condition: AsmOperand = generate_operand(node.condition)
-#             instructions.append(AsmCmp(imm_zero, condition))
-#             instructions.append(AsmJmpCC(cond_code, target))
-#         elif isinstance(node, TacCopy):
-#             src: AsmOperand = generate_operand(node.src)
-#             dst: AsmOperand = generate_operand(node.dst)
-#             instructions.append(AsmMov(src, dst))
-#         elif isinstance(node, TacLabel):
-#             name: TIdentifier = generate_identifier(node.name)
-#             instructions.append(AsmLabel(name))
-#         else:
-#
-#             raise AssemblyGeneratorError(
-#                 "An error occurred in assembly generation, not all nodes were visited")
+
+cdef void generate_jump_instructions(TacJump node):
+    cdef TIdentifier target = generate_identifier(node.target)
+    instructions.append(AsmJmp(target))
+
+
+cdef void generate_return_instructions(TacReturn node):
+    cdef AsmOperand src = generate_operand(node.val)
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Ax'))
+    instructions.append(AsmMov(src, dst))
+    instructions.append(AsmRet())
+
+
+cdef void generate_copy_instructions(TacCopy node):
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    instructions.append(AsmMov(src, dst))
+
+
+cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
+    cdef AsmOperand imm_zero = AsmImm(TInt(0))
+    cdef AsmCondCode cond_code = generate_condition_code(TacEqual())
+    cdef TIdentifier target = generate_identifier(node.target)
+    cdef AsmOperand condition = generate_operand(node.condition)
+    instructions.append(AsmCmp(imm_zero, condition))
+    instructions.append(AsmJmpCC(cond_code, target))
+
+
+cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
+    cdef AsmOperand imm_zero = AsmImm(TInt(0))
+    cdef AsmCondCode cond_code = generate_condition_code(TacNotEqual())
+    cdef TIdentifier target = generate_identifier(node.target)
+    cdef AsmOperand condition = generate_operand(node.condition)
+    instructions.append(AsmCmp(imm_zero, condition))
+    instructions.append(AsmJmpCC(cond_code, target))
+
+
+cdef void generate_conditional_unary_operator_instructions(TacUnary node):
+    cdef imm_zero = AsmImm(TInt(0))
+    cdef cond_code = generate_condition_code(TacEqual())
+    cdef src = generate_operand(node.src)
+    cdef cmp_dst = generate_operand(node.dst)
+    instructions.append(AsmCmp(imm_zero, src))
+    instructions.append(AsmMov(imm_zero, cmp_dst))
+    instructions.append(AsmSetCC(cond_code, cmp_dst))
+
+
+cdef void generate_arithmetic_unary_operator_instructions(TacUnary node):
+    cdef AsmUnaryOp unary_op = generate_unary_op(node.unary_op)
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand src_dst = generate_operand(node.dst)
+    instructions.append(AsmMov(src, src_dst))
+    instructions.append(AsmUnary(unary_op, src_dst))
+
+
+cdef void generate_instructions(TacInstruction node):
+    if isinstance(node, TacLabel):
+        generate_label_instructions(node)
+        return
+    if isinstance(node, TacJump):
+        generate_jump_instructions(node)
+        return
+    if isinstance(node, TacReturn):
+        generate_return_instructions(node)
+        return
+    if isinstance(node, TacCopy):
+        generate_copy_instructions(node)
+        return
+    if isinstance(node, TacJumpIfZero):
+        generate_jump_if_zero_instructions(node)
+        return
+    if isinstance(node, TacJumpIfNotZero):
+        generate_jump_if_not_zero_instructions(node)
+        return
+    if isinstance(node, TacUnary):
+        if isinstance(node.unary_op, TacNot):
+            generate_conditional_unary_operator_instructions(node)
+            return
+        if isinstance(node.unary_op, (TacComplement, TacNegate)):
+            generate_arithmetic_unary_operator_instructions(node)
+            return
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+    # elif isinstance(node, TacBinary):
+    #     if isinstance(node.binary_op, (TacAdd, TacSubtract, TacMultiply, TacBitAnd, TacBitOr, TacBitXor,
+    #                                    TacBitShiftLeft, TacBitShiftRight)):
+    #         binary_op: AsmBinaryOp = generate_binary_op(node.binary_op)
+    #         src1: AsmOperand = generate_operand(node.src1)
+    #         src2: AsmOperand = generate_operand(node.src2)
+    #         src1_dst: AsmOperand = generate_operand(node.dst)
+    #         instructions.append(AsmMov(src1, src1_dst))
+    #         instructions.append(AsmBinary(binary_op, src2, deepcopy(src1_dst)))
+    #     elif isinstance(node.binary_op, (TacDivide, TacRemainder)):
+    #         src1: AsmOperand = generate_operand(node.src1)
+    #         src2: AsmOperand = generate_operand(node.src2)
+    #         dst: AsmOperand = generate_operand(node.dst)
+    #         src1_dst: AsmOperand = generate_operand(REGISTER_KIND.AX)
+    #         if isinstance(node.binary_op, TacDivide):
+    #             dst_src: AsmOperand = generate_operand(REGISTER_KIND.AX)
+    #         else:
+    #             dst_src: AsmOperand = generate_operand(REGISTER_KIND.DX)
+    #         instructions.append(AsmMov(src1, src1_dst))
+    #         instructions.append(AsmCdq())
+    #         instructions.append(AsmIdiv(src2))
+    #         instructions.append(AsmMov(dst_src, dst))
+    #     else:  # if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual,
+    #         #                  TacGreaterThan, TacGreaterOrEqual)):
+    #         imm_zero: AsmOperand = AsmImm(TInt(0))
+    #         cond_code: AsmCondCode = generate_condition_code(node.binary_op)
+    #         src1: AsmOperand = generate_operand(node.src1)
+    #         src2: AsmOperand = generate_operand(node.src2)
+    #         cmp_dst: AsmOperand = generate_operand(node.dst)
+    #         instructions.append(AsmCmp(src2, src1))
+    #         instructions.append(AsmMov(imm_zero, cmp_dst))
+    #         instructions.append(AsmSetCC(cond_code, deepcopy(cmp_dst)))
+
+    raise RuntimeError(
+        "An error occurred in assembly generation, not all nodes were visited")
 
 
 cdef void generate_list_instructions(list[TacInstruction] list_node):
