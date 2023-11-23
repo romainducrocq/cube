@@ -4,7 +4,7 @@ from ccc.parser_lexer cimport lexing, Token
 from ccc.parser_parser cimport parsing
 from ccc.intermediate_semantic_analyzer cimport semantic_analysis
 from ccc.intermediate_three_address_generator cimport three_address_code_representation
-# from ccc.assembly.assembly_generator import assembly_generation
+from ccc.assembly_assembly_generator cimport assembly_generation
 # from ccc.assembly.code_emitter import code_emission
 
 
@@ -62,13 +62,13 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         debug(ast_pretty_string(tac_ast))
         return
 
-    # print("-- Start assembly generation...")
-    # asm_ast: AST = assembly_generation(tac_ast)
-    # print("-- Exit assembly generation: OK")
-    # if opt_exit == OPT.codegen:
-    #     debug(asm_ast.pretty_string())
-    #     return
-    #
+    print("-- Start assembly generation...")
+    cdef AST asm_ast = assembly_generation(tac_ast)
+    print("-- Exit assembly generation: OK")
+    if opt_exit == OPT.get('--codegen'):
+        debug(ast_pretty_string(asm_ast))
+        return
+
     # print("-- Start code emission...")
     # asm_code: List[str] = code_emission(asm_ast)
     # print("-- Exit code emission: OK")

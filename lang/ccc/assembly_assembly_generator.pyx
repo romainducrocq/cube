@@ -26,9 +26,6 @@ cdef AsmOperand generate_operand(TacValue node):
     if isinstance(node, TacVariable):
         identifier = generate_identifier(node.name)
         return AsmPseudo(identifier)
-    # if isinstance(node, int):
-    #     register: AsmReg = generate_register(node)
-    #     return AsmRegister(register)
 
     raise RuntimeError(
         "An error occurred in assembly generation, not all nodes were visited")
@@ -131,7 +128,7 @@ cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
     instructions.append(AsmJmpCC(cond_code, target))
 
 
-cdef void generate_unary_operator_conditional_not_instructions(TacUnary node):
+cdef void generate_unary_operator_conditional_instructions(TacUnary node):
     cdef imm_zero = AsmImm(TInt(0))
     cdef cond_code = generate_condition_code(TacEqual())
     cdef src = generate_operand(node.src)
@@ -214,7 +211,7 @@ cdef void generate_instructions(TacInstruction node):
         return
     if isinstance(node, TacUnary):
         if isinstance(node.unary_op, TacNot):
-            generate_unary_operator_conditional_not_instructions(node)
+            generate_unary_operator_conditional_instructions(node)
             return
         if isinstance(node.unary_op, (TacComplement, TacNegate)):
             generate_unary_operator_arithmetic_instructions(node)
@@ -224,7 +221,7 @@ cdef void generate_instructions(TacInstruction node):
             "An error occurred in assembly generation, not all nodes were visited")
 
     if isinstance(node, TacBinary):
-        if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacGreaterThan, TacLessOrEqual,
+        if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual, TacGreaterThan,
                                        TacGreaterOrEqual)):
             generate_binary_operator_conditional_instructions(node)
             return
@@ -256,42 +253,39 @@ cdef void generate_list_instructions(list[TacInstruction] list_node):
     cdef TacInstruction item_node
     for item_node in list_node:
         generate_instructions(item_node)
-#
-#
-# def generate_function_def(node: AST) -> AsmFunctionDef:
-#     """ function_definition = Function(identifier name, instruction* instructions) """
-#     expect_next(node, TacFunctionDef)
-#     if isinstance(node, TacFunction):
-#         name: TIdentifier = generate_identifier(node.name)
-#         instructions: List[AsmInstruction] = generate_list_instructions(node.body)
-#         return AsmFunction(name, instructions)
-#
-#     raise AssemblyGeneratorError(
-#         "An error occurred in assembly generation, not all nodes were visited")
-#
-#
-# def generate_program(node: AST) -> AsmProgram:
-#     """ program = Program(function_definition) """
-#     expect_next(node, AST)
-#     if isinstance(node, TacProgram):
-#         function_def: AsmFunctionDef = generate_function_def(node.function_def)
-#         return AsmProgram(function_def)
-#
-#     raise AssemblyGeneratorError(
-#         "An error occurred in assembly generation, not all nodes were visited")
 
 
-# def assembly_generation(tac_ast: AST) -> AST:
-#
-#     asm_ast: AST = generate_program(tac_ast)
-#
-#     if not asm_ast:
-#         raise AssemblyGeneratorError(
-#             "An error occurred in assembly generation, ASM was not generated")
-#
-#     generate_stack(asm_ast)
-#
-#     return asm_ast
+cdef AsmFunctionDef generate_function_def(TacFunctionDef node):
+    # function_definition = Function(identifier name, instruction* instructions)
+    cdef TIdentifier name
+    if isinstance(node, TacFunction):
+        name = generate_identifier(node.name)
+        generate_list_instructions(node.body)
+        return AsmFunction(name, instructions)
+
+    raise RuntimeError(
+        "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmProgram generate_program(AST node):
+    # program = Program(function_definition)
+    cdef AsmFunctionDef
+    if isinstance(node, TacProgram):
+        function_def = generate_function_def(node.function_def)
+        return AsmProgram(function_def)
+
+    raise RuntimeError(
+        "An error occurred in assembly generation, not all nodes were visited")
+
 
 cdef AST assembly_generation(AST tac_ast):
-    return tac_ast
+
+    cdef AST asm_ast = generate_program(tac_ast)
+
+    if not asm_ast:
+        raise RuntimeError(
+            "An error occurred in assembly generation, ASM was not generated")
+
+    # generate_stack(asm_ast)
+
+    return asm_ast
