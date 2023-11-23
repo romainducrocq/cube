@@ -162,7 +162,8 @@ cdef void sort_includes():
 
 
 cdef str sanitize_line(str line):
-    line = line.split("#")[0]
+    if "#" in line:
+        return ""
     return re_sub(RGX_SANITIZE, "", line)
 
 
