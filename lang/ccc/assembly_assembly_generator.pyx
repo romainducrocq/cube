@@ -131,7 +131,7 @@ cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
     instructions.append(AsmJmpCC(cond_code, target))
 
 
-cdef void generate_conditional_unary_operator_instructions(TacUnary node):
+cdef void generate_unary_operator_conditional_not_instructions(TacUnary node):
     cdef imm_zero = AsmImm(TInt(0))
     cdef cond_code = generate_condition_code(TacEqual())
     cdef src = generate_operand(node.src)
@@ -141,12 +141,56 @@ cdef void generate_conditional_unary_operator_instructions(TacUnary node):
     instructions.append(AsmSetCC(cond_code, cmp_dst))
 
 
-cdef void generate_arithmetic_unary_operator_instructions(TacUnary node):
+cdef void generate_unary_operator_arithmetic_instructions(TacUnary node):
     cdef AsmUnaryOp unary_op = generate_unary_op(node.unary_op)
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand src_dst = generate_operand(node.dst)
     instructions.append(AsmMov(src, src_dst))
     instructions.append(AsmUnary(unary_op, src_dst))
+
+
+cdef void generate_binary_operator_conditional_instructions(TacBinary node):
+    cdef imm_zero = AsmImm(TInt(0))
+    cdef cond_code = generate_condition_code(node.binary_op)
+    cdef src1 = generate_operand(node.src1)
+    cdef src2 = generate_operand(node.src2)
+    cdef cmp_dst = generate_operand(node.dst)
+    instructions.append(AsmCmp(src2, src1))
+    instructions.append(AsmMov(imm_zero, cmp_dst))
+    instructions.append(AsmSetCC(cond_code, cmp_dst))
+
+
+cdef void generate_binary_operator_arithmetic_instructions(TacBinary node):
+    cdef AsmBinaryOp binary_op = generate_binary_op(node.binary_op)
+    cdef AsmOperand src1 = generate_operand(node.src1)
+    cdef AsmOperand src2 = generate_operand(node.src2)
+    cdef AsmOperand src1_dst = generate_operand(node.dst)
+    instructions.append(AsmMov(src1, src1_dst))
+    instructions.append(AsmBinary(binary_op, src2, src1_dst))
+
+
+cdef void generate_binary_operator_arithmetic_divide_instructions(TacBinary node):
+    cdef AsmOperand src1 = generate_operand(node.src1)
+    cdef AsmOperand src2 = generate_operand(node.src2)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AsmOperand src1_dst = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Ax'))
+    instructions.append(AsmMov(src1, src1_dst))
+    instructions.append(AsmCdq())
+    instructions.append(AsmIdiv(src2))
+    instructions.append(AsmMov(dst_src, dst))
+
+
+cdef void generate_binary_operator_arithmetic_remainder_instructions(TacBinary node):
+    cdef AsmOperand src1 = generate_operand(node.src1)
+    cdef AsmOperand src2 = generate_operand(node.src2)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AsmOperand src1_dst = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Dx'))
+    instructions.append(AsmMov(src1, src1_dst))
+    instructions.append(AsmCdq())
+    instructions.append(AsmIdiv(src2))
+    instructions.append(AsmMov(dst_src, dst))
 
 
 cdef void generate_instructions(TacInstruction node):
@@ -170,47 +214,33 @@ cdef void generate_instructions(TacInstruction node):
         return
     if isinstance(node, TacUnary):
         if isinstance(node.unary_op, TacNot):
-            generate_conditional_unary_operator_instructions(node)
+            generate_unary_operator_conditional_not_instructions(node)
             return
         if isinstance(node.unary_op, (TacComplement, TacNegate)):
-            generate_arithmetic_unary_operator_instructions(node)
+            generate_unary_operator_arithmetic_instructions(node)
             return
 
         raise RuntimeError(
             "An error occurred in assembly generation, not all nodes were visited")
 
-    # elif isinstance(node, TacBinary):
-    #     if isinstance(node.binary_op, (TacAdd, TacSubtract, TacMultiply, TacBitAnd, TacBitOr, TacBitXor,
-    #                                    TacBitShiftLeft, TacBitShiftRight)):
-    #         binary_op: AsmBinaryOp = generate_binary_op(node.binary_op)
-    #         src1: AsmOperand = generate_operand(node.src1)
-    #         src2: AsmOperand = generate_operand(node.src2)
-    #         src1_dst: AsmOperand = generate_operand(node.dst)
-    #         instructions.append(AsmMov(src1, src1_dst))
-    #         instructions.append(AsmBinary(binary_op, src2, deepcopy(src1_dst)))
-    #     elif isinstance(node.binary_op, (TacDivide, TacRemainder)):
-    #         src1: AsmOperand = generate_operand(node.src1)
-    #         src2: AsmOperand = generate_operand(node.src2)
-    #         dst: AsmOperand = generate_operand(node.dst)
-    #         src1_dst: AsmOperand = generate_operand(REGISTER_KIND.AX)
-    #         if isinstance(node.binary_op, TacDivide):
-    #             dst_src: AsmOperand = generate_operand(REGISTER_KIND.AX)
-    #         else:
-    #             dst_src: AsmOperand = generate_operand(REGISTER_KIND.DX)
-    #         instructions.append(AsmMov(src1, src1_dst))
-    #         instructions.append(AsmCdq())
-    #         instructions.append(AsmIdiv(src2))
-    #         instructions.append(AsmMov(dst_src, dst))
-    #     else:  # if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual,
-    #         #                  TacGreaterThan, TacGreaterOrEqual)):
-    #         imm_zero: AsmOperand = AsmImm(TInt(0))
-    #         cond_code: AsmCondCode = generate_condition_code(node.binary_op)
-    #         src1: AsmOperand = generate_operand(node.src1)
-    #         src2: AsmOperand = generate_operand(node.src2)
-    #         cmp_dst: AsmOperand = generate_operand(node.dst)
-    #         instructions.append(AsmCmp(src2, src1))
-    #         instructions.append(AsmMov(imm_zero, cmp_dst))
-    #         instructions.append(AsmSetCC(cond_code, deepcopy(cmp_dst)))
+    if isinstance(node, TacBinary):
+        if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacGreaterThan, TacLessOrEqual,
+                                       TacGreaterOrEqual)):
+            generate_binary_operator_conditional_instructions(node)
+            return
+        if isinstance(node.binary_op, (TacAdd, TacSubtract, TacMultiply, TacBitAnd, TacBitOr, TacBitXor,
+                                       TacBitShiftLeft, TacBitShiftRight)):
+            generate_binary_operator_arithmetic_instructions(node)
+            return
+        if isinstance(node.binary_op, TacDivide):
+            generate_binary_operator_arithmetic_divide_instructions(node)
+            return
+        if isinstance(node.binary_op, TacRemainder):
+            generate_binary_operator_arithmetic_remainder_instructions(node)
+            return
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
 
     raise RuntimeError(
         "An error occurred in assembly generation, not all nodes were visited")
