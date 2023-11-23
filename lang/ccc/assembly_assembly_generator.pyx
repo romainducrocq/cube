@@ -85,16 +85,14 @@ cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
 
     raise RuntimeError(
         "An error occurred in assembly generation, not all nodes were visited")
-#
-#
-# def generate_list_instructions(list_node: list) -> List[AsmInstruction]:
-#     """ instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | Cmp(operand, operand)
-#                     | Idiv(operand) | Cdq | Jmp(identifier) | JmpCC(cond_code, identifier)
-#                     | SetCC(cond_code, operand) | Label(identifier) | AllocateStack(int) | Ret """
-#     expect_next(list_node, list)
-#
-#     instructions: List[AsmInstruction] = []
-#
+
+
+cdef list[AsmInstruction] instructions = []
+
+
+cdef void generate_instructions(TacInstruction node):
+    pass
+
 #     def generate_instructions(node: AST) -> None:
 #         expect_next(node, TacInstruction)
 #         if isinstance(node, TacReturn):
@@ -173,11 +171,18 @@ cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
 #
 #             raise AssemblyGeneratorError(
 #                 "An error occurred in assembly generation, not all nodes were visited")
-#
-#     for item_node in list_node:
-#         generate_instructions(item_node)
-#
-#     return instructions
+
+
+cdef void generate_list_instructions(list[TacInstruction] list_node):
+    # instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | Cmp(operand, operand)
+    #             | Idiv(operand) | Cdq | Jmp(identifier) | JmpCC(cond_code, identifier)
+    #             | SetCC(cond_code, operand) | Label(identifier) | AllocateStack(int) | Ret
+    global instructions
+    instructions = []
+
+    cdef TacInstruction item_node
+    for item_node in list_node:
+        generate_instructions(item_node)
 #
 #
 # def generate_function_def(node: AST) -> AsmFunctionDef:
