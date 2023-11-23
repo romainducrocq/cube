@@ -1,120 +1,90 @@
-from typing import List, Union
-from copy import deepcopy
+from copy import deepcopy as copy_deepcopy
 
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
-# from ccc.assembly.register import REGISTER_KIND, generate_register
+from ccc.assembly_register cimport REGISTER_KIND, generate_register
 # from ccc.assembly.stack import generate_stack
-#
-# __all__ = [
-#     'assembly_generation'
-# ]
-#
-#
-# class AssemblyGeneratorError(RuntimeError):
-#     def __init__(self, message: str) -> None:
-#         self.message = message
-#         super(AssemblyGeneratorError, self).__init__(message)
-#
-#
-# def expect_next(next_node, *expected_nodes: type) -> None:
-#     if not isinstance(next_node, expected_nodes):
-#         raise AssemblyGeneratorError(
-#             f"Expected node in types {expected_nodes} but found \"{type(next_node)}\"")
-#
-#
-# def generate_identifier(node: AST) -> TIdentifier:
-#     """ <identifier> = Built-in identifier type """
-#     expect_next(node, TIdentifier)
-#     return TIdentifier(deepcopy(node.str_t))
-#
-#
-# def generate_int(node: AST) -> TInt:
-#     """ <int> = Built-in int type """
-#     expect_next(node, TInt)
-#     return TInt(deepcopy(node.int_t))
-#
-#
-# def generate_operand(node: Union[AST, int]) -> AsmOperand:
-#     """ operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int) """
-#     expect_next(node, TacValue,
-#                      int)
-#     if isinstance(node, TacConstant):
-#         value: TInt = generate_int(node.value)
-#         return AsmImm(value)
-#     if isinstance(node, TacVariable):
-#         identifier: TIdentifier = generate_identifier(node.name)
-#         return AsmPseudo(identifier)
-#     if isinstance(node, int):
-#         register: AsmReg = generate_register(node)
-#         return AsmRegister(register)
-#
-#     raise AssemblyGeneratorError(
-#         "An error occurred in assembly generation, not all nodes were visited")
-#
-#
-# def generate_condition_code(node: AST) -> AsmCondCode:
-#     expect_next(node, TacEqual,
-#                      TacNotEqual,
-#                      TacLessThan,
-#                      TacLessOrEqual,
-#                      TacGreaterThan,
-#                      TacGreaterOrEqual)
-#     if isinstance(node, TacEqual):
-#         return AsmE()
-#     if isinstance(node, TacNotEqual):
-#         return AsmNE()
-#     if isinstance(node, TacLessThan):
-#         return AsmL()
-#     if isinstance(node, TacLessOrEqual):
-#         return AsmLE()
-#     if isinstance(node, TacGreaterThan):
-#         return AsmG()
-#     if isinstance(node, TacGreaterOrEqual):
-#         return AsmGE()
-#
-#
-# def generate_binary_op(node: AST) -> AsmBinaryOp:
-#     """ binary_operator = Add | Sub | Mult | BitAnd | BitOr | BitXor | BitShiftLeft | BitShiftRight"""
-#     expect_next(node, TacAdd,
-#                      TacSubtract,
-#                      TacMultiply,
-#                      TacBitAnd,
-#                      TacBitOr,
-#                      TacBitXor,
-#                      TacBitShiftLeft,
-#                      TacBitShiftRight)
-#     if isinstance(node, TacAdd):
-#         return AsmAdd()
-#     if isinstance(node, TacSubtract):
-#         return AsmSub()
-#     if isinstance(node, TacMultiply):
-#         return AsmMult()
-#     if isinstance(node, TacBitAnd):
-#         return AsmBitAnd()
-#     if isinstance(node, TacBitOr):
-#         return AsmBitOr()
-#     if isinstance(node, TacBitXor):
-#         return AsmBitXor()
-#     if isinstance(node, TacBitShiftLeft):
-#         return AsmBitShiftLeft()
-#     if isinstance(node, TacBitShiftRight):
-#         return AsmBitShiftRight()
-#
-#     raise AssemblyGeneratorError(
-#         "An error occurred in assembly generation, not all nodes were visited")
-#
-#
-# def generate_unary_op(node: AST) -> AsmUnaryOp:
-#     """ unary_operator = Not | Neg """
-#     expect_next(node, TacUnaryOp)
-#     if isinstance(node, TacComplement):
-#         return AsmNot()
-#     if isinstance(node, TacNegate):
-#         return AsmNeg()
-#
-#     raise AssemblyGeneratorError(
-#         "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef TIdentifier generate_identifier(TIdentifier node):
+    # <identifier> = Built-in identifier type
+    return TIdentifier(copy_deepcopy(node.str_t))
+
+
+cdef TInt generate_int(TInt node):
+    # <int> = Built-in int type
+    return TInt(copy_deepcopy(node.int_t))
+
+
+cdef AsmOperand generate_operand(TacValue node):
+    # operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int)
+    cdef TInt value
+    if isinstance(node, TacConstant):
+        value = generate_int(node.value)
+        return AsmImm(value)
+    cdef TIdentifier
+    if isinstance(node, TacVariable):
+        identifier = generate_identifier(node.name)
+        return AsmPseudo(identifier)
+    # if isinstance(node, int):
+    #     register: AsmReg = generate_register(node)
+    #     return AsmRegister(register)
+
+    raise RuntimeError(
+        "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmCondCode generate_condition_code(TacBinaryOp node):
+    # cond_code = E | NE | G | GE | L | LE
+    if isinstance(node, TacEqual):
+        return AsmE()
+    if isinstance(node, TacNotEqual):
+        return AsmNE()
+    if isinstance(node, TacLessThan):
+        return AsmL()
+    if isinstance(node, TacLessOrEqual):
+        return AsmLE()
+    if isinstance(node, TacGreaterThan):
+        return AsmG()
+    if isinstance(node, TacGreaterOrEqual):
+        return AsmGE()
+
+    raise RuntimeError(
+        "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmBinaryOp generate_binary_op(TacBinaryOp node):
+    # binary_operator = Add | Sub | Mult | BitAnd | BitOr | BitXor | BitShiftLeft | BitShiftRight
+    if isinstance(node, TacAdd):
+        return AsmAdd()
+    if isinstance(node, TacSubtract):
+        return AsmSub()
+    if isinstance(node, TacMultiply):
+        return AsmMult()
+    if isinstance(node, TacBitAnd):
+        return AsmBitAnd()
+    if isinstance(node, TacBitOr):
+        return AsmBitOr()
+    if isinstance(node, TacBitXor):
+        return AsmBitXor()
+    if isinstance(node, TacBitShiftLeft):
+        return AsmBitShiftLeft()
+    if isinstance(node, TacBitShiftRight):
+        return AsmBitShiftRight()
+
+    raise RuntimeError(
+        "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
+    # unary_operator = Not | Neg
+    if isinstance(node, TacComplement):
+        return AsmNot()
+    if isinstance(node, TacNegate):
+        return AsmNeg()
+
+    raise RuntimeError(
+        "An error occurred in assembly generation, not all nodes were visited")
 #
 #
 # def generate_list_instructions(list_node: list) -> List[AsmInstruction]:
