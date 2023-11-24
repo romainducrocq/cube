@@ -1,212 +1,159 @@
 from ccc.assembly_asm_ast cimport *
 
-cdef str CR = chr(10)
+
 cdef list[str] asm_code = []
+
 
 cdef void emit(str line, int t = 0):
 
-    asm_code.append(" " * 4 * t + line + CR)
+    asm_code.append(" " * 4 * t + line + "\n")
 
 
-# def emit_identifier(node: AST) -> str:
-#     """
-#     identifier ->
-#         $ identifier
-#     """
-#     expect_next(node, TIdentifier)
-#     return node.str_t
-#
-#
-# def emit_int(node: AST) -> str:
-#     """
-#     int ->
-#         $ int
-#     """
-#     expect_next(node, TInt)
-#     return str(node.int_t)
-#
-#
-# def emit_register_1byte(node: AST) -> str:
-#     """
-#     Reg(AX) ->
-#         $ %al
-#     Reg(CX) ->
-#         $ %cl
-#     Reg(DX) ->
-#         $ %dl
-#     Reg(R10) ->
-#         $ %r10b
-#     Reg(R11) ->
-#         $ %r11b
-#     """
-#     expect_next(node, AsmReg)
-#     if isinstance(node, AsmAx):
-#         return "al"
-#     if isinstance(node, AsmCx):
-#         return "cl"
-#     if isinstance(node, AsmDx):
-#         return "dl"
-#     if isinstance(node, AsmR10):
-#         return "r10b"
-#     if isinstance(node, AsmR11):
-#         return "r11b"
-#
-#     raise CodeEmitterError(
-#         "An error occurred in code emission, not all nodes were visited")
-#
-#
-# def emit_register_4byte(node: AST) -> str:
-#     """
-#     Reg(AX) ->
-#         $ %eax
-#     Reg(CX) ->
-#         $ %ecx
-#     Reg(DX) ->
-#         $ %edx
-#     Reg(R10) ->
-#         $ %r10d
-#     Reg(R11) ->
-#         $ %r11d
-#     """
-#     expect_next(node, AsmReg)
-#     if isinstance(node, AsmAx):
-#         return "eax"
-#     if isinstance(node, AsmCx):
-#         return "ecx"
-#     if isinstance(node, AsmDx):
-#         return "edx"
-#     if isinstance(node, AsmR10):
-#         return "r10d"
-#     if isinstance(node, AsmR11):
-#         return "r11d"
-#
-#     raise CodeEmitterError(
-#         "An error occurred in code emission, not all nodes were visited")
-#
-#
-# def emit_condition_code(node: AST) -> str:
-#     """
-#     E ->
-#         $ e
-#     NE ->
-#         $ ne
-#     L ->
-#         $ l
-#     LE ->
-#         $ le
-#     G ->
-#         $ g
-#     GE ->
-#         $ ge
-#     """
-#     expect_next(node, AsmCondCode)
-#     if isinstance(node, AsmE):
-#         return "e"
-#     if isinstance(node, AsmNE):
-#         return "ne"
-#     if isinstance(node, AsmL):
-#         return "l"
-#     if isinstance(node, AsmLE):
-#         return "le"
-#     if isinstance(node, AsmG):
-#         return "g"
-#     if isinstance(node, AsmGE):
-#         return "ge"
-#
-#     raise CodeEmitterError(
-#         "An error occurred in code emission, not all nodes were visited")
-#
-#
-# def emit_operand(node: AST, byte: int = 4) -> str:
-#     """
-#     Imm(int) ->
-#         $ $<int>
-#     Register(reg) ->
-#         $ %reg
-#     Stack(int) ->
-#         $ <int>(%rbp)
-#     """
-#     expect_next(node, AsmOperand)
-#     if isinstance(node, AsmImm):
-#         value: str = emit_int(node.value)
-#         return "$" + value
-#     if isinstance(node, AsmRegister):
-#         if byte == 1:
-#             register: str = emit_register_1byte(node.register)
-#         elif byte == 4:
-#             register: str = emit_register_4byte(node.register)
-#         else:
-#
-#             raise CodeEmitterError(
-#                 "An error occurred in code emission, unmanaged register byte size")
-#
-#         return "%" + register
-#     if isinstance(node, AsmStack):
-#         value: str = emit_int(node.value)
-#         return value + "(%rbp)"
-#
-#     raise CodeEmitterError(
-#         "An error occurred in code emission, not all nodes were visited")
-#
-#
-# def emit_binary_op(node: AST) -> str:
-#     """
-#     Add ->
-#         $ addl
-#     Sub ->
-#         $ subl
-#     Mult ->
-#         $ imull
-#     BitAnd ->
-#         $ andl
-#     BitOr ->
-#         $ orl
-#     BitXor ->
-#         $ xorl
-#     BitShiftLeft ->
-#         $ shll
-#     BitShiftRight ->
-#         $ shrl
-#     """
-#     expect_next(node, AsmBinaryOp)
-#     if isinstance(node, AsmAdd):
-#         return "addl"
-#     if isinstance(node, AsmSub):
-#         return "subl"
-#     if isinstance(node, AsmMult):
-#         return "imull"
-#     if isinstance(node, AsmBitAnd):
-#         return "andl"
-#     if isinstance(node, AsmBitOr):
-#         return "orl"
-#     if isinstance(node, AsmBitXor):
-#         return "xorl"
-#     if isinstance(node, AsmBitShiftLeft):
-#         return "shll"
-#     if isinstance(node, AsmBitShiftRight):
-#         return "shrl"
-#
-#     raise CodeEmitterError(
-#         "An error occurred in code emission, not all nodes were visited")
-#
-#
-# def emit_unary_op(node: AST) -> str:
-#     """
-#     Neg ->
-#         $ negl
-#     Not ->
-#         $ notl
-#     """
-#     expect_next(node, AsmUnaryOp)
-#     if isinstance(node, AsmNeg):
-#         return "negl"
-#     if isinstance(node, AsmNot):
-#         return "notl"
-#
-#     raise CodeEmitterError(
-#         "An error occurred in code emission, not all nodes were visited")
-#
-#
+cdef str emit_identifier(TIdentifier node):
+    # identifier -> $ identifier
+    return node.str_t
+
+
+cdef str emit_int(TInt node):
+    # int -> $ int
+    return str(node.int_t)
+
+
+cdef str emit_register_1byte(AsmReg node):
+    # Reg(AX)  -> $ %al
+    # Reg(CX)  -> $ %cl
+    # Reg(DX)  -> $ %dl
+    # Reg(R10) -> $ %r10b
+    # Reg(R11) -> $ %r11b
+    if isinstance(node, AsmAx):
+        return "al"
+    if isinstance(node, AsmCx):
+        return "cl"
+    if isinstance(node, AsmDx):
+        return "dl"
+    if isinstance(node, AsmR10):
+        return "r10b"
+    if isinstance(node, AsmR11):
+        return "r11b"
+
+    raise RuntimeError(
+        "An error occurred in code emission, not all nodes were visited")
+
+
+cdef str emit_register_4byte(AsmReg node):
+    # Reg(AX)  -> $ %eax
+    # Reg(CX)  -> $ %ecx
+    # Reg(DX)  -> $ %edx
+    # Reg(R10) -> $ %r10d
+    # Reg(R11) -> $ %r11d
+    if isinstance(node, AsmAx):
+        return "eax"
+    if isinstance(node, AsmCx):
+        return "ecx"
+    if isinstance(node, AsmDx):
+        return "edx"
+    if isinstance(node, AsmR10):
+        return "r10d"
+    if isinstance(node, AsmR11):
+        return "r11d"
+
+    raise RuntimeError(
+        "An error occurred in code emission, not all nodes were visited")
+
+
+cdef str emit_condition_code(AsmCondCode node):
+    # E  -> $ e
+    # NE -> $ ne
+    # L  -> $ l
+    # LE -> $ le
+    # G  -> $ g
+    # GE -> $ ge
+    if isinstance(node, AsmE):
+        return "e"
+    if isinstance(node, AsmNE):
+        return "ne"
+    if isinstance(node, AsmL):
+        return "l"
+    if isinstance(node, AsmLE):
+        return "le"
+    if isinstance(node, AsmG):
+        return "g"
+    if isinstance(node, AsmGE):
+        return "ge"
+
+    raise RuntimeError(
+        "An error occurred in code emission, not all nodes were visited")
+
+
+cdef str emit_operand(AsmOperand node, int byte = 4):
+    # Imm(int)      -> $ $<int>
+    # Register(reg) -> $ %reg
+    # Stack(int)    -> $ <int>(%rbp)
+    cdef str operand
+    if isinstance(node, AsmImm):
+        operand = emit_int(node.value)
+        return "$" + operand
+    if isinstance(node, AsmRegister):
+        if byte == 1:
+            operand = emit_register_1byte(node.reg)
+        elif byte == 4:
+            operand = emit_register_4byte(node.reg)
+        else:
+
+            raise RuntimeError(
+                "An error occurred in code emission, unmanaged register byte size")
+
+        return "%" + operand
+    if isinstance(node, AsmStack):
+        operand = emit_int(node.value)
+        return operand + "(%rbp)"
+
+    raise RuntimeError(
+        "An error occurred in code emission, not all nodes were visited")
+
+
+cdef str emit_binary_op(AsmBinaryOp node):
+    # Add           -> $ addl
+    # Sub           -> $ subl
+    # Mult          -> $ imull
+    # BitAnd        -> $ andl
+    # BitOr         -> $ orl
+    # BitXor        -> $ xorl
+    # BitShiftLeft  -> $ shll
+    # BitShiftRight -> $ shrl
+    if isinstance(node, AsmAdd):
+        return "addl"
+    if isinstance(node, AsmSub):
+        return "subl"
+    if isinstance(node, AsmMult):
+        return "imull"
+    if isinstance(node, AsmBitAnd):
+        return "andl"
+    if isinstance(node, AsmBitOr):
+        return "orl"
+    if isinstance(node, AsmBitXor):
+        return "xorl"
+    if isinstance(node, AsmBitShiftLeft):
+        return "shll"
+    if isinstance(node, AsmBitShiftRight):
+        return "shrl"
+
+    raise RuntimeError(
+        "An error occurred in code emission, not all nodes were visited")
+
+
+cdef str emit_unary_op(AsmUnaryOp node):
+    # Neg -> $ negl
+    # Not -> $ notl
+    if isinstance(node, AsmNeg):
+        return "negl"
+    if isinstance(node, AsmNot):
+        return "notl"
+
+    raise RuntimeError(
+        "An error occurred in code emission, not all nodes were visited")
+
+
 # def emit_instruction(node: AST) -> None:
 #     """
 #     Mov(src, dst) ->
