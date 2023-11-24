@@ -28,54 +28,66 @@ cdef void debug(str string = "", str end="\n"):
         print(string, end=end)
 
 
-cdef void compile(str filename, int opt_exit, int opt_s):
-
-    print("-- Start lexer...")
-    cdef list[Token] tokens = lexing(filename)
-    print("-- Exit lexer: OK")
+cdef void debug_tokens(list[Token] tokens):
     cdef int e
     cdef Token token
-    if opt_exit == OPT.get('--lex'):
-        for e, token in enumerate(tokens):
-            debug(str(e) + ': ("' + token.token + '", ' +
-                  str(token.token_kind) + ')')
-        return
+    for e, token in enumerate(tokens):
+        debug(str(e) + ': ("' + token.token + '", ' +
+              str(token.token_kind) + ')')
 
-    print("-- Start parser...")
-    cdef AST c_ast = parsing(tokens)
-    print("-- Exit parser: OK")
-    if opt_exit == OPT.get('--parse'):
-        debug(ast_pretty_string(c_ast))
-        return
 
-    print("-- Start semantic analysis...")
-    semantic_analysis(c_ast)
-    print("-- Exit semantic analysis: OK")
-    if opt_exit == OPT.get('--validate'):
-        debug(ast_pretty_string(c_ast))
-        return
+cdef void debug_ast(AST ast):
+    debug(ast_pretty_string(ast))
 
-    print("-- Start tac representation...")
-    cdef AST tac_ast = three_address_code_representation(c_ast)
-    print("-- Exit tac representation: OK")
-    if opt_exit == OPT.get('--tacky'):
-        debug(ast_pretty_string(tac_ast))
-        return
 
-    print("-- Start assembly generation...")
-    cdef AST asm_ast = assembly_generation(tac_ast)
-    print("-- Exit assembly generation: OK")
-    if opt_exit == OPT.get('--codegen'):
-        debug(ast_pretty_string(asm_ast))
-        return
-
-    print("-- Start code emission...")
-    cdef list[str] asm_code = code_emission(asm_ast)
-    print("-- Exit code emission: OK")
+cdef void debug_code(list[str] code):
     cdef str code_line
+    for code_line in code:
+        debug(code_line[:-1])
+
+
+cdef void compile(str filename, int opt_exit, int opt_s):
+
+    debug("-- Start lexer...")
+    cdef list[Token] tokens = lexing(filename)
+    debug("-- Exit lexer: OK")
+    if opt_exit == OPT.get('--lex'):
+        debug_tokens(tokens)
+        return
+
+    debug("-- Start parser...")
+    cdef AST c_ast = parsing(tokens)
+    debug("-- Exit parser: OK")
+    if opt_exit == OPT.get('--parse'):
+        debug_ast(c_ast)
+        return
+
+    debug("-- Start semantic analysis...")
+    semantic_analysis(c_ast)
+    debug("-- Exit semantic analysis: OK")
+    if opt_exit == OPT.get('--validate'):
+        debug_ast(c_ast)
+        return
+
+    debug("-- Start tac representation...")
+    cdef AST tac_ast = three_address_code_representation(c_ast)
+    debug("-- Exit tac representation: OK")
+    if opt_exit == OPT.get('--tacky'):
+        debug_ast(tac_ast)
+        return
+
+    debug("-- Start assembly generation...")
+    cdef AST asm_ast = assembly_generation(tac_ast)
+    debug("-- Exit assembly generation: OK")
+    if opt_exit == OPT.get('--codegen'):
+        debug_ast(asm_ast)
+        return
+
+    debug("-- Start code emission...")
+    cdef list[str] asm_code = code_emission(asm_ast)
+    debug("-- Exit code emission: OK")
     if opt_exit == OPT.get('--codeemit'):
-        for code_line in asm_code:
-            debug(code_line[:-1])
+        debug_code(asm_code)
         return
 
     # filename_out: str = f"{filename.rsplit('.', 1)[0]}.s"
