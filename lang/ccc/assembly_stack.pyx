@@ -2,64 +2,64 @@
 # from copy import deepcopy
 #
 # from ccc.util.__ast import *
-from ccc.assembly_asm_ast cimport AST
+from ccc.util_ast cimport ast_iter_child_nodes, ast_set_child_node
+from ccc.assembly_asm_ast cimport AST, TInt, AsmPseudo, AsmStack, AsmAllocStack, AsmInstruction
+from ccc.assembly_asm_ast cimport AsmFunction
 # from ccc.assembly.register import REGISTER_KIND, generate_register
-#
-# __all__ = [
-#     'generate_stack'
-# ]
-#
-#
-# class StackManagerError(RuntimeError):
-#     def __init__(self, message: str) -> None:
-#         self.message = message
-#         super(StackManagerError, self).__init__(message)
-#
-#
-# offset: int = -4
-# counter: int = -1
-# pseudo_map: Dict[str, int] = {}
-#
-#
-# def replace_pseudo_registers(node: AST) -> None:
-#     global counter
-#     global pseudo_map
-#
-#     if counter == -1:
-#         counter = 0
-#
-#     for child_node, attr, e in ast_iter_child_nodes(node):
-#         if isinstance(child_node, AsmPseudo):
-#             if child_node.name.str_t not in pseudo_map:
-#                 counter += offset
-#                 pseudo_map[child_node.name.str_t] = counter
-#
-#             value: TInt = TInt(pseudo_map[child_node.name.str_t])
-#             ast_set_child_node(node, attr, e, AsmStack(value))
-#
-#         else:
-#             replace_pseudo_registers(child_node)
-#
-#
-# def prepend_alloc_stack(instructions: List[AsmInstruction]) -> None:
-#
-#     if counter == -1:
-#         raise StackManagerError(
-#             "An error occurred in stack management, stack was not allocated")
-#
-#     value: TInt = TInt(-1 * counter)
-#     instructions.insert(0, AsmAllocStack(value))
-#
-#
-# def correct_instructions(node: AST) -> None:
-#
-#     for child_node, _, _ in ast_iter_child_nodes(node):
-#         if isinstance(child_node, AsmFunction):
-#             prepend_alloc_stack(child_node.instructions)
-#
-#             size = len(child_node.instructions)
-#             for e, instruction in enumerate(reversed(child_node.instructions)):
-#                 i = size - e
+
+cdef int offset = -4
+cdef int counter = -1
+cdef dict[str, int] pseudo_map = {}
+
+
+cdef void replace_pseudo_registers(AST node):
+    global counter
+    global pseudo_map
+
+    if counter == -1:
+        counter = 0
+
+    cdef int e
+    cdef str attr
+    cdef TInt value
+    cdef AST child_node
+    for child_node, attr, e in ast_iter_child_nodes(node):
+        if isinstance(child_node, AsmPseudo):
+            if child_node.name.str_t not in pseudo_map:
+                counter += offset
+                pseudo_map[child_node.name.str_t] = counter
+
+            value = TInt(pseudo_map[child_node.name.str_t])
+            ast_set_child_node(node, attr, e, AsmStack(value))
+
+        else:
+            replace_pseudo_registers(child_node)
+
+
+cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
+
+    if counter == -1:
+        raise RuntimeError(
+            "An error occurred in stack management, stack was not allocated")
+
+    cdef TInt value = TInt(-1 * counter)
+    instructions.insert(0, AsmAllocStack(value))
+
+
+cdef void correct_instructions(AST node):
+
+    cdef int e
+    cdef int i
+    cdef int size
+    cdef AST child_node
+    cdef AsmInstruction instruction
+    for child_node, _, _ in ast_iter_child_nodes(node):
+        if isinstance(child_node, AsmFunction):
+            prepend_alloc_stack(child_node.instructions)
+
+            size = len(child_node.instructions)
+            for e, instruction in enumerate(reversed(child_node.instructions)):
+                i = size - e
 #                 # mov | cmp (addr, addr)
 #                 # $ movl addr1, addr2 ->
 #                 #     $ movl addr1, reg
@@ -113,18 +113,14 @@ from ccc.assembly_asm_ast cimport AST
 #                     child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.dst)))
 #         else:
 #             correct_instructions(child_node)
-#
-#
-# def generate_stack(node: AST) -> None:
-#     global counter
-#     global pseudo_map
-#
-#     counter = -1
-#     pseudo_map = {}
-#
-#     replace_pseudo_registers(node)
-#
-#     correct_instructions(node)
+
 
 cdef generate_stack(AST node):
-    pass
+    global counter
+    global pseudo_map
+    counter = -1
+    pseudo_map = {}
+
+    replace_pseudo_registers(node)
+
+    correct_instructions(node)
