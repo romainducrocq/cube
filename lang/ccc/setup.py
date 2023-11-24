@@ -27,6 +27,7 @@ ext_modules = [
     Extension(f"{PACKAGE_NAME}.assembly_asm_ast", ["./assembly_asm_ast.pyx"]),
     Extension(f"{PACKAGE_NAME}.assembly_assembly_generator", ["./assembly_assembly_generator.pyx"]),
     Extension(f"{PACKAGE_NAME}.assembly_register", ["./assembly_register.pyx"]),
+    Extension(f"{PACKAGE_NAME}.assembly_stack", ["./assembly_stack.pyx"]),
 ]
 
 for ext_module in ext_modules:

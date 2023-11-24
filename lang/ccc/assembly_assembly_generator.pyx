@@ -3,7 +3,7 @@ from copy import deepcopy as copy_deepcopy
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-# from ccc.assembly.stack import generate_stack
+from ccc.assembly_stack cimport generate_stack
 
 
 cdef TIdentifier generate_identifier(TIdentifier node):
@@ -286,6 +286,6 @@ cdef AST assembly_generation(AST tac_ast):
         raise RuntimeError(
             "An error occurred in assembly generation, ASM was not generated")
 
-    # generate_stack(asm_ast)
+    generate_stack(asm_ast)
 
     return asm_ast
