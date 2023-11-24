@@ -1,32 +1,13 @@
-# from typing import List
-#
 from ccc.assembly_asm_ast cimport *
-#
-# __all__ = [
-#     'code_emission'
-# ]
-#
-#
-# class CodeEmitterError(RuntimeError):
-#     def __init__(self, message: str) -> None:
-#         self.message = message
-#         super(CodeEmitterError, self).__init__(message)
-#
-#
-# asm_code: List[str] = []
-#
-#
-# def expect_next(next_node, *expected_nodes: type) -> None:
-#     if not isinstance(next_node, expected_nodes):
-#         raise CodeEmitterError(
-#             f"Expected node of types ({expected_nodes}) but found \"{type(next_node)}\"")
-#
-#
-# def emit(line: str, t=0) -> None:
-#
-#     asm_code.append("    " * t + line + "\n")
-#
-#
+
+cdef str CR = chr(10)
+cdef list[str] asm_code = []
+
+cdef void emit(str line, int t = 0):
+
+    asm_code.append(" " * 4 * t + line + CR)
+
+
 # def emit_identifier(node: AST) -> str:
 #     """
 #     identifier ->
