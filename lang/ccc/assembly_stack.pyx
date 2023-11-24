@@ -1,11 +1,9 @@
-# from typing import Dict, List
-# from copy import deepcopy
-#
-# from ccc.util.__ast import *
 from ccc.util_ast cimport ast_iter_child_nodes, ast_set_child_node
 from ccc.assembly_asm_ast cimport AST, TInt, AsmPseudo, AsmStack, AsmAllocStack, AsmInstruction
-from ccc.assembly_asm_ast cimport AsmFunction
-# from ccc.assembly.register import REGISTER_KIND, generate_register
+from ccc.assembly_asm_ast cimport AsmFunction, AsmOperand, AsmMov, AsmCmp, AsmImm, AsmBinary, AsmIdiv, AsmMult
+from ccc.assembly_asm_ast cimport AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
+from ccc.assembly_register cimport REGISTER_KIND, generate_register
+
 
 cdef int offset = -4
 cdef int counter = -1
@@ -53,6 +51,7 @@ cdef void correct_instructions(AST node):
     cdef int size
     cdef AST child_node
     cdef AsmInstruction instruction
+    cdef AsmOperand src_src
     for child_node, _, _ in ast_iter_child_nodes(node):
         if isinstance(child_node, AsmFunction):
             prepend_alloc_stack(child_node.instructions)
@@ -60,59 +59,60 @@ cdef void correct_instructions(AST node):
             size = len(child_node.instructions)
             for e, instruction in enumerate(reversed(child_node.instructions)):
                 i = size - e
-#                 # mov | cmp (addr, addr)
-#                 # $ movl addr1, addr2 ->
-#                 #     $ movl addr1, reg
-#                 #     $ movl reg  , addr2
-#                 if isinstance(instruction, (AsmMov, AsmCmp)) and \
-#                         isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
-#                     src_src: AsmOperand = deepcopy(instruction.src)
-#                     instruction.src = AsmRegister(generate_register(REGISTER_KIND.R10))
-#                     child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
-#                 elif isinstance(instruction, AsmBinary):
-#                     # add | sub | and | or | xor | shl | shr (addr, addr)
-#                     # $ addl addr1, addr2 ->
-#                     #     $ movl addr1, reg
-#                     #     $ addl reg  , addr2
-#                     if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor,
-#                                                           AsmBitShiftLeft, AsmBitShiftRight)) and \
-#                             isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
-#                         src_src: AsmOperand = deepcopy(instruction.src)
-#                         if isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)):
-#                             instruction.src = AsmRegister(generate_register(REGISTER_KIND.CX))
-#                         else:
-#                             instruction.src = AsmRegister(generate_register(REGISTER_KIND.R10))
-#                         child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
-#                     # mul (_, addr)
-#                     # $ imull imm, addr ->
-#                     #     $ movl  addr, reg
-#                     #     $ imull imm , reg
-#                     #     $ movl  reg , addr
-#                     elif isinstance(instruction.binary_op, AsmMult) and \
-#                             isinstance(instruction.dst, AsmStack):
-#                         src_src: AsmOperand = deepcopy(instruction.dst)
-#                         instruction.dst = AsmRegister(generate_register(REGISTER_KIND.R11))
-#                         child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.dst)))
-#                         child_node.instructions.insert(i + 1, AsmMov(deepcopy(instruction.dst), deepcopy(src_src)))
-#                 # idiv (imm)
-#                 # $ idivl imm ->
-#                 #     $ movl  imm, reg
-#                 #     $ idivl reg
-#                 elif isinstance(instruction, AsmIdiv) and \
-#                         isinstance(instruction.src, AsmImm):
-#                     src_src: AsmOperand = deepcopy(instruction.src)
-#                     instruction.src = AsmRegister(generate_register(REGISTER_KIND.R10))
-#                     child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.src)))
-#                 # $ cmpl reg1, imm ->
-#                 #     $ movl imm , reg2
-#                 #     $ cmpl reg1, reg2
-#                 elif isinstance(instruction, AsmCmp) and \
-#                         isinstance(instruction.dst, AsmImm):
-#                     src_src: AsmOperand = deepcopy(instruction.dst)
-#                     instruction.dst = AsmRegister(generate_register(REGISTER_KIND.R11))
-#                     child_node.instructions.insert(i - 1, AsmMov(src_src, deepcopy(instruction.dst)))
-#         else:
-#             correct_instructions(child_node)
+                # mov | cmp (addr, addr)
+                # $ movl addr1, addr2 ->
+                #     $ movl addr1, reg
+                #     $ movl reg  , addr2
+                if isinstance(instruction, (AsmMov, AsmCmp)) and \
+                        isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
+                    src_src = instruction.src
+                    instruction.src = generate_register(REGISTER_KIND.get('R10'))
+                    child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                elif isinstance(instruction, AsmBinary):
+                    # add | sub | and | or | xor | shl | shr (addr, addr)
+                    # $ addl addr1, addr2 ->
+                    #     $ movl addr1, reg
+                    #     $ addl reg  , addr2
+                    if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor,
+                                                          AsmBitShiftLeft, AsmBitShiftRight)) and \
+                            isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
+                        src_src = instruction.src
+                        if isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)):
+                            instruction.src = generate_register(REGISTER_KIND.get('Cx'))
+                        else:
+                            instruction.src = generate_register(REGISTER_KIND.get('R10'))
+                        child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                    # mul (_, addr)
+                    # $ imull imm, addr ->
+                    #     $ movl  addr, reg
+                    #     $ imull imm , reg
+                    #     $ movl  reg , addr
+                    elif isinstance(instruction.binary_op, AsmMult) and \
+                            isinstance(instruction.dst, AsmStack):
+                        src_src = instruction.dst
+                        instruction.dst = generate_register(REGISTER_KIND.get('R11'))
+                        child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
+                        child_node.instructions.insert(i + 1, AsmMov(instruction.dst, src_src))
+                # idiv (imm)
+                # $ idivl imm ->
+                #     $ movl  imm, reg
+                #     $ idivl reg
+                elif isinstance(instruction, AsmIdiv) and \
+                        isinstance(instruction.src, AsmImm):
+                    src_src = instruction.src
+                    instruction.src = generate_register(REGISTER_KIND.get('R10'))
+                    child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                # $ cmpl reg1, imm ->
+                #     $ movl imm , reg2
+                #     $ cmpl reg1, reg2
+                elif isinstance(instruction, AsmCmp) and \
+                        isinstance(instruction.dst, AsmImm):
+                    src_src = instruction.dst
+                    instruction.dst = generate_register(REGISTER_KIND.get('R11'))
+                    child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
+
+        else:
+            correct_instructions(child_node)
 
 
 cdef generate_stack(AST node):
