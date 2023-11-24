@@ -5,7 +5,7 @@ from ccc.parser_parser cimport parsing
 from ccc.intermediate_semantic_analyzer cimport semantic_analysis
 from ccc.intermediate_three_address_generator cimport three_address_code_representation
 from ccc.assembly_assembly_generator cimport assembly_generation
-# from ccc.assembly.code_emitter import code_emission
+from ccc.assembly_code_emitter cimport code_emission
 
 
 cdef bint DEBUG = True
@@ -69,14 +69,15 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         debug(ast_pretty_string(asm_ast))
         return
 
-    # print("-- Start code emission...")
-    # asm_code: List[str] = code_emission(asm_ast)
-    # print("-- Exit code emission: OK")
-    # if opt_exit == OPT.codeemit:
-    #     for code_line in asm_code:
-    #         debug(code_line[:-1])
-    #     return
-    #
+    print("-- Start code emission...")
+    cdef list[str] asm_code = code_emission(asm_ast)
+    print("-- Exit code emission: OK")
+    cdef str code_line
+    if opt_exit == OPT.get('--codeemit'):
+        for code_line in asm_code:
+            debug(code_line[:-1])
+        return
+
     # filename_out: str = f"{filename.rsplit('.', 1)[0]}.s"
     # with open(filename_out, "w", encoding="utf-8") as output_file:
     #     output_file.writelines(asm_code)
