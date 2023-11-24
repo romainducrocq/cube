@@ -69,18 +69,23 @@ cdef void correct_instructions(AST node):
                     instruction.src = generate_register(REGISTER_KIND.get('R10'))
                     child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
                 elif isinstance(instruction, AsmBinary):
-                    # add | sub | and | or | xor | shl | shr (addr, addr)
+                    # add | sub | and | or | xor (addr, addr)
                     # $ addl addr1, addr2 ->
                     #     $ movl addr1, reg
                     #     $ addl reg  , addr2
-                    if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor,
-                                                          AsmBitShiftLeft, AsmBitShiftRight)) and \
+                    if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)) and \
                             isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
                         src_src = instruction.src
-                        if isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)):
-                            instruction.src = generate_register(REGISTER_KIND.get('Cx'))
-                        else:
-                            instruction.src = generate_register(REGISTER_KIND.get('R10'))
+                        instruction.src = generate_register(REGISTER_KIND.get('R10'))
+                        child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                    # shl | shr (addr, addr)
+                    # $ addl addr1, addr2 ->
+                    #     $ movl addr1, reg
+                    #     $ addl reg  , addr2
+                    elif isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)) and \
+                            isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
+                        src_src = instruction.src
+                        instruction.src = generate_register(REGISTER_KIND.get('Cx'))
                         child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
                     # mul (_, addr)
                     # $ imull imm, addr ->
