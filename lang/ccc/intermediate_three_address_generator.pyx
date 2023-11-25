@@ -88,110 +88,153 @@ cdef TacValue represent_value(CExp node, bint outer = True):
 cdef list[TacInstruction] instructions = []
 
 
+cdef TacVariable represent_exp_var_instructions(CVar node):
+    return represent_value(node)
+
+
+cdef TacConstant represent_exp_constant_instructions(CConstant node):
+    return represent_value(node)
+
+
+cdef TacValue represent_exp_assignment_instructions(CAssignment node):
+    cdef TacValue src = represent_exp_instructions(node.exp_right)
+    cdef TacValue dst = represent_exp_instructions(node.exp_left)
+    instructions.append(TacCopy(src, dst))
+    return dst
+
+
+cdef TacValue represent_exp_assignment_compound_instructions(CAssignmentCompound node):
+    cdef TacValue src1 = represent_exp_instructions(node.exp_left)
+    cdef TacValue src2 = represent_exp_instructions(node.exp_right)
+    cdef TacValue val = represent_value(node.exp_left, outer=False)
+    cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
+    instructions.append(TacBinary(binary_op, src1, src2, val))
+    cdef TacValue dst = represent_value(node.exp_left)
+    instructions.append(TacCopy(val, dst))
+    return dst
+
+
+cdef TacValue represent_exp_unary_instructions(CUnary node):
+    cdef TacValue src = represent_exp_instructions(node.exp)
+    cdef TacValue dst = represent_value(node.exp, outer=False)
+    cdef TacUnaryOp unary_op = represent_unary_op(node.unary_op)
+    instructions.append(TacUnary(unary_op, src, dst))
+    return dst
+
+
+cdef TacValue represent_exp_binary_and_instructions(CBinary node):
+    cdef TacValue src_true = TacConstant(TInt(1))
+    cdef TacValue src_false = TacConstant(TInt(0))
+    cdef TIdentifier target_true = represent_label_identifier("and_true")
+    cdef TIdentifier target_false = represent_label_identifier("and_false")
+    cdef TacValue condition_left = represent_exp_instructions(node.exp_left)
+    instructions.append(TacJumpIfZero(condition_left, target_false))
+    cdef TacValue condition_right = represent_exp_instructions(node.exp_right)
+    instructions.append(TacJumpIfZero(condition_right, target_false))
+    cdef TacValue dst = represent_value(node.exp_left, outer=False)
+    instructions.append(TacCopy(src_true, dst))
+    instructions.append(TacJump(target_true))
+    instructions.append(TacLabel(target_false))
+    instructions.append(TacCopy(src_false, dst))
+    instructions.append(TacLabel(target_true))
+    return dst
+
+
+cdef TacValue represent_exp_binary_or_instructions(CBinary node):
+    cdef TacValue src_true = TacConstant(TInt(1))
+    cdef TacValue src_false = TacConstant(TInt(0))
+    cdef TIdentifier target_true = represent_label_identifier("or_true")
+    cdef TIdentifier target_false = represent_label_identifier("or_false")
+    cdef TacValue condition_left = represent_exp_instructions(node.exp_left)
+    instructions.append(TacJumpIfNotZero(condition_left, target_true))
+    cdef TacValue condition_right = represent_exp_instructions(node.exp_right)
+    instructions.append(TacJumpIfNotZero(condition_right, target_true))
+    cdef TacValue dst = represent_value(node.exp_left, outer=False)
+    instructions.append(TacCopy(src_false, dst))
+    instructions.append(TacJump(target_false))
+    instructions.append(TacLabel(target_true))
+    instructions.append(TacCopy(src_true, dst))
+    instructions.append(TacLabel(target_false))
+    return dst
+
+
+cdef TacValue represent_exp_binary_instructions(CBinary node):
+    cdef TacValue src1 = represent_exp_instructions(node.exp_left)
+    cdef TacValue src2 = represent_exp_instructions(node.exp_right)
+    cdef TacValue dst = represent_value(node.exp_left, outer=False)
+    cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
+    instructions.append(TacBinary(binary_op, src1, src2, dst))
+    return dst
+
+
 cdef TacValue represent_exp_instructions(CExp node):
-    cdef TacValue val
-    if isinstance(node, (CVar, CConstant)):
-        val = represent_value(node)
-        return val
-    cdef TacValue src
-    cdef TacValue dst
+    if isinstance(node, CVar):
+        return represent_exp_var_instructions(node)
+    if isinstance(node, CConstant):
+        return represent_exp_constant_instructions(node)
     if isinstance(node, CAssignment):
-        src = represent_exp_instructions(node.exp_right)
-        dst = represent_exp_instructions(node.exp_left)
-        instructions.append(TacCopy(src, dst))
-        return dst
-    cdef TacUnaryOp unary_op
-    if isinstance(node, CUnary):
-        src = represent_exp_instructions(node.exp)
-        dst = represent_value(node.exp, outer=False)
-        unary_op = represent_unary_op(node.unary_op)
-        instructions.append(TacUnary(unary_op, src, dst))
-        return dst
-    cdef TacValue src2
-    cdef TacBinaryOp binary_op
-    if isinstance(node, CBinary) and \
-            not isinstance(node.binary_op, (CAnd, COr)):
-        src = represent_exp_instructions(node.exp_left)
-        src2 = represent_exp_instructions(node.exp_right)
-        dst = represent_value(node.exp_left, outer=False)
-        binary_op = represent_binary_op(node.binary_op)
-        instructions.append(TacBinary(binary_op, src, src2, dst))
-        return dst
+        return represent_exp_assignment_instructions(node)
     if isinstance(node, CAssignmentCompound):
-        src = represent_exp_instructions(node.exp_left)
-        src2 = represent_exp_instructions(node.exp_right)
-        val = represent_value(node.exp_left, outer=False)
-        binary_op = represent_binary_op(node.binary_op)
-        instructions.append(TacBinary(binary_op, src, src2, val))
-        dst = represent_value(node.exp_left)
-        instructions.append(TacCopy(val, dst))
-        return dst
-    cdef TacValue istrue
-    cdef TacValue is_false
-    cdef TIdentifier label_true
-    cdef TIdentifier label_false
+        return represent_exp_assignment_compound_instructions(node)
+    if isinstance(node, CUnary):
+        return represent_exp_unary_instructions(node)
     if isinstance(node, CBinary):
         if isinstance(node.binary_op, CAnd):
-            is_true = TacConstant(TInt(1))
-            is_false = TacConstant(TInt(0))
-            label_true = represent_label_identifier("and_true")
-            label_false = represent_label_identifier("and_false")
-            src = represent_exp_instructions(node.exp_left)
-            instructions.append(TacJumpIfZero(src, label_false))
-            src2 = represent_exp_instructions(node.exp_right)
-            instructions.append(TacJumpIfZero(src2, label_false))
-            dst = represent_value(node.exp_left, outer=False)
-            instructions.append(TacCopy(is_true, dst))
-            instructions.append(TacJump(label_true))
-            instructions.append(TacLabel(label_false))
-            instructions.append(TacCopy(is_false, dst))
-            instructions.append(TacLabel(label_true))
-            return dst
+            return represent_exp_binary_and_instructions(node)
         if isinstance(node.binary_op, COr):
-            is_true = TacConstant(TInt(1))
-            is_false = TacConstant(TInt(0))
-            label_true = represent_label_identifier("or_true")
-            label_false = represent_label_identifier("or_false")
-            src = represent_exp_instructions(node.exp_left)
-            instructions.append(TacJumpIfNotZero(src, label_true))
-            src2 = represent_exp_instructions(node.exp_right)
-            instructions.append(TacJumpIfNotZero(src2, label_true))
-            dst = represent_value(node.exp_left, outer=False)
-            instructions.append(TacCopy(is_false, dst))
-            instructions.append(TacJump(label_false))
-            instructions.append(TacLabel(label_true))
-            instructions.append(TacCopy(is_true, dst))
-            instructions.append(TacLabel(label_false))
-            return dst
+            return represent_exp_binary_or_instructions(node)
+        if isinstance(node.binary_op, (CEqual, CNotEqual, CLessThan, CLessOrEqual, CGreaterThan, CGreaterOrEqual,
+                                       CAdd, CSubtract, CMultiply, CDivide, CRemainder, CBitAnd, CBitOr, CBitXor,
+                                       CBitShiftLeft, CBitShiftRight)):
+            return represent_exp_binary_instructions(node)
+
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
     raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
+
+
+cdef void represent_statement_null_instructions(CNull node):
+    pass
+
+
+cdef void represent_statement_expression_instructions(CExpression node):
+    _ = represent_exp_instructions(node.exp)
+
+
+cdef void represent_statement_return_instructions(CReturn node):
+    cdef TacValue val = represent_exp_instructions(node.exp)
+    instructions.append(TacReturn(val))
 
 
 cdef void represent_statement_instructions(CStatement node):
     if isinstance(node, CNull):
+        represent_statement_null_instructions(node)
         return
     if isinstance(node, CExpression):
-        _ = represent_exp_instructions(node.exp)
+        represent_statement_expression_instructions(node)
         return
-    cdef TacValue val
     if isinstance(node, CReturn):
-        val = represent_exp_instructions(node.exp)
-        instructions.append(TacReturn(val))
+        represent_statement_return_instructions(node)
         return
 
     raise RuntimeError(
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef void represent_declaration_instructions(CDeclaration node):
+cdef void represent_declaration_decl_instructions(CDecl node):
     cdef TacValue src
     cdef TacValue dst
+    if node.init:
+        src = represent_exp_instructions(node.init)
+        dst = represent_value(CVar(node.name))
+        instructions.append(TacCopy(src, dst))
+
+
+cdef void represent_declaration_instructions(CDeclaration node):
     if isinstance(node, CDecl):
-        if node.init:
-            src = represent_exp_instructions(node.init)
-            dst = represent_value(CVar(node.name))
-            instructions.append(TacCopy(src, dst))
+        represent_declaration_decl_instructions(node)
         return
 
     raise RuntimeError(
