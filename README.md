@@ -15,7 +15,6 @@
 - [x] Binary operators  
 - [x] Logical and relational operators  
 - [x] Local variables  
-- [ ] Cythonize  
 
 ## How To _
 
