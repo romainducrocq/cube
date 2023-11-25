@@ -1,18 +1,5 @@
 BACKLOG
 
-- refactor every nested if into sub functions:
-    => make use of static typing declaration
-    => declare only cdef needed for scope
-    => readability
-    => eg:
-    - cpdef AstType do_something(AstType node):
-        if isinstance(node, type1):
-            _do_something_type1(node)
-            ...
-        if isinstance(node, type2):
-            _do_something_type2(node)
-            ...
-
 - regex findall in c (is slower?):
     => https://gist.github.com/ianmackinnon/3294587
     => https://gist.github.com/raoulduke/1babb0592e9062d8b330c57ea08862cb
