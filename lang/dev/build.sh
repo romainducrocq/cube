@@ -4,10 +4,26 @@ PACKAGE_NAME="$(cat ../build/package_name.txt)"
 PYTHON_VERSION="$(cat ../build/python_version.txt)"
 
 function clean () {
-    if [[ "${1}" == "--clean" ]]; then
+    echo ${@} |\
+       grep -q -e "--clean"
+    if [ ${?} -eq 0 ]; then
         rm *.c > /dev/null 2>&1
         if [ -d "./build/" ]; then rm -r ./build/; fi
         if [ -d "./${PACKAGE_NAME}/" ]; then rm -r ./${PACKAGE_NAME}/; fi
+    fi
+}
+
+function sanitize () {
+    echo ${@} |\
+       grep -q -e "--sanitize"
+    if [ ${?} -eq 0 ]; then
+        EXTS=("pyx" "pxd")
+        for EXT in "${EXTS[@]}"; do
+            for FILE in $(find . -maxdepth 1 -name "*.${EXT}" -type f); do
+                vi $(readlink -f ${FILE}) +'e ++ff=dos | set ff=unix | wq!'
+                if [ ${?} -ne 0 ]; then exit 1; fi
+            done
+        done
     fi
 }
 
@@ -41,7 +57,8 @@ function install () {
 }
 
 cd ../${PACKAGE_NAME}/
-clean ${1}
+clean ${@}
+sanitize ${@}
 compile
 install
 

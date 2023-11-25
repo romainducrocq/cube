@@ -12,16 +12,6 @@ function clean () {
     if [ -f "${PACKAGE_NAME}/${PACKAGE_NAME}.h" ]; then rm ${PACKAGE_NAME}/${PACKAGE_NAME}.h; fi
 }
 
-function sanitize () {
-    EXTS=("pyx" "pxd")
-    for EXT in "${EXTS[@]}"; do
-        for FILE in $(find ../${PACKAGE_NAME}/ -maxdepth 1 -name "*.${EXT}" -type f); do
-            vi $(readlink -f ${FILE}) +'e ++ff=dos | set ff=unix | wq!'
-            if [ ${?} -ne 0 ]; then clean; exit 1; fi
-        done
-    done
-}
-
 function prebuild () {
     mkdir -p ./${PACKAGE_NAME}/
     cd prebuild/
@@ -70,7 +60,6 @@ function install () {
     if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
-# sanitize
 prebuild
 cythonize
 compile

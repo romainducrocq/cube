@@ -21,13 +21,13 @@ cdef class TInt(AST):
 
 #
 cdef list[tuple[object, str]] ast_iter_fields(AST node): #
- #
+#
     cdef list[tuple[object, str]] fields = [] #
- #
+#
     cdef str name #
     for name in node._fields: #
         fields.append((getattr(node, name), name)) #
- #
+#
     return fields #
 #
 
