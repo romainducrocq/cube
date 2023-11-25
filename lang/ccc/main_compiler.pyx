@@ -90,9 +90,10 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         debug_code(asm_code)
         return
 
-    # filename_out: str = f"{filename.rsplit('.', 1)[0]}.s"
-    # with open(filename_out, "w", encoding="utf-8") as output_file:
-    #     output_file.writelines(asm_code)
+    cdef object output_file
+    cdef str filename_out = f"{filename.rsplit('.', 1)[0]}.s"
+    with open(filename_out, "w", encoding="utf-8") as output_file:
+        output_file.writelines(asm_code)
 
 
 cdef str shift_args(list[str] argv):
