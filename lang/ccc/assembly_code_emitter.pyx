@@ -147,17 +147,17 @@ cdef str emit_unary_op(AsmUnaryOp node):
         "An error occurred in code emission, not all nodes were visited")
 
 
-cdef bint emit_code = True
-cdef list[str] print_code = []
+cdef bint debug = False #
+cdef list[str] print_code = [] #
 
 
 cdef void emit(str line, int t = 0):
     line = " " * 4 * t + line
 
-    if emit_code:
-        write_line(line)
-    else:
-        print_code.append(line)
+    if debug: #
+        print_code.append(line) #
+        return #
+    write_line(line)
 
 
 cdef void emit_ret_instructions(AsmRet node):
@@ -315,26 +315,26 @@ cdef void emit_program(AST node):
     raise RuntimeError(
         "An error occurred in code emission, not all nodes were visited")
 
+#
+cdef list[str] code_emission_print(AST asm_ast): #
+    global debug #
+    global print_code #
+    debug = True #
+    print_code = [] #
+#
+    emit_program(asm_ast) #
+#
+    if not print_code: #
+        raise RuntimeError( #
+            "An error occurred in code emission, ASM was not emitted") #
+#
+    return print_code #
+#
 
-cdef list[str] code_emission(AST asm_ast, str filename):
-    global emit_code
-    global print_code
-    emit_code = True
-    print_code = []
+cdef void code_emission(AST asm_ast, str filename):
 
-    if not filename:
-        emit_code = False
-
-    if emit_code:
-        file_open_write(filename)
+    file_open_write(filename)
 
     emit_program(asm_ast)
 
-    if emit_code:
-        file_close_write()
-
-    if not (emit_code or print_code):
-        raise RuntimeError(
-            "An error occurred in code emission, ASM was not emitted")
-
-    return print_code
+    file_close_write()
