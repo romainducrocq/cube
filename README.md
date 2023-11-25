@@ -15,6 +15,7 @@
 - [x] Binary operators  
 - [x] Logical and relational operators  
 - [x] Local variables  
+- [ ] Statements and conditional expressions  
 
 ## How To _
 
