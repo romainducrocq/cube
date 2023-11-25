@@ -19,3 +19,4 @@ BACKLOG
     => performance: http://romankleiner.blogspot.com/2015/06/cython-and-regular-expressions.html
 
 - see if sanitize option of make
+- add python version in configure .ccc/Python-${ver}/

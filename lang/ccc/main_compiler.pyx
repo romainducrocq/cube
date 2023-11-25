@@ -85,11 +85,11 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         debug_ast(asm_ast) #
         return
 
-    debug("-- Start code emission...") #
-    cdef list[str] print_code = code_emission_print(asm_ast) #
-    debug("-- Exit code emission: OK") #
     if opt_exit == OPT.get('--codeemit'): #
-        debug_code(print_code) #
+        debug("-- Start code emission...") #
+        debug_code(code_emission_print(asm_ast)) #
+        debug("-- Exit code emission: OK") #
+        return #
 
     filename = f"{filename.rsplit('.', 1)[0]}.s"
     code_emission(asm_ast, filename)
