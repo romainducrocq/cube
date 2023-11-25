@@ -8,6 +8,7 @@ function clean () {
        grep -q -e "--clean"
     if [ ${?} -eq 0 ]; then
         rm *.c > /dev/null 2>&1
+        rm *.h > /dev/null 2>&1
         if [ -d "./build/" ]; then rm -r ./build/; fi
         if [ -d "./${PACKAGE_NAME}/" ]; then rm -r ./${PACKAGE_NAME}/; fi
     fi
