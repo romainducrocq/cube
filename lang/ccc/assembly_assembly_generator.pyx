@@ -1,5 +1,3 @@
-from copy import deepcopy as copy_deepcopy
-
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
@@ -8,12 +6,12 @@ from ccc.assembly_stack cimport generate_stack
 
 cdef TIdentifier generate_identifier(TIdentifier node):
     # <identifier> = Built-in identifier type
-    return TIdentifier(copy_deepcopy(node.str_t))
+    return TIdentifier(node.str_t)
 
 
 cdef TInt generate_int(TInt node):
     # <int> = Built-in int type
-    return TInt(copy_deepcopy(node.int_t))
+    return TInt(node.int_t)
 
 
 cdef AsmOperand generate_operand(TacValue node):

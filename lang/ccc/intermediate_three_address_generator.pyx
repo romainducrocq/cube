@@ -1,5 +1,3 @@
-from copy import deepcopy as copy_deepcopy
-
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
 from ccc.intermediate_name cimport represent_label_identifier, represent_variable_identifier
@@ -7,12 +5,12 @@ from ccc.intermediate_name cimport represent_label_identifier, represent_variabl
 
 cdef TIdentifier represent_identifier(TIdentifier node):
     # <identifier> = Built-in identifier type
-    return TIdentifier(copy_deepcopy(node.str_t))
+    return TIdentifier(node.str_t)
 
 
 cdef TInt represent_int(TInt node):
     # <int> = Built-in int type
-    return TInt(copy_deepcopy(node.int_t))
+    return TInt(node.int_t)
 
 cdef TacBinaryOp represent_binary_op(CBinaryOp node):
     # binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
