@@ -1,14 +1,6 @@
 from ccc.assembly_asm_ast cimport *
 
 
-cdef list[str] asm_code = []
-
-
-cdef void emit(str line, int t = 0):
-
-    asm_code.append(" " * 4 * t + line + "\n")
-
-
 cdef str emit_identifier(TIdentifier node):
     # identifier -> $ identifier
     return node.str_t
@@ -152,6 +144,19 @@ cdef str emit_unary_op(AsmUnaryOp node):
 
     raise RuntimeError(
         "An error occurred in code emission, not all nodes were visited")
+
+
+cdef bint emit_code = True
+cdef list[str] print_code = []
+
+
+cdef void emit(str line, int t = 0):
+    line = " " * 4 * t + line
+
+    if emit_code:
+        pass
+    else:
+        print_code.append(line)
 
 
 cdef void emit_ret_instructions(AsmRet node):
@@ -310,14 +315,19 @@ cdef void emit_program(AST node):
         "An error occurred in code emission, not all nodes were visited")
 
 
-cdef list[str] code_emission(AST asm_ast):
-    global asm_code
+cdef list[str] code_emission(AST asm_ast, str filename):
+    global emit_code
+    global print_code
+    emit_code = True
+    print_code = []
 
-    asm_code = []
+    if not filename:
+        emit_code = False
+
     emit_program(asm_ast)
 
-    if not asm_code:
+    if not (emit_code or print_code):
         raise RuntimeError(
             "An error occurred in code emission, ASM was not emitted")
 
-    return asm_code
+    return print_code

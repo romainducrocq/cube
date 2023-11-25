@@ -43,7 +43,7 @@ cdef void debug_ast(AST ast):
 cdef void debug_code(list[str] code):
     cdef str code_line
     for code_line in code:
-        debug(code_line[:-1])
+        debug(code_line)
 
 
 cdef void compile(str filename, int opt_exit, int opt_s):
@@ -84,16 +84,13 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         return
 
     debug("-- Start code emission...")
-    cdef list[str] asm_code = code_emission(asm_ast)
+    filename = f"{filename.rsplit('.', 1)[0]}.s"
+    if opt_exit == OPT.get('--codeemit'):
+        filename = ""
+    cdef list[str] print_code = code_emission(asm_ast, filename)
     debug("-- Exit code emission: OK")
     if opt_exit == OPT.get('--codeemit'):
-        debug_code(asm_code)
-        return
-
-    cdef object output_file
-    cdef str filename_out = f"{filename.rsplit('.', 1)[0]}.s"
-    with open(filename_out, "w", encoding="utf-8") as output_file:
-        output_file.writelines(asm_code)
+        debug_code(print_code)
 
 
 cdef str shift_args(list[str] argv):
