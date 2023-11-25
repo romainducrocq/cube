@@ -14,13 +14,15 @@ function file () {
 
 function ret_gcc () {
     FILE=${1}
-    gcc ${FILE}.c -o ${FILE} > /dev/null 2>&1 && ${1}
+    if [ -f "${FILE}" ]; then rm ${FILE}; fi
+    gcc ${FILE}.c -o ${FILE} > /dev/null 2>&1 && ${FILE}
     echo "${?}"
 }
 
 function ret_ccc () {
     FILE=${1}
-    ${PACKAGE_NAME} ${FILE}.c > /dev/null 2>&1 && ${1}
+    if [ -f "${FILE}" ]; then rm ${FILE}; fi
+    ${PACKAGE_NAME} ${FILE}.c > /dev/null 2>&1 && ${FILE}
     echo "${?}"
 }
 

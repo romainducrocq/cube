@@ -1,3 +1,4 @@
+from ccc.util_fopen cimport file_open_write, write_line, file_close_write
 from ccc.assembly_asm_ast cimport *
 
 
@@ -154,7 +155,7 @@ cdef void emit(str line, int t = 0):
     line = " " * 4 * t + line
 
     if emit_code:
-        pass
+        write_line(line)
     else:
         print_code.append(line)
 
@@ -324,7 +325,13 @@ cdef list[str] code_emission(AST asm_ast, str filename):
     if not filename:
         emit_code = False
 
+    if emit_code:
+        file_open_write(filename)
+
     emit_program(asm_ast)
+
+    if emit_code:
+        file_close_write()
 
     if not (emit_code or print_code):
         raise RuntimeError(
