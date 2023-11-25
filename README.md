@@ -71,6 +71,7 @@ FILE:            .c file to compile
 
 *The source code is preprocessed and cythonized before being compiled. <ins>It must strictly follow these formatting rules</ins>:*
 - All `.{pyx,pxd}` files must be in `lang/ccc/` package, submodules are not supported.
+- All `.{pyx,pxd}` files must be in `unix` file format, `dos` format is not supported.
 - All `.pyx` source files must be added to `lang/ccc/setup.py`.
 - Every `.pyx` source file must have a `pxd` declaration file with same name, even if empty.
 - All `.{pyx,pxd}` files must be named with format `<package_name>_<file_name>.{pyx,pxd}`.
