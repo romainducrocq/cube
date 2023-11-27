@@ -22,6 +22,7 @@ else
     test --chapter 3 --latest-only --bitwise
     test --chapter 4 --latest-only --bitwise
     test --chapter 5 --latest-only --extra-credit
+    test --chapter 6 --stage lex --latest-only
 fi
 
 exit 0

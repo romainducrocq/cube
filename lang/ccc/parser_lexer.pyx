@@ -52,10 +52,15 @@ TOKEN_KIND = IotaEnum((
     "binop_lessthan",
     "binop_greaterthan",
     "assignment_simple",
+    "ternary_if",
+    "ternary_else",
 
     "key_int",
     "key_void",
     "key_return",
+    "key_if",
+    "key_else",
+
     "identifier",
     "constant",
 
@@ -104,10 +109,15 @@ cdef dict[int, str] TOKEN_REGEX = {
     TOKEN_KIND.get('binop_lessthan'): r"<",
     TOKEN_KIND.get('binop_greaterthan'): r">",
     TOKEN_KIND.get('assignment_simple'): r"=",
+    TOKEN_KIND.get('ternary_if'): r"\?",
+    TOKEN_KIND.get('ternary_else'): r":",
 
     TOKEN_KIND.get('key_int'): r"int\b",
     TOKEN_KIND.get('key_void'): r"void\b",
     TOKEN_KIND.get('key_return'): r"return\b",
+    TOKEN_KIND.get('key_if'): r"if\b",
+    TOKEN_KIND.get('key_else'): r"else\b",
+
     TOKEN_KIND.get('identifier'): r"[a-zA-Z_]\w*\b",
     TOKEN_KIND.get('constant'): r"[0-9]+\b",
 
