@@ -6,6 +6,11 @@ cdef int label_counter = 0
 cdef int variable_counter = 0
 
 
+cdef TIdentifier resolve_label_identifier(TIdentifier label):
+
+    return represent_label_identifier(label.str_t)
+
+
 cdef TIdentifier resolve_variable_identifier(TIdentifier variable):
     global variable_counter
 
