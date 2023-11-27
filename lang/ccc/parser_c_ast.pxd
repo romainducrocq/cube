@@ -118,6 +118,12 @@ cdef class CAssignment(CExp):
     cdef public CExp exp_right
 
 
+cdef class CConditional(CExp):
+    cdef public CExp condition
+    cdef public CExp exp_middle
+    cdef public CExp exp_right
+
+
 cdef class CAssignmentCompound(CExp):
     cdef public CBinaryOp binary_op
     cdef public CExp exp_left
@@ -134,6 +140,13 @@ cdef class CReturn(CStatement):
 
 cdef class CExpression(CStatement):
     cdef public CExp exp
+
+
+cdef class CIf(CStatement):
+    cdef public CExp condition
+    cdef public CStatement then
+    # Optional
+    cdef public CStatement else_fi
 
 
 cdef class CNull(CStatement):

@@ -165,6 +165,7 @@ cdef class CExp(AST):
     #     | Binary(binary_operator, exp, exp)
     #     | Assignment(exp, exp)
     #     | AssignmentCompound(binary_operator, exp, exp)
+    #     | Conditional(exp, exp, exp)
     def __cinit__(self):
         self._fields = ()
 
@@ -229,9 +230,21 @@ cdef class CAssignmentCompound(CExp):
         self.exp_right = exp_right
 
 
+cdef class CConditional(CExp):
+    # Conditional(exp condition, exp, exp)
+    def __cinit__(self):
+        self._fields = ('condition', 'exp_middle', 'exp_right')
+
+    def __init__(self, CExp condition, CExp exp_middle, CExp exp_right):
+        self.condition = condition
+        self.exp_middle = exp_middle
+        self.exp_right = exp_right
+
+
 cdef class CStatement(AST):
     # statement = Return(exp)
     #           | Expression(exp)
+    #           | If(exp, statement, statement?)
     #           | Null
     def __cinit__(self):
         self._fields = ()
@@ -253,6 +266,17 @@ cdef class CExpression(CStatement):
 
     def __init__(self, CExp exp):
         self.exp = exp
+
+
+cdef class CIf(CStatement):
+    # If(exp condition, statement then, statement? else)
+    def __cinit__(self):
+        self._fields = ('condition', 'then', 'else_fi')
+
+    def __init__(self, CExp condition, CStatement then, CStatement else_fi):
+        self.condition = condition
+        self.then = then
+        self.else_fi = else_fi
 
 
 cdef class CNull(CStatement):

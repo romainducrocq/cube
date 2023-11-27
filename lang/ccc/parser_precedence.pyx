@@ -20,6 +20,7 @@ cdef dict[int, int] TOKEN_PRECEDENCE = {
     TOKEN_KIND.get('binop_bitor'): 15,
     TOKEN_KIND.get('binop_and'): 10,
     TOKEN_KIND.get('binop_or'): 5,
+    TOKEN_KIND.get('ternary_if'): 3,
     TOKEN_KIND.get('assignment_simple'): 1,
     TOKEN_KIND.get('assignment_plus'): 1,
     TOKEN_KIND.get('assignment_difference'): 1,

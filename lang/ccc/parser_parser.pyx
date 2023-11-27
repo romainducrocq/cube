@@ -184,10 +184,11 @@ cdef CExp parse_factor():
 
 
 cdef CExp parse_exp(int min_precedence = 0):
-    # <exp> ::= <factor> | <exp> <binop> <exp>
+    # <exp> ::= <factor> | <exp> <binop> <exp> | <exp> "?" <exp> ":" <exp>
     cdef int precedence
     cdef CBinaryOp binary_op
     cdef CExp exp_right
+    cdef CExp exp_middle
     cdef CExp exp_left = parse_factor()
     while peek_next().token_kind in (TOKEN_KIND.get('unop_negation'),
                                      TOKEN_KIND.get('binop_addition'),
@@ -217,7 +218,8 @@ cdef CExp parse_exp(int min_precedence = 0):
                                      TOKEN_KIND.get('assignment_bitor'),
                                      TOKEN_KIND.get('assignment_bitxor'),
                                      TOKEN_KIND.get('assignment_bitshiftleft'),
-                                     TOKEN_KIND.get('assignment_bitshiftright')):
+                                     TOKEN_KIND.get('assignment_bitshiftright'),
+                                     TOKEN_KIND.get('ternary_if')):
         precedence = parse_token_precedence(peek_token.token_kind)
         if precedence < min_precedence:
             break
@@ -238,6 +240,12 @@ cdef CExp parse_exp(int min_precedence = 0):
             binary_op = parse_binary_op()
             exp_right = parse_exp(precedence)
             exp_left = CAssignmentCompound(binary_op, exp_left, exp_right)
+        elif peek_token.token_kind == TOKEN_KIND.get('ternary_if'):
+            _ = pop_next()
+            exp_middle = parse_exp()
+            expect_next_is(pop_next(), TOKEN_KIND.get('ternary_else'))
+            exp_right = parse_exp(precedence)
+            exp_left = CConditional(exp_left, exp_middle, exp_right)
         else:
             binary_op = parse_binary_op()
             exp_right = parse_exp(precedence + 1)
@@ -246,20 +254,36 @@ cdef CExp parse_exp(int min_precedence = 0):
 
 
 cdef CStatement parse_statement():
-    # <statement> ::= "return" <exp> ";" | <exp> ";" | ";"
+    # <statement> ::= "return" <exp> ";" | <exp> ";" | "if" "(" <exp> ")" <statement> [ "else" <statement> ] | ";"
     if peek_token.token_kind == TOKEN_KIND.get('semicolon'):
         _ = pop_next()
         return CNull()
-    cdef CExp return_exp
+    cdef CExp exp
     if peek_token.token_kind == TOKEN_KIND.get('key_return'):
         _ = pop_next()
-        return_exp = parse_exp()
+        exp = parse_exp()
         expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-        return CReturn(return_exp)
+        return CReturn(exp)
+    cdef CStatement then
+    cdef CStatement else_fi
+    if peek_token.token_kind == TOKEN_KIND.get('key_if'):
+        _ = pop_next()
+        expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
+        exp = parse_exp()
+        expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
+        _ = peek_next()
+        then = parse_statement()
+        if peek_next().token_kind == TOKEN_KIND.get('key_else'):
+            _ = pop_next()
+            _ = peek_next()
+            else_fi = parse_statement()
+        else:
+            else_fi = None
+        return CIf(exp, then, else_fi)
     if True:
-        return_exp = parse_exp()
+        exp = parse_exp()
         expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-        return CExpression(return_exp)
+        return CExpression(exp)
 
 
 cdef CDeclaration parse_declaration():
