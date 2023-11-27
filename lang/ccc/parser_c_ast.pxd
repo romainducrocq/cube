@@ -149,6 +149,15 @@ cdef class CIf(CStatement):
     cdef public CStatement else_fi
 
 
+cdef class CGoto(CStatement):
+    cdef public TIdentifier target
+
+
+cdef class CLabeledStatement(CStatement):
+    cdef public TIdentifier target
+    cdef public CStatement jump_to
+
+
 cdef class CNull(CStatement):
     pass
 

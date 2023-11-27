@@ -60,6 +60,7 @@ TOKEN_KIND = IotaEnum((
     "key_return",
     "key_if",
     "key_else",
+    "key_goto",
 
     "identifier",
     "constant",
@@ -117,6 +118,7 @@ cdef dict[int, str] TOKEN_REGEX = {
     TOKEN_KIND.get('key_return'): r"return\b",
     TOKEN_KIND.get('key_if'): r"if\b",
     TOKEN_KIND.get('key_else'): r"else\b",
+    TOKEN_KIND.get('key_goto'): r"goto\b",
 
     TOKEN_KIND.get('identifier'): r"[a-zA-Z_]\w*\b",
     TOKEN_KIND.get('constant'): r"[0-9]+\b",
