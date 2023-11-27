@@ -7,19 +7,25 @@ function usage () {
     echo ${@} |\
        grep -q -e "--help"
     if [ ${?} -eq 0 ]; then
-        echo "Usage: ${PACKAGE_NAME} FILE [Options]"
-        echo ""
-        echo "Options:"
-        echo "    --help       print help and exit"
-        echo "    --lex        print lexing and exit"
-        echo "    --parse      print parsing and exit"
-        echo "    --validate   print semantic analysis and exit"
-        echo "    --tacky      print tac representation and exit"
-        echo "    --codegen    print assembly generation and exit"
-        echo "    --codeemit   print code emission and exit"
-        echo "    -S           print optimization and exit"
-        echo ""
-        echo "FILE:            .c file to compile"
+        if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
+            echo "Usage: ${PACKAGE_NAME} FILE"
+            echo ""
+            echo "FILE:            .c file to compile"
+        else
+            echo "Usage: ${PACKAGE_NAME} FILE [Options]"
+            echo ""
+            echo "Options:"
+            echo "    --help       print help and exit"
+            echo "    --lex        print lexing and exit"
+            echo "    --parse      print parsing and exit"
+            echo "    --validate   print semantic analysis and exit"
+            echo "    --tacky      print tac representation and exit"
+            echo "    --codegen    print assembly generation and exit"
+            echo "    --codeemit   print code emission and exit"
+            echo "    -S           print optimization and exit"
+            echo ""
+            echo "FILE:            .c file to compile"
+        fi
         exit 0
     fi
 }

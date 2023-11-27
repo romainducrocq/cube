@@ -15,7 +15,7 @@
 - [x] Binary operators  
 - [x] Logical and relational operators  
 - [x] Local variables  
-- [ ] Statements and conditional expressions  
+- [x] Statements and conditional expressions  
 
 ## How To _
 
@@ -25,6 +25,7 @@ cd ccc/
 ./configure.sh
 ./make.sh
 ./install.sh
+. ~/.bashrc
 ```
 
 ### Build for dev
@@ -35,6 +36,7 @@ cd ../lang/dev/
 ./build.sh
 cd ../../ccc/
 ./install.sh
+. ~/.bashrc
 ```
 
 ### Test
@@ -49,6 +51,13 @@ ccc path/to/file.c
 ```
 
 ### Help
+```
+Usage: ccc FILE
+
+FILE:            .c file to compile
+```
+
+### Help for dev
 ```
 Usage: ccc FILE [Options]
 
