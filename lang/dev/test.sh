@@ -48,7 +48,7 @@ function test_dir () {
     TOTAL=0
     DIR=${1}
 
-    for SUBDIR in $(find ${DIR} -type d); do
+    for SUBDIR in $(find ${DIR} -type d | sort --uniq); do
         DIR=$(readlink -f ${SUBDIR})
         if [[ ! "${SUBDIR: -1}" == "/" ]]; then
             SUBDIR=${SUBDIR}'/'
