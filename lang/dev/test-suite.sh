@@ -23,6 +23,7 @@ else
     test --chapter 4 --latest-only --bitwise
     test --chapter 5 --latest-only --extra-credit
     test --chapter 6 --latest-only --extra-credit
+    test --chapter 7 --stage parse --latest-only
 fi
 
 exit 0

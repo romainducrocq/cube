@@ -285,6 +285,11 @@ cdef CLabel parse_label_statement():
     return CLabel(target, jump_to)
 
 
+cdef CCompound parse_compound_statement():
+    cdef CBlock block = parse_block()
+    return CCompound(block)
+
+
 cdef CExpression parse_expression_statement():
     cdef CExp exp = parse_exp()
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
@@ -293,6 +298,7 @@ cdef CExpression parse_expression_statement():
 
 cdef CStatement parse_statement():
     # <statement> ::= "return" <exp> ";" | <exp> ";" | "if" "(" <exp> ")" <statement> [ "else" <statement> ] | ";"
+    #               | <block>
     if peek_token.token_kind == TOKEN_KIND.get('semicolon'):
         return parse_null_statement()
     if peek_token.token_kind == TOKEN_KIND.get('key_return'):
@@ -304,6 +310,8 @@ cdef CStatement parse_statement():
     if peek_token.token_kind == TOKEN_KIND.get('identifier'):
         if peek_next_i(1).token_kind == TOKEN_KIND.get('ternary_else'):
             return parse_label_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('brace_open'):
+        return parse_compound_statement()
     if True:
         return parse_expression_statement()
 
@@ -345,20 +353,31 @@ cdef CBlockItem parse_block_item():
         return parse_s_block_item()
 
 
+cdef CB parse_b_block():
+    cdef CBlockItem block_item
+    cdef list[CBlockItem] block_items = []
+    while peek_next().token_kind != TOKEN_KIND.get('brace_close'):
+        block_item = parse_block_item()
+        block_items.append(block_item)
+    return CB(block_items)
+
+
+cdef CBlock parse_block():
+    # <block> ::= "{" { <block-item> } "}
+    expect_next_is(pop_next(), TOKEN_KIND.get('brace_open'))
+    cdef CBlock block = parse_b_block()
+    expect_next_is(pop_next(), TOKEN_KIND.get('brace_close'))
+    return block
+
+
 cdef CFunctionDef parse_function_def():
-    # <function> ::= "int" <identifier> "(" "void" ")" "{" { <block-item> } "}"
+    # <function> ::= "int" <identifier> "(" "void" ")" <block>
     expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
     cdef TIdentifier name = parse_identifier()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
     expect_next_is(pop_next(), TOKEN_KIND.get('key_void'))
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
-    expect_next_is(pop_next(), TOKEN_KIND.get('brace_open'))
-    cdef CBlockItem block_item
-    cdef list[CBlockItem] body = []
-    while peek_next().token_kind != TOKEN_KIND.get('brace_close'):
-        block_item = parse_block_item()
-        body.append(block_item)
-    expect_next_is(pop_next(), TOKEN_KIND.get('brace_close'))
+    cdef CBlock body = parse_block()
     return CFunction(name, body)
 
 
