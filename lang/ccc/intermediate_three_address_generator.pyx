@@ -241,6 +241,17 @@ cdef void represent_statement_if_else_instructions(CIf node):
     instructions.append(TacLabel(target_false))
 
 
+cdef void represent_statement_goto_instructions(CGoto node):
+    cdef TIdentifier target_label = node.target
+    instructions.append(TacJump(target_label))
+
+
+cdef void represent_statement_label_instructions(CLabel node):
+    cdef TIdentifier target_label = node.target
+    instructions.append(TacLabel(target_label))
+    represent_statement_instructions(node.jump_to)
+
+
 cdef void represent_statement_return_instructions(CReturn node):
     cdef TacValue val = represent_exp_instructions(node.exp)
     instructions.append(TacReturn(val))
@@ -249,6 +260,9 @@ cdef void represent_statement_return_instructions(CReturn node):
 cdef void represent_statement_instructions(CStatement node):
     if isinstance(node, CNull):
         represent_statement_null_instructions(node)
+        return
+    if isinstance(node, CReturn):
+        represent_statement_return_instructions(node)
         return
     if isinstance(node, CExpression):
         represent_statement_expression_instructions(node)
@@ -259,8 +273,11 @@ cdef void represent_statement_instructions(CStatement node):
         else:
             represent_statement_if_instructions(node)
         return
-    if isinstance(node, CReturn):
-        represent_statement_return_instructions(node)
+    if isinstance(node, CGoto):
+        represent_statement_goto_instructions(node)
+        return
+    if isinstance(node, CLabel):
+        represent_statement_label_instructions(node)
         return
 
     raise RuntimeError(
