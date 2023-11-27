@@ -39,6 +39,14 @@ cdef Token peek_next():
         "An error occurred in parser, all Tokens were consumed before end of program")
 
 
+cdef Token peek_next_i(int i):
+    if i < len(tokens):
+        return tokens[i]
+
+    raise RuntimeError(
+        "An error occurred in parser, all Tokens were consumed before end of program")
+
+
 cdef TIdentifier parse_identifier():
     # <identifier> ::= ? An identifier token ?
     expect_next_is(pop_next(), TOKEN_KIND.get('identifier'))
@@ -262,6 +270,21 @@ cdef CIf parse_if_statement():
     return CIf(condition, then, else_fi)
 
 
+cdef CGoto parse_goto_statement():
+    _ = pop_next()
+    cdef TIdentifier target = parse_identifier()
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
+    return CGoto(target)
+
+
+cdef CLabel parse_label_statement():
+    cdef TIdentifier target = parse_identifier()
+    expect_next_is(pop_next(), TOKEN_KIND.get('ternary_else'))
+    _ = peek_next()
+    cdef CStatement jump_to = parse_statement()
+    return CLabel(target, jump_to)
+
+
 cdef CExpression parse_expression_statement():
     cdef CExp exp = parse_exp()
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
@@ -276,6 +299,11 @@ cdef CStatement parse_statement():
         return parse_return_statement()
     if peek_token.token_kind == TOKEN_KIND.get('key_if'):
         return parse_if_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('key_goto'):
+        return parse_goto_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('identifier'):
+        if peek_next_i(1).token_kind == TOKEN_KIND.get('ternary_else'):
+            return parse_label_statement()
     if True:
         return parse_expression_statement()
 

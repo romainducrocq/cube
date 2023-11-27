@@ -246,7 +246,7 @@ cdef class CStatement(AST):
     #           | Expression(exp)
     #           | If(exp, statement, statement?)
     #           | Goto(identifier)
-    #           | LabeledStatement(identifier, target)
+    #           | Label(identifier, target)
     #           | Null
     def __cinit__(self):
         self._fields = ()
@@ -290,8 +290,8 @@ cdef class CGoto(CStatement):
         self.target = target
 
 
-cdef class CLabeledStatement(CStatement):
-    # LabeledStatement(identifier target, statement)
+cdef class CLabel(CStatement):
+    # Label(identifier target, statement)
     def __cinit__(self):
         self._fields = ('target', 'jump_to')
 

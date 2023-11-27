@@ -153,7 +153,7 @@ cdef class CGoto(CStatement):
     cdef public TIdentifier target
 
 
-cdef class CLabeledStatement(CStatement):
+cdef class CLabel(CStatement):
     cdef public TIdentifier target
     cdef public CStatement jump_to
 
