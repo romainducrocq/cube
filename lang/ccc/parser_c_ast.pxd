@@ -158,6 +158,10 @@ cdef class CLabel(CStatement):
     cdef public CStatement jump_to
 
 
+cdef class CCompound(CStatement):
+    cdef public CBlock block
+
+
 cdef class CNull(CStatement):
     pass
 
@@ -170,6 +174,14 @@ cdef class CDecl(CDeclaration):
     cdef public TIdentifier name
     # Optional
     cdef public CExp init
+
+
+cdef class CBlock(AST):
+    pass
+
+
+cdef class CB(CBlock):
+    cdef public list[CBlockItem] block_items
 
 
 cdef class CBlockItem(AST):
@@ -190,7 +202,7 @@ cdef class CFunctionDef(AST):
 
 cdef class CFunction(CFunctionDef):
     cdef public TIdentifier name
-    cdef public list[CBlockItem] body
+    cdef public CBlock body
 
 
 cdef class CProgram(AST):

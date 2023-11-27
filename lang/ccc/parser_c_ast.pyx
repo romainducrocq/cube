@@ -247,6 +247,7 @@ cdef class CStatement(AST):
     #           | If(exp, statement, statement?)
     #           | Goto(identifier)
     #           | Label(identifier, target)
+    #           | Compound(block)
     #           | Null
     def __cinit__(self):
         self._fields = ()
@@ -300,6 +301,15 @@ cdef class CLabel(CStatement):
         self.jump_to = jump_to
 
 
+cdef class CCompound(CStatement):
+    # Compound(block)
+    def __cinit__(self):
+        self._fields = ('block',)
+
+    def __init__(self, CBlock block):
+        self.block = block
+
+
 cdef class CNull(CStatement):
     # Null
     def __cinit__(self):
@@ -320,6 +330,21 @@ cdef class CDecl(CDeclaration):
     def __init__(self, TIdentifier name, CExp init):
         self.name = name
         self.init = init
+
+
+cdef class CBlock(AST):
+    # block = B(block_item*)
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class CB(CBlock):
+    # B(block_item* block_items)
+    def __cinit__(self):
+        self._fields = ('block_items',)
+
+    def __init__(self, list[CBlockItem] block_items):
+        self.block_items = block_items
 
 
 cdef class CBlockItem(AST):
@@ -348,17 +373,17 @@ cdef class CD(CBlockItem):
 
 
 cdef class CFunctionDef(AST):
-    # function_definition = Function(identifier, block_item*)
+    # function_definition = Function(identifier, block)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CFunction(CFunctionDef):
-    # Function(identifier name, block_item* body)
+    # Function(identifier name, block body)
     def __cinit__(self):
         self._fields = ('name', 'body')
 
-    def __init__(self, TIdentifier name, list[CBlockItem] body):
+    def __init__(self, TIdentifier name, CBlock body):
         self.name = name
         self.body = body
 
