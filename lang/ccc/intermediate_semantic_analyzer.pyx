@@ -1,7 +1,7 @@
 from ccc.util_ast cimport ast_iter_child_nodes
 from ccc.parser_c_ast cimport AST, TIdentifier, CFunction, CBlockItem
-from ccc.parser_c_ast cimport CD, CDeclaration, CDecl, CS, CStatement, CReturn, CExpression, CNull
-from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound
+from ccc.parser_c_ast cimport CD, CDeclaration, CDecl, CS, CStatement, CReturn, CExpression, CIf, CNull
+from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound, CConditional
 from ccc.intermediate_name cimport resolve_variable_identifier
 
 
@@ -11,6 +11,12 @@ cdef dict[str, str] variable_map = {}
 cdef void resolve_statement(CStatement node):
     if isinstance(node, (CReturn, CExpression)):
         resolve_expression(node.exp)
+        return
+    if isinstance(node, CIf):
+        resolve_expression(node.condition)
+        resolve_statement(node.then)
+        if node.else_fi:
+            resolve_statement(node.else_fi)
         return
     if isinstance(node, CNull):
         return
@@ -67,6 +73,11 @@ cdef void resolve_expression(CExp node):
                 f"Left expression {type(node.exp_left)} is an invalid lvalue")
 
         resolve_expression(node.exp_left)
+        resolve_expression(node.exp_right)
+        return
+    if isinstance(node, CConditional):
+        resolve_expression(node.condition)
+        resolve_expression(node.exp_middle)
         resolve_expression(node.exp_right)
         return
 
