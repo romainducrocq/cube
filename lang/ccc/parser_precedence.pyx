@@ -39,7 +39,5 @@ cdef int parse_token_precedence(int token_kind):
 
     if token_kind in TOKEN_PRECEDENCE:
         return TOKEN_PRECEDENCE[token_kind]
-
-    raise RuntimeError(
-        f"""An error occurred in precedence management, unmanaged token {
-            list(TOKEN_KIND.iter().keys())[list(TOKEN_KIND.iter().values()).index(token_kind)]}""")
+    else:
+        return -1

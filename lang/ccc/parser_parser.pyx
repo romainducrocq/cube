@@ -8,23 +8,13 @@ cdef Token next_token = Token('', TOKEN_KIND.get('error'))
 cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
 
 
-cdef void expect_next_is(Token _next_token, int expected_token):
-    if _next_token.token_kind != expected_token:
+cdef void expect_next_is(Token next_token_is, int expected_token):
+    if next_token_is.token_kind != expected_token:
         raise RuntimeError(
             f"""Expected token {
                 list(TOKEN_KIND.iter().keys())[
                        list(TOKEN_KIND.iter().values()).index(expected_token)
-            ]} but found \"{_next_token.token}\"""")
-
-
-cdef void expect_next_in(Token _next_token, tuple[int, ...] expected_tokens):
-    if _next_token.token_kind not in expected_tokens:
-        raise RuntimeError(
-            f"""Expected token in kinds { tuple([
-                list(TOKEN_KIND.iter().keys())[
-                       list(TOKEN_KIND.iter().values()).index(expected_token)
-                ] for expected_token in expected_tokens])
-            } but found \"{_next_token.token}\"""")
+            ]} but found \"{next_token_is.token}\"""")
 
 
 cdef Token pop_next():
@@ -64,35 +54,7 @@ cdef TInt parse_int():
 cdef CBinaryOp parse_binary_op():
     # <binop> ::= "-" | "+" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "&&" | "||" | "==" | "!="
     #                 | "<" | "<=" | ">" | ">="
-    expect_next_in(pop_next(), (TOKEN_KIND.get('unop_negation'),
-                   TOKEN_KIND.get('binop_addition'),
-                   TOKEN_KIND.get('binop_multiplication'),
-                   TOKEN_KIND.get('binop_division'),
-                   TOKEN_KIND.get('binop_remainder'),
-                   TOKEN_KIND.get('binop_bitand'),
-                   TOKEN_KIND.get('binop_bitor'),
-                   TOKEN_KIND.get('binop_bitxor'),
-                   TOKEN_KIND.get('binop_bitshiftleft'),
-                   TOKEN_KIND.get('binop_bitshiftright'),
-                   TOKEN_KIND.get('binop_lessthan'),
-                   TOKEN_KIND.get('binop_lessthanorequal'),
-                   TOKEN_KIND.get('binop_greaterthan'),
-                   TOKEN_KIND.get('binop_greaterthanorequal'),
-                   TOKEN_KIND.get('binop_equalto'),
-                   TOKEN_KIND.get('binop_notequal'),
-                   TOKEN_KIND.get('binop_and'),
-                   TOKEN_KIND.get('binop_or'),
-                   TOKEN_KIND.get('assignment_plus'),
-                   TOKEN_KIND.get('assignment_difference'),
-                   TOKEN_KIND.get('assignment_product'),
-                   TOKEN_KIND.get('assignment_quotient'),
-                   TOKEN_KIND.get('assignment_remainder'),
-                   TOKEN_KIND.get('assignment_bitand'),
-                   TOKEN_KIND.get('assignment_bitor'),
-                   TOKEN_KIND.get('assignment_bitxor'),
-                   TOKEN_KIND.get('assignment_bitshiftleft'),
-                   TOKEN_KIND.get('assignment_bitshiftright')))
-    if next_token.token_kind in (TOKEN_KIND.get('unop_negation'),
+    if pop_next().token_kind in (TOKEN_KIND.get('unop_negation'),
                                  TOKEN_KIND.get('assignment_difference')):
         return CSubtract()
     if next_token.token_kind in (TOKEN_KIND.get('binop_addition'),
@@ -139,18 +101,21 @@ cdef CBinaryOp parse_binary_op():
     if next_token.token_kind == TOKEN_KIND.get('binop_greaterthanorequal'):
         return CGreaterOrEqual()
 
+    raise RuntimeError(
+        f"Expected token type \"binary_op\" but found token \"{next_token.token}\"")
+
 
 cdef CUnaryOp parse_unary_op():
     # <unop> ::= "-" | "~" | "!"
-    expect_next_in(pop_next(), (TOKEN_KIND.get('unop_complement'),
-                   TOKEN_KIND.get('unop_negation'),
-                   TOKEN_KIND.get('unop_not')))
-    if next_token.token_kind == TOKEN_KIND.get('unop_complement'):
+    if pop_next().token_kind == TOKEN_KIND.get('unop_complement'):
         return CComplement()
     if next_token.token_kind == TOKEN_KIND.get('unop_negation'):
         return CNegate()
     if next_token.token_kind == TOKEN_KIND.get('unop_not'):
         return CNot()
+
+    raise RuntimeError(
+        f"Expected token type \"unary_op\" but found token \"{next_token.token}\"")
 
 
 cdef CVar parse_var_factor():
@@ -177,13 +142,7 @@ cdef CExp parse_inner_exp_factor():
 
 cdef CExp parse_factor():
     # <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")"
-    expect_next_in(peek_next(),(TOKEN_KIND.get('constant'),
-                   TOKEN_KIND.get('identifier'),
-                   TOKEN_KIND.get('unop_complement'),
-                   TOKEN_KIND.get('unop_negation'),
-                   TOKEN_KIND.get('unop_not'),
-                   TOKEN_KIND.get('parenthesis_open')))
-    if peek_token.token_kind == TOKEN_KIND.get('identifier'):
+    if peek_next().token_kind == TOKEN_KIND.get('identifier'):
         return parse_var_factor()
     if peek_token.token_kind == TOKEN_KIND.get('constant'):
         return parse_constant_factor()
@@ -193,6 +152,9 @@ cdef CExp parse_factor():
         return parse_unary_factor()
     if pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
         return parse_inner_exp_factor()
+
+    raise RuntimeError(
+        f"Expected token type \"factor\" but found token \"{next_token.token}\"")
 
 
 cdef CAssignment parse_assigment_exp(CExp exp_left, int precedence):
@@ -224,41 +186,9 @@ cdef CBinary parse_binary_exp(CExp exp_left, int precedence):
 cdef CExp parse_exp(int min_precedence = 0):
     # <exp> ::= <factor> | <exp> <binop> <exp> | <exp> "?" <exp> ":" <exp>
     cdef int precedence
-    cdef CBinaryOp binary_op
-    cdef CExp exp_right
-    cdef CExp exp_middle
     cdef CExp exp_left = parse_factor()
-    while peek_next().token_kind in (TOKEN_KIND.get('unop_negation'),
-                                     TOKEN_KIND.get('binop_addition'),
-                                     TOKEN_KIND.get('binop_multiplication'),
-                                     TOKEN_KIND.get('binop_division'),
-                                     TOKEN_KIND.get('binop_remainder'),
-                                     TOKEN_KIND.get('binop_bitand'),
-                                     TOKEN_KIND.get('binop_bitor'),
-                                     TOKEN_KIND.get('binop_bitxor'),
-                                     TOKEN_KIND.get('binop_bitshiftleft'),
-                                     TOKEN_KIND.get('binop_bitshiftright'),
-                                     TOKEN_KIND.get('binop_lessthan'),
-                                     TOKEN_KIND.get('binop_lessthanorequal'),
-                                     TOKEN_KIND.get('binop_greaterthan'),
-                                     TOKEN_KIND.get('binop_greaterthanorequal'),
-                                     TOKEN_KIND.get('binop_equalto'),
-                                     TOKEN_KIND.get('binop_notequal'),
-                                     TOKEN_KIND.get('binop_and'),
-                                     TOKEN_KIND.get('binop_or'),
-                                     TOKEN_KIND.get('assignment_simple'),
-                                     TOKEN_KIND.get('assignment_plus'),
-                                     TOKEN_KIND.get('assignment_difference'),
-                                     TOKEN_KIND.get('assignment_product'),
-                                     TOKEN_KIND.get('assignment_quotient'),
-                                     TOKEN_KIND.get('assignment_remainder'),
-                                     TOKEN_KIND.get('assignment_bitand'),
-                                     TOKEN_KIND.get('assignment_bitor'),
-                                     TOKEN_KIND.get('assignment_bitxor'),
-                                     TOKEN_KIND.get('assignment_bitshiftleft'),
-                                     TOKEN_KIND.get('assignment_bitshiftright'),
-                                     TOKEN_KIND.get('ternary_if')):
-        precedence = parse_token_precedence(peek_token.token_kind)
+    while True:
+        precedence = parse_token_precedence(peek_next().token_kind)
         if precedence < min_precedence:
             break
         if peek_token.token_kind == TOKEN_KIND.get('assignment_simple'):
@@ -276,8 +206,30 @@ cdef CExp parse_exp(int min_precedence = 0):
             exp_left = parse_assigment_compound_exp(exp_left, precedence)
         elif peek_token.token_kind == TOKEN_KIND.get('ternary_if'):
             exp_left = parse_ternary_exp(exp_left, precedence)
-        else:
+        elif peek_token.token_kind in (TOKEN_KIND.get('unop_negation'),
+                                       TOKEN_KIND.get('binop_addition'),
+                                       TOKEN_KIND.get('binop_multiplication'),
+                                       TOKEN_KIND.get('binop_division'),
+                                       TOKEN_KIND.get('binop_remainder'),
+                                       TOKEN_KIND.get('binop_bitand'),
+                                       TOKEN_KIND.get('binop_bitor'),
+                                       TOKEN_KIND.get('binop_bitxor'),
+                                       TOKEN_KIND.get('binop_bitshiftleft'),
+                                       TOKEN_KIND.get('binop_bitshiftright'),
+                                       TOKEN_KIND.get('binop_lessthan'),
+                                       TOKEN_KIND.get('binop_lessthanorequal'),
+                                       TOKEN_KIND.get('binop_greaterthan'),
+                                       TOKEN_KIND.get('binop_greaterthanorequal'),
+                                       TOKEN_KIND.get('binop_equalto'),
+                                       TOKEN_KIND.get('binop_notequal'),
+                                       TOKEN_KIND.get('binop_and'),
+                                       TOKEN_KIND.get('binop_or')):
             exp_left = parse_binary_exp(exp_left, precedence)
+        else:
+
+            raise RuntimeError(
+                f"Expected token type \"exp\" but found token \"{peek_token.token}\"")
+
     return exp_left
 
 
