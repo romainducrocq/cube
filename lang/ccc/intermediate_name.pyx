@@ -1,5 +1,5 @@
 from ccc.parser_c_ast cimport TIdentifier, CExp
-from ccc.parser_c_ast cimport CVar, CConstant, CUnary, CBinary
+from ccc.parser_c_ast cimport CVar, CConstant, CUnary, CBinary, CConditional
 
 
 cdef int label_counter = 0
@@ -36,6 +36,8 @@ cdef TIdentifier represent_variable_identifier(CExp node):
         variable = "unary"
     elif isinstance(node, CBinary):
         variable = "binary"
+    elif isinstance(node, CConditional):
+        variable = "ternary"
     else:
 
         raise RuntimeError(

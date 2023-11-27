@@ -114,6 +114,22 @@ cdef TacValue represent_exp_assignment_compound_instructions(CAssignmentCompound
     return dst
 
 
+cdef TacValue represent_exp_conditional_instructions(CConditional node):
+    cdef TIdentifier target_else = represent_label_identifier("ternary_else")
+    cdef TacValue condition = represent_exp_instructions(node.condition)
+    instructions.append(TacJumpIfZero(condition, target_else))
+    cdef TacValue src_middle = represent_exp_instructions(node.exp_middle)
+    cdef TacValue dst = represent_value(node, outer=False)
+    instructions.append(TacCopy(src_middle, dst))
+    cdef TIdentifier target_false = represent_label_identifier("ternary_false")
+    instructions.append(TacJump(target_false))
+    instructions.append(TacLabel(target_else))
+    cdef TacValue src_right = represent_exp_instructions(node.exp_right)
+    instructions.append(TacCopy(src_right, dst))
+    instructions.append(TacLabel(target_false))
+    return dst
+
+
 cdef TacValue represent_exp_unary_instructions(CUnary node):
     cdef TacValue src = represent_exp_instructions(node.exp)
     cdef TacValue dst = represent_value(node.exp, outer=False)
@@ -123,14 +139,14 @@ cdef TacValue represent_exp_unary_instructions(CUnary node):
 
 
 cdef TacValue represent_exp_binary_and_instructions(CBinary node):
-    cdef TacValue src_true = TacConstant(TInt(1))
-    cdef TacValue src_false = TacConstant(TInt(0))
-    cdef TIdentifier target_true = represent_label_identifier("and_true")
     cdef TIdentifier target_false = represent_label_identifier("and_false")
     cdef TacValue condition_left = represent_exp_instructions(node.exp_left)
     instructions.append(TacJumpIfZero(condition_left, target_false))
     cdef TacValue condition_right = represent_exp_instructions(node.exp_right)
     instructions.append(TacJumpIfZero(condition_right, target_false))
+    cdef TacValue src_true = TacConstant(TInt(1))
+    cdef TacValue src_false = TacConstant(TInt(0))
+    cdef TIdentifier target_true = represent_label_identifier("and_true")
     cdef TacValue dst = represent_value(node.exp_left, outer=False)
     instructions.append(TacCopy(src_true, dst))
     instructions.append(TacJump(target_true))
@@ -141,14 +157,14 @@ cdef TacValue represent_exp_binary_and_instructions(CBinary node):
 
 
 cdef TacValue represent_exp_binary_or_instructions(CBinary node):
-    cdef TacValue src_true = TacConstant(TInt(1))
-    cdef TacValue src_false = TacConstant(TInt(0))
     cdef TIdentifier target_true = represent_label_identifier("or_true")
-    cdef TIdentifier target_false = represent_label_identifier("or_false")
     cdef TacValue condition_left = represent_exp_instructions(node.exp_left)
     instructions.append(TacJumpIfNotZero(condition_left, target_true))
     cdef TacValue condition_right = represent_exp_instructions(node.exp_right)
     instructions.append(TacJumpIfNotZero(condition_right, target_true))
+    cdef TacValue src_true = TacConstant(TInt(1))
+    cdef TacValue src_false = TacConstant(TInt(0))
+    cdef TIdentifier target_false = represent_label_identifier("or_false")
     cdef TacValue dst = represent_value(node.exp_left, outer=False)
     instructions.append(TacCopy(src_false, dst))
     instructions.append(TacJump(target_false))
@@ -176,6 +192,8 @@ cdef TacValue represent_exp_instructions(CExp node):
         return represent_exp_assignment_instructions(node)
     if isinstance(node, CAssignmentCompound):
         return represent_exp_assignment_compound_instructions(node)
+    if isinstance(node, CConditional):
+        return represent_exp_conditional_instructions(node)
     if isinstance(node, CUnary):
         return represent_exp_unary_instructions(node)
     if isinstance(node, CBinary):
@@ -203,6 +221,26 @@ cdef void represent_statement_expression_instructions(CExpression node):
     _ = represent_exp_instructions(node.exp)
 
 
+cdef void represent_statement_if_instructions(CIf node):
+    cdef TIdentifier target_false = represent_label_identifier("if_false")
+    cdef TacValue condition = represent_exp_instructions(node.condition)
+    instructions.append(TacJumpIfZero(condition, target_false))
+    represent_statement_instructions(node.then)
+    instructions.append(TacLabel(target_false))
+
+
+cdef void represent_statement_if_else_instructions(CIf node):
+    cdef TIdentifier target_else = represent_label_identifier("if_else")
+    cdef TacValue condition = represent_exp_instructions(node.condition)
+    instructions.append(TacJumpIfZero(condition, target_else))
+    represent_statement_instructions(node.then)
+    cdef TIdentifier target_false = represent_label_identifier("if_false")
+    instructions.append(TacJump(target_false))
+    instructions.append(TacLabel(target_else))
+    represent_statement_instructions(node.else_fi)
+    instructions.append(TacLabel(target_false))
+
+
 cdef void represent_statement_return_instructions(CReturn node):
     cdef TacValue val = represent_exp_instructions(node.exp)
     instructions.append(TacReturn(val))
@@ -214,6 +252,12 @@ cdef void represent_statement_instructions(CStatement node):
         return
     if isinstance(node, CExpression):
         represent_statement_expression_instructions(node)
+        return
+    if isinstance(node, CIf):
+        if node.else_fi:
+            represent_statement_if_else_instructions(node)
+        else:
+            represent_statement_if_instructions(node)
         return
     if isinstance(node, CReturn):
         represent_statement_return_instructions(node)

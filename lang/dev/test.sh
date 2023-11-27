@@ -30,8 +30,8 @@ function test_file () {
     FILE=${1}
     FILE=$(file ${FILE})
 
-    RET_GCC=$(ret_gcc ${FILE})
     RET_CCC=$(ret_ccc ${FILE})
+    RET_GCC=$(ret_gcc ${FILE})
 
     RES=""
     FILE=$(echo "${FILE}" | rev | cut -d"/" -f1 | rev)'.c'
@@ -57,8 +57,8 @@ function test_dir () {
         for FILE in $(find ${DIR} -maxdepth 1 -name "*.c" -type f); do
             FILE=$(file ${FILE})
 
-            RET_GCC=$(ret_gcc ${FILE})
             RET_CCC=$(ret_ccc ${FILE})
+            RET_GCC=$(ret_gcc ${FILE})
 
             RES=""
             FILE=$(echo "${FILE}" | rev | cut -d"/" -f1 | rev)'.c'
