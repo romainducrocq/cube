@@ -16,7 +16,7 @@
 - [x] Logical and relational operators  
 - [x] Local variables  
 - [x] Statements and conditional expressions  
-- [ ] Compound statements  
+- [x] Compound statements  
 
 ## How To _
 

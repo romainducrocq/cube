@@ -115,9 +115,9 @@ cdef void correct_instructions(AST node):
                     src_src = instruction.dst
                     instruction.dst = generate_register(REGISTER_KIND.get('R11'))
                     child_node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
-
-        else:
-            correct_instructions(child_node)
+        #
+        # else:
+        #     correct_instructions(child_node)
 
 
 cdef generate_stack(AST node):

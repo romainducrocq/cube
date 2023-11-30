@@ -169,9 +169,9 @@ cdef void resolve_variable(AST node):
             label_set = set()
             resolve_block(child_node.body)
             resolve_label()
-
-        else:
-            resolve_variable(child_node)
+        #
+        # else:
+        #     resolve_variable(child_node)
 
 
 cdef void semantic_analysis(AST c_ast):
