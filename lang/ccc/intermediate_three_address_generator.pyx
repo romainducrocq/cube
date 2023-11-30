@@ -217,6 +217,15 @@ cdef void represent_statement_null_instructions(CNull node):
     pass
 
 
+cdef void represent_statement_return_instructions(CReturn node):
+    cdef TacValue val = represent_exp_instructions(node.exp)
+    instructions.append(TacReturn(val))
+
+
+cdef void represent_statement_compound_instructions(CCompound node):
+    represent_block(node.block)
+
+
 cdef void represent_statement_expression_instructions(CExpression node):
     _ = represent_exp_instructions(node.exp)
 
@@ -252,17 +261,15 @@ cdef void represent_statement_label_instructions(CLabel node):
     represent_statement_instructions(node.jump_to)
 
 
-cdef void represent_statement_return_instructions(CReturn node):
-    cdef TacValue val = represent_exp_instructions(node.exp)
-    instructions.append(TacReturn(val))
-
-
 cdef void represent_statement_instructions(CStatement node):
     if isinstance(node, CNull):
         represent_statement_null_instructions(node)
         return
     if isinstance(node, CReturn):
         represent_statement_return_instructions(node)
+        return
+    if isinstance(node, CCompound):
+        represent_statement_compound_instructions(node)
         return
     if isinstance(node, CExpression):
         represent_statement_expression_instructions(node)
@@ -307,8 +314,6 @@ cdef void represent_list_instructions(list[CBlockItem] list_node):
     #             | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
     #             | Jump(identifier target) | JumpIfZero(val condition, identifier target)
     #             | JumpIfNotZero(val condition, identifier target) | Label(identifier name)
-    global instructions
-    instructions = []
 
     cdef CBlockItem item_node
     for item_node in list_node:
@@ -321,15 +326,27 @@ cdef void represent_list_instructions(list[CBlockItem] list_node):
             raise RuntimeError(
                 "An error occurred in three address code representation, not all nodes were visited")
 
-    instructions.append(TacReturn(TacConstant(TInt(0))))
+
+cdef void represent_block(CBlock node):
+    # block = Block(block_item* block_items)
+    if isinstance(node, CB):
+        represent_list_instructions(node.block_items)
+        return
+
+    raise RuntimeError(
+        "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef TacFunctionDef represent_function_def(CFunctionDef node):
-    # function_definition = Function(identifier, instruction* body)
+    # function_definition = Function(identifier, block body)
+    global instructions
+    instructions = []
+
     cdef TIdentifier name
     if isinstance(node, CFunction):
         name = represent_identifier(node.name)
-        represent_list_instructions(node.body)
+        represent_block(node.body)
+        instructions.append(TacReturn(TacConstant(TInt(0))))
         return TacFunction(name, instructions)
 
     raise RuntimeError(
