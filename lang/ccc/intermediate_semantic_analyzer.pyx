@@ -1,11 +1,13 @@
 from ccc.util_ast cimport ast_iter_child_nodes
-from ccc.parser_c_ast cimport AST, TIdentifier, CFunction, CBlockItem
-from ccc.parser_c_ast cimport CD, CDeclaration, CDecl, CS, CStatement, CReturn, CExpression, CIf, CLabel, CGoto, CNull
+from ccc.parser_c_ast cimport AST, TIdentifier, CFunction, CBlock, CB, CBlockItem, CD, CS, CDeclaration, CStatement
+from ccc.parser_c_ast cimport CDecl, CReturn, CExpression, CIf, CLabel, CGoto, CCompound, CNull
 from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound, CConditional
+
 from ccc.intermediate_name cimport resolve_label_identifier, resolve_variable_identifier
 
 
-cdef dict[str, str] variable_map = {}
+cdef list[dict[str, str]] scoped_variable_maps = [{}]
+
 cdef dict[str, str] goto_map = {}
 cdef set[str] label_set = set()
 
@@ -15,6 +17,11 @@ cdef void resolve_statement(CStatement node):
         return
     if isinstance(node, (CReturn, CExpression)):
         resolve_expression(node.exp)
+        return
+    if isinstance(node, CCompound):
+        scoped_variable_maps.append({})
+        resolve_block(node.block)
+        del scoped_variable_maps[-1]
         return
     if isinstance(node, CIf):
         resolve_expression(node.condition)
@@ -54,17 +61,17 @@ cdef void resolve_statement(CStatement node):
 
 
 cdef void resolve_declaration(CDeclaration node):
-    global variable_map
+    global scoped_variable_maps
 
     cdef TIdentifier name
     if isinstance(node, CDecl):
-        if node.name.str_t in variable_map:
+        if node.name.str_t in scoped_variable_maps[-1]:
 
             raise RuntimeError(
                 f"Variable {node.name.str_t} was already declared in this scope")
 
         name = resolve_variable_identifier(node.name)
-        variable_map[node.name.str_t] = name.str_t
+        scoped_variable_maps[-1][node.name.str_t] = name.str_t
         node.name = name
         if node.init:
             resolve_expression(node.init)
@@ -77,11 +84,14 @@ cdef void resolve_declaration(CDeclaration node):
 cdef void resolve_expression(CExp node):
     if isinstance(node, CConstant):
         return
+    cdef int scope
     cdef TIdentifier name
     if isinstance(node, CVar):
-        if node.name.str_t in variable_map:
-            name = TIdentifier(variable_map[node.name.str_t])
-            node.name = name
+        for scope in range(len(scoped_variable_maps)):
+            if node.name.str_t in scoped_variable_maps[scope]:
+                name = TIdentifier(scoped_variable_maps[scope][node.name.str_t])
+                node.name = name
+                break
         else:
 
             raise RuntimeError(
@@ -113,23 +123,33 @@ cdef void resolve_expression(CExp node):
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
+cdef void resolve_block(CBlock node):
+
+    cdef CBlockItem block_item
+    if isinstance(node, CB):
+
+        for block_item in node.block_items:
+            if isinstance(block_item, CS):
+                resolve_statement(block_item.statement)
+            elif isinstance(block_item, CD):
+                resolve_declaration(block_item.declaration)
+            else:
+
+                raise RuntimeError(
+                    "An error occurred in semantic analysis, not all nodes were visited")
+
+        return
+
+    raise RuntimeError(
+        "An error occurred in semantic analysis, not all nodes were visited")
+
+
 cdef void resolve_variable(AST node):
 
-    cdef int e
     cdef AST child_node
-    cdef CBlockItem block_item
     for child_node, _, _ in ast_iter_child_nodes(node):
         if isinstance(child_node, CFunction):
-
-            for e, block_item in enumerate(child_node.body):
-                if isinstance(block_item, CS):
-                    resolve_statement(block_item.statement)
-                elif isinstance(block_item, CD):
-                    resolve_declaration(block_item.declaration)
-                else:
-
-                    raise RuntimeError(
-                        "An error occurred in semantic analysis, not all nodes were visited")
+            resolve_block(child_node.body)
 
         else:
             resolve_variable(child_node)
@@ -145,10 +165,10 @@ cdef void resolve_label():
 
 
 cdef void semantic_analysis(AST c_ast):
-    global variable_map
+    global scoped_variable_maps
     global goto_map
     global label_set
-    variable_map = {}
+    scoped_variable_maps = [{}]
     goto_map = {}
     label_set = set()
 
