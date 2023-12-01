@@ -1,7 +1,6 @@
-from ccc.util_ast cimport ast_iter_child_nodes
 from ccc.parser_c_ast cimport TIdentifier, CProgram, CFunctionDef, CFunction, CBlock, CB, CBlockItem, CD, CS
-from ccc.parser_c_ast cimport CDeclaration, CDecl
-from ccc.parser_c_ast cimport CStatement, CReturn, CExpression, CIf, CLabel, CGoto, CCompound, CNull
+from ccc.parser_c_ast cimport CDeclaration, CDecl, CStatement, CReturn, CExpression, CIf, CLabel, CGoto, CCompound
+from ccc.parser_c_ast cimport CWhile, CDoWhile, CFor, CBreak, CContinue, CForInit, CInitDecl, CInitExp, CNull
 from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound, CConditional
 
 from ccc.intermediate_name cimport resolve_label_identifier, resolve_variable_identifier
@@ -13,8 +12,21 @@ cdef dict[str, str] goto_map = {}
 cdef set[str] label_set = set()
 
 
+cdef void resolve_for_init(CForInit node):
+    if isinstance(node, CInitDecl):
+        resolve_declaration(node.init)
+        return
+    if isinstance(node, CInitExp):
+        if node:
+            resolve_expression(node.init)
+        return
+
+    raise RuntimeError(
+        "An error occurred in semantic analysis, not all nodes were visited")
+
+
 cdef void resolve_statement(CStatement node):
-    if isinstance(node, CNull):
+    if isinstance(node, (CNull, CBreak, CContinue)):
         return
     if isinstance(node, (CReturn, CExpression)):
         resolve_expression(node.exp)
@@ -29,6 +41,24 @@ cdef void resolve_statement(CStatement node):
         resolve_statement(node.then)
         if node.else_fi:
             resolve_statement(node.else_fi)
+        return
+    if isinstance(node, CWhile):
+        resolve_expression(node.condition)
+        resolve_statement(node.body)
+        return
+    if isinstance(node, CDoWhile):
+        resolve_statement(node.body)
+        resolve_expression(node.condition)
+        return
+    if isinstance(node, CFor):
+        scoped_variable_maps.append({})
+        resolve_for_init(node.init)
+        if node.condition:
+            resolve_expression(node.condition)
+        if node.post:
+            resolve_expression(node.post)
+        resolve_statement(node.body)
+        del scoped_variable_maps[-1]
         return
     cdef TIdentifier target
     if isinstance(node, CLabel):
@@ -127,7 +157,7 @@ cdef void resolve_expression(CExp node):
         "An error occurred in semantic analysis, not all nodes were visited")
 
 
-cdef void resolve_block_items(list[CBlockItems] list_node):
+cdef void resolve_block_items(list[CBlockItem] list_node):
 
     cdef int block_item
     for block_item in range(len(list_node)):
