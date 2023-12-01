@@ -1,5 +1,5 @@
 from ccc.parser_c_ast cimport *
-from ccc.parser_lexer cimport TOKEN_KIND, Token
+from ccc.lexer_lexer cimport TOKEN_KIND, Token
 from ccc.parser_precedence cimport parse_token_precedence
 
 

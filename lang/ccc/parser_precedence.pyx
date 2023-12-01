@@ -1,4 +1,4 @@
-from ccc.parser_lexer cimport TOKEN_KIND
+from ccc.lexer_lexer cimport TOKEN_KIND
 
 
 cdef dict[int, int] TOKEN_PRECEDENCE = {

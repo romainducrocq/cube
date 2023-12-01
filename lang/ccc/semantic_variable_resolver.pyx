@@ -4,6 +4,7 @@ from ccc.parser_c_ast cimport CWhile, CDoWhile, CFor, CBreak, CContinue, CForIni
 from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound, CConditional
 
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
+from ccc.semantic_loop_annotater cimport annotate_loop
 
 
 cdef list[dict[str, str]] scoped_variable_maps = [{}]
@@ -214,3 +215,5 @@ cdef void resolve_variable(CProgram node):
 cdef void analyze_semantic(CProgram c_ast):
 
     resolve_variable(c_ast)
+
+    annotate_loop(c_ast)

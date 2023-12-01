@@ -1,7 +1,7 @@
 from ccc.util_iota_enum cimport IotaEnum
 from ccc.util_ast cimport AST, ast_pretty_string
 
-from ccc.parser_lexer cimport lexing, Token
+from ccc.lexer_lexer cimport lexing, Token
 from ccc.parser_c_ast cimport CProgram
 from ccc.parser_parser cimport parsing
 

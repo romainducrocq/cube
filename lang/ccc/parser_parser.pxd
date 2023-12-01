@@ -1,4 +1,4 @@
 from ccc.parser_c_ast cimport CProgram
-from ccc.parser_lexer cimport Token
+from ccc.lexer_lexer cimport Token
 
 cdef CProgram parsing(list[Token] lex_tokens)
