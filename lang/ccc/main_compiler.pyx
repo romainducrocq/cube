@@ -36,12 +36,10 @@ cdef void debug(str string = "", str end="\n"): #
 #
 #
 cdef void debug_tokens(list[Token] tokens): #
-    cdef int e #
-    cdef Token token #
-    for e, token in enumerate(tokens): #
-        debug(str(e) + ': ("' + token.token + #
-              '", ' + str(token.token_kind) + #
-              ')') #
+    cdef int token #
+    for token in range(len(tokens)): #
+        debug(str(token) + ': ("' + tokens[token].token + #
+              '", ' + str(tokens[token].token_kind) + ')') #
 #
 #
 cdef void debug_ast(AST ast): #
@@ -49,9 +47,9 @@ cdef void debug_ast(AST ast): #
 #
 #
 cdef void debug_code(list[str] code): #
-    cdef str code_line #
-    for code_line in code: #
-        debug(code_line) #
+    cdef int code_line #
+    for code_line in range(len(code)): #
+        debug(code[code_line]) #
 #
 
 cdef void compile(str filename, int opt_exit, int opt_s):
