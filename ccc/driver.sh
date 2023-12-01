@@ -8,7 +8,10 @@ function usage () {
        grep -q -e "--help"
     if [ ${?} -eq 0 ]; then
         if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
-            echo "Usage: ${PACKAGE_NAME} FILE"
+            echo "Usage: ${PACKAGE_NAME} FILE [Options]"
+            echo ""
+            echo "Options:"
+            echo "    --help       print help and exit"
             echo ""
             echo "FILE:            .c file to compile"
         else

@@ -54,7 +54,10 @@ ccc path/to/file.c
 
 ### Help
 ```
-Usage: ccc FILE
+Usage: ccc FILE [Options]
+
+Options:
+    --help       print help and exit
 
 FILE:            .c file to compile
 ```
