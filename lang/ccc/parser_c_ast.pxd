@@ -162,8 +162,49 @@ cdef class CCompound(CStatement):
     cdef public CBlock block
 
 
+cdef class CWhile(CStatement):
+    cdef public CExp condition
+    cdef public CStatement body
+    cdef public TIdentifier target
+
+
+cdef class CDoWhile(CStatement):
+    cdef public CExp condition
+    cdef public CStatement body
+    cdef public TIdentifier target
+
+
+cdef class CFor(CStatement):
+    cdef public CForInit init
+    cdef public CExp condition
+    cdef public CExp post
+    cdef public CStatement body
+    cdef public TIdentifier target
+
+
+cdef class CBreak(CStatement):
+    cdef public TIdentifier target
+
+
+cdef class CContinue(CStatement):
+    cdef public TIdentifier target
+
+
 cdef class CNull(CStatement):
     pass
+
+
+cdef class CForInit(AST):
+    pass
+
+
+cdef class CInitDecl(CForInit):
+    cdef public CDeclaration init
+
+
+cdef class CInitExp(CForInit):
+    # Optional
+    cdef public CExp exp
 
 
 cdef class CDeclaration(AST):

@@ -248,6 +248,11 @@ cdef class CStatement(AST):
     #           | Goto(identifier)
     #           | Label(identifier, target)
     #           | Compound(block)
+    #           | While(exp, statement, identifier)
+    #           | DoWhile(statement, exp, identifier)
+    #           | For(for_init, exp?, exp?, statement, identifier)
+    #           | Break(identifier)
+    #           | Continue(identifier)
     #           | Null
     def __cinit__(self):
         self._fields = ()
@@ -310,10 +315,88 @@ cdef class CCompound(CStatement):
         self.block = block
 
 
+cdef class CWhile(CStatement):
+    # While(exp condition, statement body, identifier target)
+    def __cinit__(self):
+        self._fields = ('condition', 'body', 'target')
+
+    def __init__(self, CExp condition, CStatement body, TIdentifier target):
+        self.condition = condition
+        self.body = body
+        self.target = target
+
+
+cdef class CDoWhile(CStatement):
+    # DoWhile(statement body, exp condition, identifier target)
+    def __cinit__(self):
+        self._fields = ('condition', 'body', 'target')
+
+    def __init__(self, CExp condition, CStatement body, TIdentifier target):
+        self.condition = condition
+        self.body = body
+        self.target = target
+
+
+cdef class CFor(CStatement):
+    # For(for_init init, exp? condition, exp? post, statement body, identifier target)
+    def __cinit__(self):
+        self._fields = ('init', 'condition', 'post', 'body', 'target')
+
+    def __init__(self, CForInit init, CExp condition, CExp post, CStatement body, TIdentifier target):
+        self.init = init
+        self.condition = condition
+        self.post = post
+        self.body = body
+        self.target = target
+
+
+cdef class CBreak(CStatement):
+    # Break(identifier target)
+    def __cinit__(self):
+        self._fields = ('target',)
+
+    def __init__(self, TIdentifier target):
+        self.target = target
+
+
+cdef class CContinue(CStatement):
+    # Continue(identifier target)
+    def __cinit__(self):
+        self._fields = ('target',)
+
+    def __init__(self, TIdentifier target):
+        self.target = target
+
+
 cdef class CNull(CStatement):
     # Null
     def __cinit__(self):
         self._fields = ()
+
+
+cdef class CForInit(AST):
+    # for_init = InitDecl(declaration)
+    #          | InitExp(exp?)
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class CInitDecl(CForInit):
+    # InitDecl(declaration)
+    def __cinit__(self):
+        self._fields = ('init',)
+
+    def __init__(self, CDeclaration init):
+        self.init = init
+
+
+cdef class CInitExp(CForInit):
+    # InitExp(exp?)
+    def __cinit__(self):
+        self._fields = ('exp',)
+
+    def __init__(self, CExp exp):
+        self.exp = exp
 
 
 cdef class CDeclaration(AST):
