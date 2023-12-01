@@ -204,7 +204,7 @@ cdef class CInitDecl(CForInit):
 
 cdef class CInitExp(CForInit):
     # Optional
-    cdef public CExp exp
+    cdef public CExp init
 
 
 cdef class CDeclaration(AST):

@@ -290,6 +290,61 @@ cdef CCompound parse_compound_statement():
     return CCompound(block)
 
 
+cdef CWhile parse_while_statement():
+    _ = pop_next()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
+    cdef CExp condition = parse_exp()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
+    _ = peek_next()
+    body = parse_statement()
+    return CWhile(condition, body, None)
+
+
+cdef CDoWhile parse_do_while_statement():
+    _ = pop_next()
+    _ = peek_next()
+    body = parse_statement()
+    expect_next_is(pop_next(), TOKEN_KIND.get('key_while'))
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
+    cdef CExp condition = parse_exp()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
+    return CDoWhile(condition, body, None)
+
+
+cdef CFor parse_for_statement():
+    _ = pop_next()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
+    cdef CForInit init = parse_for_init()
+    cdef CExp condition
+    if peek_next().token_kind == TOKEN_KIND.get('semicolon'):
+        condition = None
+    else:
+        condition = parse_exp()
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
+    cdef CExp post
+    if peek_next().token_kind == TOKEN_KIND.get('parenthesis_close'):
+        post = None
+    else:
+        post = parse_exp()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
+    _ = peek_next()
+    body = parse_statement()
+    return CFor(init, condition, post, body, None)
+
+
+cdef CBreak parse_break_statement():
+    _ = pop_next()
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
+    return CBreak(None)
+
+
+cdef CContinue parse_continue_statement():
+    _ = pop_next()
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
+    return CContinue(None)
+
+
 cdef CExpression parse_expression_statement():
     cdef CExp exp = parse_exp()
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
@@ -298,7 +353,8 @@ cdef CExpression parse_expression_statement():
 
 cdef CStatement parse_statement():
     # <statement> ::= "return" <exp> ";" | <exp> ";" | "if" "(" <exp> ")" <statement> [ "else" <statement> ] | ";"
-    #               | <block>
+    #               | <block> | "while" "(" <exp> ")" <statement> | "do" <statement> "while" "(" <exp> ")" ";"
+    #               | "for" "(" <for-init> [ <exp> ] ";" [ <exp> ] ")" <statement> | "break" ";" | "continue" ";"
     if peek_token.token_kind == TOKEN_KIND.get('semicolon'):
         return parse_null_statement()
     if peek_token.token_kind == TOKEN_KIND.get('key_return'):
@@ -312,8 +368,41 @@ cdef CStatement parse_statement():
             return parse_label_statement()
     if peek_token.token_kind == TOKEN_KIND.get('brace_open'):
         return parse_compound_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('key_while'):
+        return parse_while_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('key_do'):
+        return parse_do_while_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('key_for'):
+        return parse_for_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('key_break'):
+        return parse_break_statement()
+    if peek_token.token_kind == TOKEN_KIND.get('key_continue'):
+        return parse_continue_statement()
     if True:
         return parse_expression_statement()
+
+
+cdef CInitDecl parse_decl_for_init():
+    cdef CDeclaration init = parse_declaration()
+    return CInitDecl(init)
+
+
+cdef CInitExp parse_exp_for_init():
+    cdef CExp exp
+    if peek_next().token_kind == TOKEN_KIND.get('semicolon'):
+        init = None
+    else:
+        init = parse_exp()
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
+    return CInitExp(init)
+
+
+cdef CForInit parse_for_init():
+    # <for-init> ::= <declaration> | [<exp>] ";"
+    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
+        return parse_decl_for_init()
+    if True:
+        return parse_exp_for_init()
 
 
 cdef CDecl parse_decl_declaration():

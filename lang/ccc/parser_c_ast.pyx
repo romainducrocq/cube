@@ -393,10 +393,10 @@ cdef class CInitDecl(CForInit):
 cdef class CInitExp(CForInit):
     # InitExp(exp?)
     def __cinit__(self):
-        self._fields = ('exp',)
+        self._fields = ('init',)
 
-    def __init__(self, CExp exp):
-        self.exp = exp
+    def __init__(self, CExp init):
+        self.init = init
 
 
 cdef class CDeclaration(AST):
