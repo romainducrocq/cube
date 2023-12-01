@@ -1,6 +1,7 @@
 from ccc.util_ast cimport ast_iter_child_nodes
-from ccc.parser_c_ast cimport AST, CProgram, TIdentifier, CFunction, CBlock, CB, CBlockItem, CD, CS, CDeclaration
-from ccc.parser_c_ast cimport CStatement, CDecl, CReturn, CExpression, CIf, CLabel, CGoto, CCompound, CNull
+from ccc.parser_c_ast cimport TIdentifier, CProgram, CFunctionDef, CFunction, CBlock, CB, CBlockItem, CD, CS
+from ccc.parser_c_ast cimport CDeclaration, CDecl
+from ccc.parser_c_ast cimport CStatement, CReturn, CExpression, CIf, CLabel, CGoto, CCompound, CNull
 from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound, CConditional
 
 from ccc.intermediate_name cimport resolve_label_identifier, resolve_variable_identifier
@@ -158,20 +159,23 @@ cdef void resolve_label():
                 f"An error occurred in semantic analysis, goto \"{target}\" has no target label")
 
 
-cdef void resolve_variable(CProgram node):
+cdef void resolve_function_def(CFunctionDef node):
     global goto_map
     global label_set
 
-    cdef AST child_node
-    for child_node, _, _ in ast_iter_child_nodes(node):
-        if isinstance(child_node, CFunction):
-            goto_map = {}
-            label_set = set()
-            resolve_block(child_node.body)
-            resolve_label()
-        #
-        # else:
-        #     resolve_variable(child_node)
+    if isinstance(node, CFunction):
+        goto_map = {}
+        label_set = set()
+        resolve_block(node.body)
+        resolve_label()
+        return
+
+    raise RuntimeError(
+        "An error occurred in semantic analysis, not all nodes were visited")
+
+
+cdef void resolve_variable(CProgram node):
+    resolve_function_def(node.function_def)
 
 
 cdef void semantic_analysis(CProgram c_ast):
