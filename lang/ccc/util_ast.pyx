@@ -33,19 +33,19 @@ cdef list[tuple[object, str]] ast_iter_fields(AST node): #
 
 cdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node):
 
-    cdef object field, item
+    cdef object field
     cdef list[tuple[AST, str, int]] child_nodes = []
 
-    cdef int e
-    cdef str name
-    for name in node._fields:
-        field = getattr(node, name)
+    cdef int name
+    cdef int item
+    for name in range(len(node._fields)):
+        field = getattr(node, node._fields[name])
         if isinstance(field, AST):
-            child_nodes.append((field, name, -1))
+            child_nodes.append((field, node._fields[name], -1))
         elif isinstance(field, list):
-            for e, item in enumerate(field):
-                if isinstance(item, AST):
-                    child_nodes.append((item, name, e))
+            for item in range(len(field)):
+                if isinstance(field[item], AST):
+                    child_nodes.append((field[item], node._fields[name], item))
 
     return child_nodes
 

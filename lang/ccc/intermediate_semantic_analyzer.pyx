@@ -129,12 +129,12 @@ cdef void resolve_expression(CExp node):
 
 cdef void resolve_block_items(list[CBlockItems] list_node):
 
-    cdef CBlockItem block_item
-    for block_item in list_node:
-        if isinstance(block_item, CS):
-            resolve_statement(block_item.statement)
-        elif isinstance(block_item, CD):
-            resolve_declaration(block_item.declaration)
+    cdef int block_item
+    for block_item in range(len(list_node)):
+        if isinstance(list_node[block_item], CS):
+            resolve_statement(list_node[block_item].statement)
+        elif isinstance(list_node[block_item], CD):
+            resolve_declaration(list_node[block_item].declaration)
         else:
 
             raise RuntimeError(

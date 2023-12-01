@@ -248,9 +248,9 @@ cdef void generate_list_instructions(list[TacInstruction] list_node):
     global instructions
     instructions = []
 
-    cdef TacInstruction item_node
-    for item_node in list_node:
-        generate_instructions(item_node)
+    cdef int instruction
+    for instruction in range(len(list_node)):
+        generate_instructions(list_node[instruction])
 
 
 cdef AsmFunctionDef generate_function_def(TacFunctionDef node):

@@ -283,6 +283,12 @@ cdef void emit_instructions(AsmInstruction node):
         "An error occurred in code emission, not all nodes were visited")
 
 
+cdef void emit_list_instructions(list[AsmInstruction] list_node):
+    cdef int instruction
+    for instruction in range(len(list_node)):
+        emit_instructions(list_node[instruction])
+
+
 cdef void emit_function_def(AsmFunctionDef node):
     # Function(name, instructions) -> $     .globl <name>
     #                                 $ <name>:
@@ -296,8 +302,7 @@ cdef void emit_function_def(AsmFunctionDef node):
         emit(f"{name}:", t=0)
         emit("pushq %rbp", t=1)
         emit("movq %rsp, %rbp", t=1)
-        for instruction in node.instructions:
-            emit_instructions(instruction)
+        emit_list_instructions(node.instructions)
         return
 
     raise RuntimeError(

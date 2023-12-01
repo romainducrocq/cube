@@ -315,12 +315,12 @@ cdef void represent_list_instructions(list[CBlockItem] list_node):
     #             | Jump(identifier target) | JumpIfZero(val condition, identifier target)
     #             | JumpIfNotZero(val condition, identifier target) | Label(identifier name)
 
-    cdef CBlockItem item_node
-    for item_node in list_node:
-        if isinstance(item_node, CS):
-            represent_statement_instructions(item_node.statement)
-        elif isinstance(item_node, CD):
-            represent_declaration_instructions(item_node.declaration)
+    cdef int block_item
+    for block_item in range(len(list_node)):
+        if isinstance(list_node[block_item], CS):
+            represent_statement_instructions(list_node[block_item].statement)
+        elif isinstance(list_node[block_item], CD):
+            represent_declaration_instructions(list_node[block_item].declaration)
         else:
 
             raise RuntimeError(
