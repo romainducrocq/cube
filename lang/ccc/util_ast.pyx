@@ -24,9 +24,9 @@ cdef list[tuple[object, str]] ast_iter_fields(AST node): #
 #
     cdef list[tuple[object, str]] fields = [] #
 #
-    cdef str name #
-    for name in node._fields: #
-        fields.append((getattr(node, name), name)) #
+    cdef int name #
+    for name in range(len(node._fields)): #
+        fields.append((getattr(node, node._fields[name]), node._fields[name])) #
 #
     return fields #
 #
