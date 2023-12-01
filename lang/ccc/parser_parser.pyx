@@ -387,7 +387,7 @@ cdef CProgram parse_program():
     return CProgram(function_def)
 
 
-cdef AST parsing(list[Token] lex_tokens):
+cdef CProgram parsing(list[Token] lex_tokens):
     global tokens
     global next_token
     global peek_token
@@ -395,7 +395,7 @@ cdef AST parsing(list[Token] lex_tokens):
     next_token = Token('', TOKEN_KIND.get('error'))
     peek_token = Token('', TOKEN_KIND.get('error'))
 
-    cdef AST c_ast = parse_program()
+    cdef CProgram c_ast = parse_program()
 
     if tokens:
         raise RuntimeError(

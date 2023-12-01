@@ -353,20 +353,15 @@ cdef TacFunctionDef represent_function_def(CFunctionDef node):
         "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef TacProgram represent_program(AST node):
-    # AST = Program(function_definition)
-    cdef TacFunctionDef function_def
-    if isinstance(node, CProgram):
-        function_def = represent_function_def(node.function_def)
-        return TacProgram(function_def)
-
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+cdef TacProgram represent_program(CProgram node):
+    # program = Program(function_definition)
+    cdef TacFunctionDef function_def = represent_function_def(node.function_def)
+    return TacProgram(function_def)
 
 
-cdef AST three_address_code_representation(AST c_ast):
+cdef TacProgram three_address_code_representation(CProgram c_ast):
 
-    cdef AST tac_ast = represent_program(c_ast)
+    cdef TacProgram tac_ast = represent_program(c_ast)
 
     if not tac_ast:
         raise RuntimeError(

@@ -1,3 +1,4 @@
-from ccc.assembly_asm_ast cimport AST
+from ccc.intermediate_tac_ast cimport TacProgram
+from ccc.assembly_asm_ast cimport AsmProgram
 
-cdef AST assembly_generation(AST tac_ast)
+cdef AsmProgram assembly_generation(TacProgram tac_ast)

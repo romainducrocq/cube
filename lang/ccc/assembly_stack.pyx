@@ -1,5 +1,5 @@
 from ccc.util_ast cimport ast_iter_child_nodes, ast_set_child_node
-from ccc.assembly_asm_ast cimport AST, TInt, AsmPseudo, AsmStack, AsmAllocStack, AsmInstruction
+from ccc.assembly_asm_ast cimport AST, TInt, AsmProgram, AsmPseudo, AsmStack, AsmAllocStack, AsmInstruction
 from ccc.assembly_asm_ast cimport AsmFunction, AsmOperand, AsmMov, AsmCmp, AsmImm, AsmBinary, AsmIdiv, AsmMult
 from ccc.assembly_asm_ast cimport AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
@@ -44,7 +44,7 @@ cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
     instructions.insert(0, AsmAllocStack(value))
 
 
-cdef void correct_instructions(AST node):
+cdef void correct_instructions(AsmProgram node):
 
     cdef int e
     cdef int i
@@ -120,12 +120,12 @@ cdef void correct_instructions(AST node):
         #     correct_instructions(child_node)
 
 
-cdef generate_stack(AST node):
+cdef generate_stack(AsmProgram asm_ast):
     global counter
     global pseudo_map
     counter = -1
     pseudo_map = {}
 
-    replace_pseudo_registers(node)
+    replace_pseudo_registers(asm_ast)
 
-    correct_instructions(node)
+    correct_instructions(asm_ast)

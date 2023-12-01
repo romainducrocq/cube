@@ -1,6 +1,6 @@
 from ccc.util_ast cimport ast_iter_child_nodes
-from ccc.parser_c_ast cimport AST, TIdentifier, CFunction, CBlock, CB, CBlockItem, CD, CS, CDeclaration, CStatement
-from ccc.parser_c_ast cimport CDecl, CReturn, CExpression, CIf, CLabel, CGoto, CCompound, CNull
+from ccc.parser_c_ast cimport AST, CProgram, TIdentifier, CFunction, CBlock, CB, CBlockItem, CD, CS, CDeclaration
+from ccc.parser_c_ast cimport CStatement, CDecl, CReturn, CExpression, CIf, CLabel, CGoto, CCompound, CNull
 from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound, CConditional
 
 from ccc.intermediate_name cimport resolve_label_identifier, resolve_variable_identifier
@@ -158,7 +158,7 @@ cdef void resolve_label():
                 f"An error occurred in semantic analysis, goto \"{target}\" has no target label")
 
 
-cdef void resolve_variable(AST node):
+cdef void resolve_variable(CProgram node):
     global goto_map
     global label_set
 
@@ -174,7 +174,7 @@ cdef void resolve_variable(AST node):
         #     resolve_variable(child_node)
 
 
-cdef void semantic_analysis(AST c_ast):
+cdef void semantic_analysis(CProgram c_ast):
     global scoped_variable_maps
     scoped_variable_maps = [{}]
 

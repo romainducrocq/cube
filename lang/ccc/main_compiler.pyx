@@ -1,9 +1,15 @@
 from ccc.util_iota_enum cimport IotaEnum
 from ccc.util_ast cimport AST, ast_pretty_string
+
 from ccc.parser_lexer cimport lexing, Token
+from ccc.parser_c_ast cimport CProgram
 from ccc.parser_parser cimport parsing
+
 from ccc.intermediate_semantic_analyzer cimport semantic_analysis
+from ccc.intermediate_tac_ast cimport TacProgram
 from ccc.intermediate_three_address_generator cimport three_address_code_representation
+
+from ccc.assembly_asm_ast cimport AsmProgram
 from ccc.assembly_assembly_generator cimport assembly_generation
 from ccc.assembly_code_emitter cimport code_emission
 from ccc.assembly_code_emitter cimport code_emission_print #
@@ -58,7 +64,7 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         return
 
     debug("-- Start parser...") #
-    cdef AST c_ast = parsing(tokens)
+    cdef CProgram c_ast = parsing(tokens)
     debug("-- Exit parser: OK") #
     if opt_exit == OPT.get('--parse'):
         debug_ast(c_ast) #
@@ -72,14 +78,14 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         return
 
     debug("-- Start tac representation...") #
-    cdef AST tac_ast = three_address_code_representation(c_ast)
+    cdef TacProgram tac_ast = three_address_code_representation(c_ast)
     debug("-- Exit tac representation: OK") #
     if opt_exit == OPT.get('--tacky'):
         debug_ast(tac_ast) #
         return
 
     debug("-- Start assembly generation...") #
-    cdef AST asm_ast = assembly_generation(tac_ast)
+    cdef AsmProgram asm_ast = assembly_generation(tac_ast)
     debug("-- Exit assembly generation: OK") #
     if opt_exit == OPT.get('--codegen'):
         debug_ast(asm_ast) #

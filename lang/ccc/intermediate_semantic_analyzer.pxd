@@ -1,3 +1,3 @@
-from ccc.parser_c_ast cimport AST
+from ccc.parser_c_ast cimport CProgram
 
-cdef void semantic_analysis(AST c_ast)
+cdef void semantic_analysis(CProgram c_ast)

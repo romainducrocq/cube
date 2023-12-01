@@ -304,19 +304,15 @@ cdef void emit_function_def(AsmFunctionDef node):
         "An error occurred in code emission, not all nodes were visited")
 
 
-cdef void emit_program(AST node):
+cdef void emit_program(AsmProgram node):
     # Program(function_definition) -> $ <function_definition>
     #                                 $     .section .note.GNU-stack,"",@progbits
-    if isinstance(node, AsmProgram):
-        emit_function_def(node.function_def)
-        emit(".section .note.GNU-stack,\"\",@progbits", t=1)
-        return
+    emit_function_def(node.function_def)
+    emit(".section .note.GNU-stack,\"\",@progbits", t=1)
 
-    raise RuntimeError(
-        "An error occurred in code emission, not all nodes were visited")
 
 #
-cdef list[str] code_emission_print(AST asm_ast): #
+cdef list[str] code_emission_print(AsmProgram asm_ast): #
     global debug #
     global print_code #
     debug = True #
@@ -331,7 +327,7 @@ cdef list[str] code_emission_print(AST asm_ast): #
     return print_code #
 #
 
-cdef void code_emission(AST asm_ast, str filename):
+cdef void code_emission(AsmProgram asm_ast, str filename):
 
     file_open_write(filename)
 

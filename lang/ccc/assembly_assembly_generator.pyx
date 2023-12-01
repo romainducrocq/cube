@@ -265,20 +265,15 @@ cdef AsmFunctionDef generate_function_def(TacFunctionDef node):
         "An error occurred in assembly generation, not all nodes were visited")
 
 
-cdef AsmProgram generate_program(AST node):
+cdef AsmProgram generate_program(TacProgram node):
     # program = Program(function_definition)
-    cdef AsmFunctionDef
-    if isinstance(node, TacProgram):
-        function_def = generate_function_def(node.function_def)
-        return AsmProgram(function_def)
-
-    raise RuntimeError(
-        "An error occurred in assembly generation, not all nodes were visited")
+    cdef AsmFunctionDef function_def = generate_function_def(node.function_def)
+    return AsmProgram(function_def)
 
 
-cdef AST assembly_generation(AST tac_ast):
+cdef AsmProgram assembly_generation(TacProgram tac_ast):
 
-    cdef AST asm_ast = generate_program(tac_ast)
+    cdef AsmProgram asm_ast = generate_program(tac_ast)
 
     if not asm_ast:
         raise RuntimeError(
