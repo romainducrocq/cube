@@ -17,6 +17,7 @@
 - [x] Local variables  
 - [x] Statements and conditional expressions  
 - [x] Compound statements  
+- [ ] Loops  
 
 ## How To _
 
