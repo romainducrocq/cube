@@ -6,6 +6,7 @@ from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignmen
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
 from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_loop, annotate_for_loop
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
+from ccc.semantic_loop_annotater cimport begin_annotate_loop, end_annotate_loop
 
 
 cdef list[dict[str, str]] scoped_variable_maps = [{}]
@@ -24,7 +25,7 @@ cdef void resolve_for_init(CForInit node):
         return
 
     raise RuntimeError(
-        "An error occurred in semantic analysis, not all nodes were visited")
+        "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_statement(CStatement node):
@@ -102,7 +103,7 @@ cdef void resolve_statement(CStatement node):
         return
 
     raise RuntimeError(
-        "An error occurred in semantic analysis, not all nodes were visited")
+        "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_declaration(CDeclaration node):
@@ -123,7 +124,7 @@ cdef void resolve_declaration(CDeclaration node):
         return
 
     raise RuntimeError(
-        "An error occurred in semantic analysis, not all nodes were visited")
+        "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_expression(CExp node):
@@ -168,7 +169,7 @@ cdef void resolve_expression(CExp node):
         return
 
     raise RuntimeError(
-        "An error occurred in semantic analysis, not all nodes were visited")
+        "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_block_items(list[CBlockItem] list_node):
@@ -182,7 +183,7 @@ cdef void resolve_block_items(list[CBlockItem] list_node):
         else:
 
             raise RuntimeError(
-                "An error occurred in semantic analysis, not all nodes were visited")
+                "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_block(CBlock node):
@@ -191,7 +192,7 @@ cdef void resolve_block(CBlock node):
         return
 
     raise RuntimeError(
-        "An error occurred in semantic analysis, not all nodes were visited")
+        "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_label():
@@ -200,7 +201,7 @@ cdef void resolve_label():
         if not target in label_set:
 
             raise RuntimeError(
-                f"An error occurred in semantic analysis, goto \"{target}\" has no target label")
+                f"An error occurred in variable resolution, goto \"{target}\" has no target label")
 
 
 cdef void resolve_function_def(CFunctionDef node):
@@ -210,12 +211,14 @@ cdef void resolve_function_def(CFunctionDef node):
     if isinstance(node, CFunction):
         goto_map = {}
         label_set = set()
+        begin_annotate_loop()
         resolve_block(node.body)
         resolve_label()
+        end_annotate_loop()
         return
 
     raise RuntimeError(
-        "An error occurred in semantic analysis, not all nodes were visited")
+        "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_variable(CProgram node):

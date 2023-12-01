@@ -22,12 +22,34 @@ cdef void annotate_for_loop(CFor node):
 
 
 cdef void annotate_break_loop(CBreak node):
+    if not loop_labels:
+
+        raise RuntimeError(
+            "An error occurred in loop annotation, break is outside of loop")
+
     node.target = TIdentifier(loop_labels[-1])
 
 
 cdef void annotate_continue_loop(CContinue node):
+    if not loop_labels:
+
+        raise RuntimeError(
+            "An error occurred in loop annotation, continue is outside of loop")
+
     node.target = TIdentifier(loop_labels[-1])
 
 
 cdef void deannotate_loop():
     del loop_labels[-1]
+
+
+cdef void end_annotate_loop():
+    if loop_labels:
+
+        raise RuntimeError(
+            "An error occurred in loop annotation, not all visited loops were closed")
+
+
+cdef void begin_annotate_loop():
+    global loop_labels
+    loop_labels = []
