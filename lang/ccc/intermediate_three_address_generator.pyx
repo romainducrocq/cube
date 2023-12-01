@@ -1,6 +1,6 @@
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
-from ccc.intermediate_name cimport represent_label_identifier, represent_variable_identifier
+from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
 
 
 cdef TIdentifier represent_identifier(TIdentifier node):

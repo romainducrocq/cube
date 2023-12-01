@@ -5,7 +5,8 @@ from ccc.parser_lexer cimport lexing, Token
 from ccc.parser_c_ast cimport CProgram
 from ccc.parser_parser cimport parsing
 
-from ccc.intermediate_semantic_analyzer cimport semantic_analysis
+from ccc.semantic_variable_resolver cimport analyze_semantic
+
 from ccc.intermediate_tac_ast cimport TacProgram
 from ccc.intermediate_three_address_generator cimport three_address_code_representation
 
@@ -69,7 +70,7 @@ cdef void compile(str filename, int opt_exit, int opt_s):
         return
 
     debug("-- Start semantic analysis...") #
-    semantic_analysis(c_ast)
+    analyze_semantic(c_ast)
     debug("-- Exit semantic analysis: OK") #
     if opt_exit == OPT.get('--validate'):
         debug_ast(c_ast) #
