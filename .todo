@@ -7,4 +7,5 @@ BACKLOG
 
 - add timeit to ./test.sh to time exec
 
+- refactor variable resolution
 - see if can transform assembly_stack correct_instructions for to c for loop

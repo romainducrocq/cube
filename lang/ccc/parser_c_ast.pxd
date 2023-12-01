@@ -176,7 +176,9 @@ cdef class CDoWhile(CStatement):
 
 cdef class CFor(CStatement):
     cdef public CForInit init
+    # Optional
     cdef public CExp condition
+    # Optional
     cdef public CExp post
     cdef public CStatement body
     cdef public TIdentifier target

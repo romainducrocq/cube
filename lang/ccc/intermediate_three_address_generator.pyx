@@ -250,6 +250,78 @@ cdef void represent_statement_if_else_instructions(CIf node):
     instructions.append(TacLabel(target_false))
 
 
+cdef void represent_statement_while_instructions(CWhile node):
+    cdef TIdentifier target_continue = TIdentifier("continue_" + node.target.str_t)
+    instructions.append(TacLabel(target_continue))
+    cdef TacValue condition = represent_exp_instructions(node.condition)
+    cdef TIdentifier target_break = TIdentifier("break_" + node.target.str_t)
+    instructions.append(TacJumpIfZero(condition, target_break))
+    represent_statement_instructions(node.body)
+    instructions.append(TacJump(target_continue))
+    instructions.append(TacLabel(target_break))
+
+
+cdef void represent_statement_do_while_instructions(CDoWhile node):
+    cdef TIdentifier target_do_while_start = represent_label_identifier("do_while_start")
+    instructions.append(TacLabel(target_do_while_start))
+    represent_statement_instructions(node.body)
+    cdef TIdentifier target_continue = TIdentifier("continue_" + node.target.str_t)
+    instructions.append(TacLabel(target_continue))
+    cdef TacValue condition = represent_exp_instructions(node.condition)
+    instructions.append(TacJumpIfNotZero(condition, target_do_while_start))
+    cdef TIdentifier target_break = TIdentifier("break_" + node.target.str_t)
+    instructions.append(TacLabel(target_break))
+
+
+cdef void represent_for_init_decl_instructions(CInitDecl node):
+    represent_declaration_instructions(node.init)
+
+
+cdef void represent_for_init_exp_instructions(CInitExp node):
+    if node.init:
+        _ = represent_exp_instructions(node.init)
+
+
+cdef void represent_statement_for_init_instructions(CForInit node):
+    if isinstance(node, CInitDecl):
+        represent_for_init_decl_instructions(node)
+        return
+    if isinstance(node, CInitExp):
+        represent_for_init_exp_instructions(node)
+        return
+
+    raise RuntimeError(
+        "An error occurred in three address code representation, not all nodes were visited")
+
+
+cdef void represent_statement_for_instructions(CFor node):
+    represent_statement_for_init_instructions(node.init)
+    cdef TIdentifier target_for_start = represent_label_identifier("for_start")
+    instructions.append(TacLabel(target_for_start))
+    cdef TIdentifier target_break = TIdentifier("break_" + node.target.str_t)
+    cdef TacValue condition
+    if node.condition:
+        condition = represent_exp_instructions(node.condition)
+        instructions.append(TacJumpIfZero(condition, target_break))
+    represent_statement_instructions(node.body)
+    cdef TIdentifier target_continue = TIdentifier("continue_" + node.target.str_t)
+    instructions.append(TacLabel(target_continue))
+    if node.post:
+        _ = represent_exp_instructions(node.post)
+    instructions.append(TacJump(target_for_start))
+    instructions.append(TacLabel(target_break))
+
+
+cdef void represent_statement_break_instructions(CBreak node):
+    cdef TIdentifier target_break = TIdentifier("break_" + node.target.str_t)
+    instructions.append(TacJump(target_break))
+
+
+cdef void represent_statement_continue_instructions(CContinue node):
+    cdef TIdentifier target_continue = TIdentifier("continue_" + node.target.str_t)
+    instructions.append(TacJump(target_continue))
+
+
 cdef void represent_statement_goto_instructions(CGoto node):
     cdef TIdentifier target_label = node.target
     instructions.append(TacJump(target_label))
@@ -279,6 +351,21 @@ cdef void represent_statement_instructions(CStatement node):
             represent_statement_if_else_instructions(node)
         else:
             represent_statement_if_instructions(node)
+        return
+    if isinstance(node, CWhile):
+        represent_statement_while_instructions(node)
+        return
+    if isinstance(node, CDoWhile):
+        represent_statement_do_while_instructions(node)
+        return
+    if isinstance(node, CFor):
+        represent_statement_for_instructions(node)
+        return
+    if isinstance(node, CBreak):
+        represent_statement_break_instructions(node)
+        return
+    if isinstance(node, CContinue):
+        represent_statement_continue_instructions(node)
         return
     if isinstance(node, CGoto):
         represent_statement_goto_instructions(node)

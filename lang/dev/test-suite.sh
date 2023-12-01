@@ -24,7 +24,7 @@ else
     test --chapter 5 --latest-only --extra-credit
     test --chapter 6 --latest-only --extra-credit
     test --chapter 7 --latest-only --extra-credit
-    test --chapter 8 --stage validate --latest-only
+    test --chapter 8 --latest-only
 fi
 
 exit 0
