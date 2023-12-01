@@ -142,6 +142,7 @@ cdef object TOKEN_PATTERN = re_compile(
     "|".join(f"(?P<{str(tk)}>{TOKEN_REGEX[TOKEN_KIND.get(tk)]})" for tk in TOKEN_KIND.iter())
 )
 
+
 cdef list[Token] lexing(str filename):
 
     cdef list[Token] tokens = []

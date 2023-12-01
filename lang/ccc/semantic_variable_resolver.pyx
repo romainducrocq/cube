@@ -4,8 +4,8 @@ from ccc.parser_c_ast cimport CWhile, CDoWhile, CFor, CBreak, CContinue, CForIni
 from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignment, CAssignmentCompound, CConditional
 
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
-from ccc.semantic_loop_annotater cimport annotate_loop
-
+from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_loop, annotate_for_loop
+from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop
 
 cdef list[dict[str, str]] scoped_variable_maps = [{}]
 
@@ -27,7 +27,7 @@ cdef void resolve_for_init(CForInit node):
 
 
 cdef void resolve_statement(CStatement node):
-    if isinstance(node, (CNull, CBreak, CContinue)):
+    if isinstance(node, CNull):
         return
     if isinstance(node, (CReturn, CExpression)):
         resolve_expression(node.exp)
@@ -44,14 +44,17 @@ cdef void resolve_statement(CStatement node):
             resolve_statement(node.else_fi)
         return
     if isinstance(node, CWhile):
+        annotate_while_loop(node)
         resolve_expression(node.condition)
         resolve_statement(node.body)
         return
     if isinstance(node, CDoWhile):
+        annotate_do_while_loop(node)
         resolve_statement(node.body)
         resolve_expression(node.condition)
         return
     if isinstance(node, CFor):
+        annotate_for_loop(node)
         scoped_variable_maps.append({})
         resolve_for_init(node.init)
         if node.condition:
@@ -60,6 +63,12 @@ cdef void resolve_statement(CStatement node):
             resolve_expression(node.post)
         resolve_statement(node.body)
         del scoped_variable_maps[-1]
+        return
+    if isinstance(node, CBreak):
+        annotate_break_loop(node)
+        return
+    if isinstance(node, CContinue):
+        annotate_continue_loop(node)
         return
     cdef TIdentifier target
     if isinstance(node, CLabel):
@@ -215,5 +224,3 @@ cdef void resolve_variable(CProgram node):
 cdef void analyze_semantic(CProgram c_ast):
 
     resolve_variable(c_ast)
-
-    annotate_loop(c_ast)
