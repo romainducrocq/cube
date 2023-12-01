@@ -17,18 +17,18 @@ cdef void replace_pseudo_registers(AST node):
     if counter == -1:
         counter = 0
 
-    cdef int e
+    cdef int item
     cdef str attr
     cdef TInt value
     cdef AST child_node
-    for child_node, attr, e in ast_iter_child_nodes(node):
+    for child_node, attr, item in ast_iter_child_nodes(node):
         if isinstance(child_node, AsmPseudo):
             if child_node.name.str_t not in pseudo_map:
                 counter += offset
                 pseudo_map[child_node.name.str_t] = counter
 
             value = TInt(pseudo_map[child_node.name.str_t])
-            ast_set_child_node(node, attr, e, AsmStack(value))
+            ast_set_child_node(node, attr, item, AsmStack(value))
 
         else:
             replace_pseudo_registers(child_node)

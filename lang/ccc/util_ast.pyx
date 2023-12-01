@@ -79,10 +79,9 @@ cdef void _pretty_string(str kind, object node): #
     global string #
     global indent #
 #
-    cdef int e #
+    cdef int item #
     cdef str child_kind #
     cdef object child_node #
-    cdef object list_node #
 #
     string += str(' ' * indent + kind + type(node).__name__ + ':' + '\n') #
     indent += 4 #
@@ -92,8 +91,8 @@ cdef void _pretty_string(str kind, object node): #
             string += str(' ' * indent + '<' + child_kind + '> List(' + str(len(child_node)) + '):' + '\n') #
             indent += 4 #
 #
-            for e, list_node in enumerate(child_node): #
-                _pretty_string_child('[' + str(e) + '] ', list_node) #
+            for item in range(len(child_node)): #
+                _pretty_string_child('[' + str(item) + '] ', child_node[item]) #
 #
             indent -= 4 #
 #
