@@ -5,7 +5,8 @@ from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignmen
 
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
 from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_loop, annotate_for_loop
-from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop
+from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
+
 
 cdef list[dict[str, str]] scoped_variable_maps = [{}]
 
@@ -18,7 +19,7 @@ cdef void resolve_for_init(CForInit node):
         resolve_declaration(node.init)
         return
     if isinstance(node, CInitExp):
-        if node:
+        if node.init:
             resolve_expression(node.init)
         return
 
@@ -47,11 +48,13 @@ cdef void resolve_statement(CStatement node):
         annotate_while_loop(node)
         resolve_expression(node.condition)
         resolve_statement(node.body)
+        deannotate_loop()
         return
     if isinstance(node, CDoWhile):
         annotate_do_while_loop(node)
         resolve_statement(node.body)
         resolve_expression(node.condition)
+        deannotate_loop()
         return
     if isinstance(node, CFor):
         annotate_for_loop(node)
@@ -63,6 +66,7 @@ cdef void resolve_statement(CStatement node):
             resolve_expression(node.post)
         resolve_statement(node.body)
         del scoped_variable_maps[-1]
+        deannotate_loop()
         return
     if isinstance(node, CBreak):
         annotate_break_loop(node)
