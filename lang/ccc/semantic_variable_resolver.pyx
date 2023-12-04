@@ -18,92 +18,132 @@ cdef set[str] label_set = set()
 cdef void resolve_for_init(CForInit node):
     if isinstance(node, CInitDecl):
         resolve_declaration(node.init)
-        return
-    if isinstance(node, CInitExp):
+    elif isinstance(node, CInitExp):
         if node.init:
             resolve_expression(node.init)
-        return
+    else:
 
-    raise RuntimeError(
-        "An error occurred in variable resolution, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in variable resolution, not all nodes were visited")
+
+cdef void resolve_null_statement(CNull node):
+    pass
+
+
+cdef void resolve_return_statement(CReturn node):
+    resolve_expression(node.exp)
+
+
+cdef void resolve_expression_statement(CExpression node):
+    resolve_expression(node.exp)
+
+
+cdef void resolve_compound_statement(CCompound node):
+    scoped_variable_maps.append({})
+    resolve_block(node.block)
+    del scoped_variable_maps[-1]
+
+
+cdef void resolve_if_statement(CIf node):
+    resolve_expression(node.condition)
+    resolve_statement(node.then)
+    if node.else_fi:
+        resolve_statement(node.else_fi)
+
+
+cdef void resolve_while_statement(CWhile node):
+    annotate_while_loop(node)
+    resolve_expression(node.condition)
+    resolve_statement(node.body)
+    deannotate_loop()
+
+
+cdef void resolve_do_while_statement(CDoWhile node):
+    annotate_do_while_loop(node)
+    resolve_statement(node.body)
+    resolve_expression(node.condition)
+    deannotate_loop()
+
+
+cdef void resolve_for_statement(CFor node):
+    annotate_for_loop(node)
+    scoped_variable_maps.append({})
+    resolve_for_init(node.init)
+    if node.condition:
+        resolve_expression(node.condition)
+    if node.post:
+        resolve_expression(node.post)
+    resolve_statement(node.body)
+    del scoped_variable_maps[-1]
+    deannotate_loop()
+
+
+cdef void resolve_break_statement(CBreak node):
+    annotate_break_loop(node)
+
+
+cdef void resolve_continue_statement(CContinue node):
+    annotate_continue_loop(node)
+
+
+cdef void resolve_label_statement(CLabel node):
+    cdef TIdentifier target
+    if node.target in label_set:
+
+        raise RuntimeError(
+            f"Label {node.target.str_t} was already declared in this scope")
+
+    label_set.add(node.target.str_t)
+    if node.target.str_t in goto_map:
+        target = TIdentifier(goto_map[node.target.str_t])
+        node.target = target
+    else:
+        target = resolve_label_identifier(node.target)
+        goto_map[node.target.str_t] = target.str_t
+        node.target = target
+    resolve_statement(node.jump_to)
+
+
+cdef void resolve_goto_statement(CGoto node):
+    cdef TIdentifier target
+    if node.target.str_t in goto_map:
+        target = TIdentifier(goto_map[node.target.str_t])
+        node.target = target
+    else:
+        target = resolve_label_identifier(node.target)
+        goto_map[node.target.str_t] = target.str_t
+        node.target = target
 
 
 cdef void resolve_statement(CStatement node):
     if isinstance(node, CNull):
-        return
-    if isinstance(node, (CReturn, CExpression)):
-        resolve_expression(node.exp)
-        return
-    if isinstance(node, CCompound):
-        scoped_variable_maps.append({})
-        resolve_block(node.block)
-        del scoped_variable_maps[-1]
-        return
-    if isinstance(node, CIf):
-        resolve_expression(node.condition)
-        resolve_statement(node.then)
-        if node.else_fi:
-            resolve_statement(node.else_fi)
-        return
-    if isinstance(node, CWhile):
-        annotate_while_loop(node)
-        resolve_expression(node.condition)
-        resolve_statement(node.body)
-        deannotate_loop()
-        return
-    if isinstance(node, CDoWhile):
-        annotate_do_while_loop(node)
-        resolve_statement(node.body)
-        resolve_expression(node.condition)
-        deannotate_loop()
-        return
-    if isinstance(node, CFor):
-        annotate_for_loop(node)
-        scoped_variable_maps.append({})
-        resolve_for_init(node.init)
-        if node.condition:
-            resolve_expression(node.condition)
-        if node.post:
-            resolve_expression(node.post)
-        resolve_statement(node.body)
-        del scoped_variable_maps[-1]
-        deannotate_loop()
-        return
-    if isinstance(node, CBreak):
-        annotate_break_loop(node)
-        return
-    if isinstance(node, CContinue):
-        annotate_continue_loop(node)
-        return
-    cdef TIdentifier target
-    if isinstance(node, CLabel):
-        if node.target in label_set:
+        resolve_null_statement(node)
+    elif isinstance(node, CReturn):
+        resolve_return_statement(node)
+    elif isinstance(node, CExpression):
+        resolve_expression_statement(node)
+    elif isinstance(node, CCompound):
+        resolve_compound_statement(node)
+    elif isinstance(node, CIf):
+        resolve_if_statement(node)
+    elif isinstance(node, CWhile):
+        resolve_while_statement(node)
+    elif isinstance(node, CDoWhile):
+        resolve_do_while_statement(node)
+    elif isinstance(node, CFor):
+        resolve_for_statement(node)
+    elif isinstance(node, CBreak):
+        resolve_break_statement(node)
+    elif isinstance(node, CContinue):
+        resolve_continue_statement(node)
+    elif isinstance(node, CLabel):
+        resolve_label_statement(node)
+    elif isinstance(node, CGoto):
+        resolve_goto_statement(node)
+    else:
 
-            raise RuntimeError(
-                f"Label {node.target.str_t} was already declared in this scope")
-
-        label_set.add(node.target.str_t)
-        if node.target.str_t in goto_map:
-            target = TIdentifier(goto_map[node.target.str_t])
-            node.target = target
-        else:
-            target = resolve_label_identifier(node.target)
-            goto_map[node.target.str_t] = target.str_t
-            node.target = target
-        resolve_statement(node.jump_to)
-        return
-    if isinstance(node, CGoto):
-        if node.target.str_t in goto_map:
-            target = TIdentifier(goto_map[node.target.str_t])
-            node.target = target
-        else:
-            target = resolve_label_identifier(node.target)
-            goto_map[node.target.str_t] = target.str_t
-            node.target = target
-        return
-
-    raise RuntimeError(
-        "An error occurred in variable resolution, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_declaration(CDeclaration node):
