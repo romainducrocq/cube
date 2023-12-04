@@ -68,25 +68,38 @@ cdef TacUnaryOp represent_unary_op(CUnaryOp node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
+cdef TacConstant represent_constant_value(CConstant node):
+    cdef TInt value
+    value = represent_int(node.value)
+    return TacConstant(value)
+
+
+cdef TacVariable represent_variable_value(CVar node):
+    cdef TIdentifier name
+    name = represent_identifier(node.name)
+    return TacVariable(name)
+
+
+cdef TacVariable represent_inner_exp_value(CExp node):
+    cdef TIdentifier name
+    name = represent_variable_identifier(node)
+    return TacVariable(name)
+
+
 cdef TacValue represent_value(CExp node, bint outer = True):
     # val = Constant(int) | Var(identifier)
-    cdef TInt value
-    cdef TIdentifier name
     if outer:
         if isinstance(node, CConstant):
-            value = represent_int(node.value)
-            return TacConstant(value)
+            return represent_constant_value(node)
         elif isinstance(node, CVar):
-            name = represent_identifier(node.name)
-            return TacVariable(name)
+            return represent_variable_value(node)
         else:
 
             raise RuntimeError(
                 "An error occurred in three address code representation, not all nodes were visited")
 
     else:
-        name = represent_variable_identifier(node)
-        return TacVariable(name)
+        return represent_inner_exp_value(node)
 
 
 cdef list[TacInstruction] instructions = []

@@ -14,16 +14,24 @@ cdef TInt generate_int(TInt node):
     return TInt(node.int_t)
 
 
+cdef AsmImm generate_imm_operand(TacConstant node):
+    cdef TInt value
+    value = generate_int(node.value)
+    return AsmImm(value)
+
+
+cdef AsmPseudo generate_pseudo_operand(TacVariable node):
+    cdef TIdentifier identifier
+    identifier = generate_identifier(node.name)
+    return AsmPseudo(identifier)
+
+
 cdef AsmOperand generate_operand(TacValue node):
     # operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int)
-    cdef TInt value
-    cdef TIdentifier
     if isinstance(node, TacConstant):
-        value = generate_int(node.value)
-        return AsmImm(value)
+        return generate_imm_operand(node)
     elif isinstance(node, TacVariable):
-        identifier = generate_identifier(node.name)
-        return AsmPseudo(identifier)
+        return generate_pseudo_operand(node)
     else:
 
         raise RuntimeError(
