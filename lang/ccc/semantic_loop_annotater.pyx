@@ -43,13 +43,6 @@ cdef void deannotate_loop():
     del loop_labels[-1]
 
 
-cdef void end_annotate_loop():
-    if loop_labels:
-
-        raise RuntimeError(
-            "An error occurred in loop annotation, not all visited loops were closed")
-
-
-cdef void begin_annotate_loop():
+cdef void init_annotate_loop():
     global loop_labels
     loop_labels = []

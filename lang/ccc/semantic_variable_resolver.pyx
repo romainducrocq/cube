@@ -6,13 +6,21 @@ from ccc.parser_c_ast cimport CExp, CVar, CConstant, CUnary, CBinary, CAssignmen
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
 from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_loop, annotate_for_loop
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
-from ccc.semantic_loop_annotater cimport begin_annotate_loop, end_annotate_loop
+from ccc.semantic_loop_annotater cimport init_annotate_loop
 
 
 cdef list[dict[str, str]] scoped_variable_maps = [{}]
 
 cdef dict[str, str] goto_map = {}
 cdef set[str] label_set = set()
+
+
+cdef void enter_scope():
+    scoped_variable_maps.append({})
+
+
+cdef void exit_scope():
+    del scoped_variable_maps[-1]
 
 
 cdef void resolve_for_init(CForInit node):
@@ -25,6 +33,7 @@ cdef void resolve_for_init(CForInit node):
 
         raise RuntimeError(
             "An error occurred in variable resolution, not all nodes were visited")
+
 
 cdef void resolve_null_statement(CNull node):
     pass
@@ -39,9 +48,9 @@ cdef void resolve_expression_statement(CExpression node):
 
 
 cdef void resolve_compound_statement(CCompound node):
-    scoped_variable_maps.append({})
+    enter_scope()
     resolve_block(node.block)
-    del scoped_variable_maps[-1]
+    exit_scope()
 
 
 cdef void resolve_if_statement(CIf node):
@@ -67,14 +76,14 @@ cdef void resolve_do_while_statement(CDoWhile node):
 
 cdef void resolve_for_statement(CFor node):
     annotate_for_loop(node)
-    scoped_variable_maps.append({})
+    enter_scope()
     resolve_for_init(node.init)
     if node.condition:
         resolve_expression(node.condition)
     if node.post:
         resolve_expression(node.post)
     resolve_statement(node.body)
-    del scoped_variable_maps[-1]
+    exit_scope()
     deannotate_loop()
 
 
@@ -283,10 +292,9 @@ cdef void resolve_function(CFunction node):
     goto_map = {}
     label_set = set()
 
-    begin_annotate_loop()
+    init_annotate_loop()
     resolve_block(node.body)
     resolve_label()
-    end_annotate_loop()
 
 
 cdef void resolve_function_def(CFunctionDef node):
