@@ -18,52 +18,54 @@ cdef TacBinaryOp represent_binary_op(CBinaryOp node):
     #                 | GreaterThan | GreaterOrEqual
     if isinstance(node, CAdd):
         return TacAdd()
-    if isinstance(node, CSubtract):
+    elif isinstance(node, CSubtract):
         return TacSubtract()
-    if isinstance(node, CMultiply):
+    elif isinstance(node, CMultiply):
         return TacMultiply()
-    if isinstance(node, CDivide):
+    elif isinstance(node, CDivide):
         return TacDivide()
-    if isinstance(node, CRemainder):
+    elif isinstance(node, CRemainder):
         return TacRemainder()
-    if isinstance(node, CBitAnd):
+    elif isinstance(node, CBitAnd):
         return TacBitAnd()
-    if isinstance(node, CBitOr):
+    elif isinstance(node, CBitOr):
         return TacBitOr()
-    if isinstance(node, CBitXor):
+    elif isinstance(node, CBitXor):
         return TacBitXor()
-    if isinstance(node, CBitShiftLeft):
+    elif isinstance(node, CBitShiftLeft):
         return TacBitShiftLeft()
-    if isinstance(node, CBitShiftRight):
+    elif isinstance(node, CBitShiftRight):
         return TacBitShiftRight()
-    if isinstance(node, CEqual):
+    elif isinstance(node, CEqual):
         return TacEqual()
-    if isinstance(node, CNotEqual):
+    elif isinstance(node, CNotEqual):
         return TacNotEqual()
-    if isinstance(node, CLessThan):
+    elif isinstance(node, CLessThan):
         return TacLessThan()
-    if isinstance(node, CLessOrEqual):
+    elif isinstance(node, CLessOrEqual):
         return TacLessOrEqual()
-    if isinstance(node, CGreaterThan):
+    elif isinstance(node, CGreaterThan):
         return TacGreaterThan()
-    if isinstance(node, CGreaterOrEqual):
+    elif isinstance(node, CGreaterOrEqual):
         return TacGreaterOrEqual()
+    else:
 
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef TacUnaryOp represent_unary_op(CUnaryOp node):
     # unary_operator = Complement | Negate | Not
     if isinstance(node, CComplement):
         return TacComplement()
-    if isinstance(node, CNegate):
+    elif isinstance(node, CNegate):
         return TacNegate()
-    if isinstance(node, CNot):
+    elif isinstance(node, CNot):
         return TacNot()
+    else:
 
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef TacValue represent_value(CExp node, bint outer = True):
@@ -74,15 +76,17 @@ cdef TacValue represent_value(CExp node, bint outer = True):
         if isinstance(node, CConstant):
             value = represent_int(node.value)
             return TacConstant(value)
-        if isinstance(node, CVar):
+        elif isinstance(node, CVar):
             name = represent_identifier(node.name)
             return TacVariable(name)
+        else:
 
-        raise RuntimeError(
-            "An error occurred in three address code representation, not all nodes were visited")
+            raise RuntimeError(
+                "An error occurred in three address code representation, not all nodes were visited")
 
-    name = represent_variable_identifier(node)
-    return TacVariable(name)
+    else:
+        name = represent_variable_identifier(node)
+        return TacVariable(name)
 
 
 cdef list[TacInstruction] instructions = []
@@ -186,31 +190,34 @@ cdef TacValue represent_exp_binary_instructions(CBinary node):
 cdef TacValue represent_exp_instructions(CExp node):
     if isinstance(node, CVar):
         return represent_exp_var_instructions(node)
-    if isinstance(node, CConstant):
+    elif isinstance(node, CConstant):
         return represent_exp_constant_instructions(node)
-    if isinstance(node, CAssignment):
+    elif isinstance(node, CAssignment):
         return represent_exp_assignment_instructions(node)
-    if isinstance(node, CAssignmentCompound):
+    elif isinstance(node, CAssignmentCompound):
         return represent_exp_assignment_compound_instructions(node)
-    if isinstance(node, CConditional):
+    elif isinstance(node, CConditional):
         return represent_exp_conditional_instructions(node)
-    if isinstance(node, CUnary):
+    elif isinstance(node, CUnary):
         return represent_exp_unary_instructions(node)
-    if isinstance(node, CBinary):
+    elif isinstance(node, CBinary):
         if isinstance(node.binary_op, CAnd):
             return represent_exp_binary_and_instructions(node)
-        if isinstance(node.binary_op, COr):
+        elif isinstance(node.binary_op, COr):
             return represent_exp_binary_or_instructions(node)
-        if isinstance(node.binary_op, (CEqual, CNotEqual, CLessThan, CLessOrEqual, CGreaterThan, CGreaterOrEqual,
+        elif isinstance(node.binary_op, (CEqual, CNotEqual, CLessThan, CLessOrEqual, CGreaterThan, CGreaterOrEqual,
                                        CAdd, CSubtract, CMultiply, CDivide, CRemainder, CBitAnd, CBitOr, CBitXor,
                                        CBitShiftLeft, CBitShiftRight)):
             return represent_exp_binary_instructions(node)
+        else:
+
+            raise RuntimeError(
+                "An error occurred in three address code representation, not all nodes were visited")
+
+    else:
 
         raise RuntimeError(
             "An error occurred in three address code representation, not all nodes were visited")
-
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef void represent_statement_null_instructions(CNull node):
@@ -285,13 +292,12 @@ cdef void represent_for_init_exp_instructions(CInitExp node):
 cdef void represent_statement_for_init_instructions(CForInit node):
     if isinstance(node, CInitDecl):
         represent_for_init_decl_instructions(node)
-        return
-    if isinstance(node, CInitExp):
+    elif isinstance(node, CInitExp):
         represent_for_init_exp_instructions(node)
-        return
+    else:
 
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef void represent_statement_for_instructions(CFor node):
@@ -336,46 +342,35 @@ cdef void represent_statement_label_instructions(CLabel node):
 cdef void represent_statement_instructions(CStatement node):
     if isinstance(node, CNull):
         represent_statement_null_instructions(node)
-        return
-    if isinstance(node, CReturn):
+    elif isinstance(node, CReturn):
         represent_statement_return_instructions(node)
-        return
-    if isinstance(node, CCompound):
+    elif isinstance(node, CCompound):
         represent_statement_compound_instructions(node)
-        return
-    if isinstance(node, CExpression):
+    elif isinstance(node, CExpression):
         represent_statement_expression_instructions(node)
-        return
-    if isinstance(node, CIf):
+    elif isinstance(node, CIf):
         if node.else_fi:
             represent_statement_if_else_instructions(node)
         else:
             represent_statement_if_instructions(node)
-        return
-    if isinstance(node, CWhile):
+    elif isinstance(node, CWhile):
         represent_statement_while_instructions(node)
-        return
-    if isinstance(node, CDoWhile):
+    elif isinstance(node, CDoWhile):
         represent_statement_do_while_instructions(node)
-        return
-    if isinstance(node, CFor):
+    elif isinstance(node, CFor):
         represent_statement_for_instructions(node)
-        return
-    if isinstance(node, CBreak):
+    elif isinstance(node, CBreak):
         represent_statement_break_instructions(node)
-        return
-    if isinstance(node, CContinue):
+    elif isinstance(node, CContinue):
         represent_statement_continue_instructions(node)
-        return
-    if isinstance(node, CGoto):
+    elif isinstance(node, CGoto):
         represent_statement_goto_instructions(node)
-        return
-    if isinstance(node, CLabel):
+    elif isinstance(node, CLabel):
         represent_statement_label_instructions(node)
-        return
+    else:
 
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef void represent_declaration_decl_instructions(CDecl node):
@@ -390,10 +385,10 @@ cdef void represent_declaration_decl_instructions(CDecl node):
 cdef void represent_declaration_instructions(CDeclaration node):
     if isinstance(node, CDecl):
         represent_declaration_decl_instructions(node)
-        return
+    else:
 
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef void represent_list_instructions(list[CBlockItem] list_node):
@@ -418,10 +413,10 @@ cdef void represent_block(CBlock node):
     # block = Block(block_item* block_items)
     if isinstance(node, CB):
         represent_list_instructions(node.block_items)
-        return
+    else:
 
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef TacFunctionDef represent_function_def(CFunctionDef node):
@@ -435,9 +430,10 @@ cdef TacFunctionDef represent_function_def(CFunctionDef node):
         represent_block(node.body)
         instructions.append(TacReturn(TacConstant(TInt(0))))
         return TacFunction(name, instructions)
+    else:
 
-    raise RuntimeError(
-        "An error occurred in three address code representation, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef TacProgram represent_program(CProgram node):

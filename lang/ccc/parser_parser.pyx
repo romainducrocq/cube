@@ -23,9 +23,10 @@ cdef Token pop_next():
     if tokens:
         next_token = tokens.pop(0)
         return next_token
+    else:
 
-    raise RuntimeError(
-        "An error occurred in parser, all Tokens were consumed before end of program")
+        raise RuntimeError(
+            "An error occurred in parser, all Tokens were consumed before end of program")
 
 
 cdef Token peek_next():
@@ -34,17 +35,19 @@ cdef Token peek_next():
     if tokens:
         peek_token = tokens[0]
         return peek_token
+    else:
 
-    raise RuntimeError(
-        "An error occurred in parser, all Tokens were consumed before end of program")
+        raise RuntimeError(
+            "An error occurred in parser, all Tokens were consumed before end of program")
 
 
 cdef Token peek_next_i(int i):
     if i < len(tokens):
         return tokens[i]
+    else:
 
-    raise RuntimeError(
-        "An error occurred in parser, all Tokens were consumed before end of program")
+        raise RuntimeError(
+            "An error occurred in parser, all Tokens were consumed before end of program")
 
 
 cdef TIdentifier parse_identifier():
@@ -65,65 +68,67 @@ cdef CBinaryOp parse_binary_op():
     if pop_next().token_kind in (TOKEN_KIND.get('unop_negation'),
                                  TOKEN_KIND.get('assignment_difference')):
         return CSubtract()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_addition'),
-                                 TOKEN_KIND.get('assignment_plus')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_addition'),
+                                   TOKEN_KIND.get('assignment_plus')):
         return CAdd()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_multiplication'),
-                                 TOKEN_KIND.get('assignment_product')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_multiplication'),
+                                   TOKEN_KIND.get('assignment_product')):
         return CMultiply()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_division'),
-                                 TOKEN_KIND.get('assignment_quotient')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_division'),
+                                   TOKEN_KIND.get('assignment_quotient')):
         return CDivide()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_remainder'),
-                                 TOKEN_KIND.get('assignment_remainder')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_remainder'),
+                                   TOKEN_KIND.get('assignment_remainder')):
         return CRemainder()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_bitand'),
-                                 TOKEN_KIND.get('assignment_bitand')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_bitand'),
+                                   TOKEN_KIND.get('assignment_bitand')):
         return CBitAnd()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_bitor'),
-                                 TOKEN_KIND.get('assignment_bitor')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_bitor'),
+                                   TOKEN_KIND.get('assignment_bitor')):
         return CBitOr()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_bitxor'),
-                                 TOKEN_KIND.get('assignment_bitxor')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_bitxor'),
+                                   TOKEN_KIND.get('assignment_bitxor')):
         return CBitXor()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_bitshiftleft'),
-                                 TOKEN_KIND.get('assignment_bitshiftleft')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_bitshiftleft'),
+                                   TOKEN_KIND.get('assignment_bitshiftleft')):
         return CBitShiftLeft()
-    if next_token.token_kind in (TOKEN_KIND.get('binop_bitshiftright'),
-                                 TOKEN_KIND.get('assignment_bitshiftright')):
+    elif next_token.token_kind in (TOKEN_KIND.get('binop_bitshiftright'),
+                                   TOKEN_KIND.get('assignment_bitshiftright')):
         return CBitShiftRight()
-    if next_token.token_kind == TOKEN_KIND.get('binop_and'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_and'):
         return CAnd()
-    if next_token.token_kind == TOKEN_KIND.get('binop_or'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_or'):
         return COr()
-    if next_token.token_kind == TOKEN_KIND.get('binop_equalto'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_equalto'):
         return CEqual()
-    if next_token.token_kind == TOKEN_KIND.get('binop_notequal'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_notequal'):
         return CNotEqual()
-    if next_token.token_kind == TOKEN_KIND.get('binop_lessthan'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_lessthan'):
         return CLessThan()
-    if next_token.token_kind == TOKEN_KIND.get('binop_lessthanorequal'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_lessthanorequal'):
         return CLessOrEqual()
-    if next_token.token_kind == TOKEN_KIND.get('binop_greaterthan'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_greaterthan'):
         return CGreaterThan()
-    if next_token.token_kind == TOKEN_KIND.get('binop_greaterthanorequal'):
+    elif next_token.token_kind == TOKEN_KIND.get('binop_greaterthanorequal'):
         return CGreaterOrEqual()
+    else:
 
-    raise RuntimeError(
-        f"Expected token type \"binary_op\" but found token \"{next_token.token}\"")
+        raise RuntimeError(
+            f"Expected token type \"binary_op\" but found token \"{next_token.token}\"")
 
 
 cdef CUnaryOp parse_unary_op():
     # <unop> ::= "-" | "~" | "!"
     if pop_next().token_kind == TOKEN_KIND.get('unop_complement'):
         return CComplement()
-    if next_token.token_kind == TOKEN_KIND.get('unop_negation'):
+    elif next_token.token_kind == TOKEN_KIND.get('unop_negation'):
         return CNegate()
-    if next_token.token_kind == TOKEN_KIND.get('unop_not'):
+    elif next_token.token_kind == TOKEN_KIND.get('unop_not'):
         return CNot()
+    else:
 
-    raise RuntimeError(
-        f"Expected token type \"unary_op\" but found token \"{next_token.token}\"")
+        raise RuntimeError(
+            f"Expected token type \"unary_op\" but found token \"{next_token.token}\"")
 
 
 cdef CVar parse_var_factor():
@@ -152,17 +157,18 @@ cdef CExp parse_factor():
     # <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")"
     if peek_next().token_kind == TOKEN_KIND.get('identifier'):
         return parse_var_factor()
-    if peek_token.token_kind == TOKEN_KIND.get('constant'):
+    elif peek_token.token_kind == TOKEN_KIND.get('constant'):
         return parse_constant_factor()
-    if peek_token.token_kind in (TOKEN_KIND.get('unop_complement'),
-                                 TOKEN_KIND.get('unop_negation'),
-                                 TOKEN_KIND.get('unop_not')):
+    elif peek_token.token_kind in (TOKEN_KIND.get('unop_complement'),
+                                   TOKEN_KIND.get('unop_negation'),
+                                   TOKEN_KIND.get('unop_not')):
         return parse_unary_factor()
-    if pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
+    elif pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
         return parse_inner_exp_factor()
+    else:
 
-    raise RuntimeError(
-        f"Expected token type \"factor\" but found token \"{next_token.token}\"")
+        raise RuntimeError(
+            f"Expected token type \"factor\" but found token \"{next_token.token}\"")
 
 
 cdef CAssignment parse_assigment_exp(CExp exp_left, int precedence):
@@ -199,7 +205,7 @@ cdef CExp parse_exp(int min_precedence = 0):
         precedence = parse_token_precedence(peek_next().token_kind)
         if precedence < min_precedence:
             break
-        if peek_token.token_kind == TOKEN_KIND.get('assignment_simple'):
+        elif peek_token.token_kind == TOKEN_KIND.get('assignment_simple'):
             exp_left = parse_assigment_exp(exp_left, precedence)
         elif peek_token.token_kind in (TOKEN_KIND.get('assignment_plus'),
                                        TOKEN_KIND.get('assignment_difference'),
@@ -357,29 +363,29 @@ cdef CStatement parse_statement():
     #               | "for" "(" <for-init> [ <exp> ] ";" [ <exp> ] ")" <statement> | "break" ";" | "continue" ";"
     if peek_token.token_kind == TOKEN_KIND.get('semicolon'):
         return parse_null_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_return'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_return'):
         return parse_return_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_if'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_if'):
         return parse_if_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_goto'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_goto'):
         return parse_goto_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('identifier'):
+    elif peek_token.token_kind == TOKEN_KIND.get('identifier'):
         if peek_next_i(1).token_kind == TOKEN_KIND.get('ternary_else'):
             return parse_label_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('brace_open'):
+    elif peek_token.token_kind == TOKEN_KIND.get('brace_open'):
         return parse_compound_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_while'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_while'):
         return parse_while_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_do'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_do'):
         return parse_do_while_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_for'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_for'):
         return parse_for_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_break'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_break'):
         return parse_break_statement()
-    if peek_token.token_kind == TOKEN_KIND.get('key_continue'):
+    elif peek_token.token_kind == TOKEN_KIND.get('key_continue'):
         return parse_continue_statement()
-    if True:
-        return parse_expression_statement()
+
+    return parse_expression_statement()
 
 
 cdef CInitDecl parse_decl_for_init():
@@ -401,7 +407,7 @@ cdef CForInit parse_for_init():
     # <for-init> ::= <declaration> | [<exp>] ";"
     if peek_next().token_kind == TOKEN_KIND.get('key_int'):
         return parse_decl_for_init()
-    if True:
+    else:
         return parse_exp_for_init()
 
 
@@ -438,7 +444,7 @@ cdef CBlockItem parse_block_item():
     # <block-item> ::= <statement> | <declaration>
     if peek_token.token_kind == TOKEN_KIND.get('key_int'):
         return parse_d_block_item()
-    if True:
+    else:
         return parse_s_block_item()
 
 
