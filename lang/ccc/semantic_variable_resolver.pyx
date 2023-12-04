@@ -146,70 +146,103 @@ cdef void resolve_statement(CStatement node):
             "An error occurred in variable resolution, not all nodes were visited")
 
 
-cdef void resolve_declaration(CDeclaration node):
+cdef void resolve_decl_declaration(CDecl node):
     global scoped_variable_maps
 
     cdef TIdentifier name
+    if node.name.str_t in scoped_variable_maps[-1]:
+
+        raise RuntimeError(
+            f"Variable {node.name.str_t} was already declared in this scope")
+
+    name = resolve_variable_identifier(node.name)
+    scoped_variable_maps[-1][node.name.str_t] = name.str_t
+    node.name = name
+    if node.init:
+        resolve_expression(node.init)
+
+
+cdef void resolve_declaration(CDeclaration node):
     if isinstance(node, CDecl):
-        if node.name.str_t in scoped_variable_maps[-1]:
+        resolve_decl_declaration(node)
+    else:
 
-            raise RuntimeError(
-                f"Variable {node.name.str_t} was already declared in this scope")
-
-        name = resolve_variable_identifier(node.name)
-        scoped_variable_maps[-1][node.name.str_t] = name.str_t
-        node.name = name
-        if node.init:
-            resolve_expression(node.init)
-        return
-
-    raise RuntimeError(
-        "An error occurred in variable resolution, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in variable resolution, not all nodes were visited")
 
 
-cdef void resolve_expression(CExp node):
-    if isinstance(node, CConstant):
-        return
-    if isinstance(node, (CAssignment, CAssignmentCompound)):
-        if not isinstance(node.exp_left, CVar):
-
-            raise RuntimeError(
-                f"Left expression {type(node.exp_left)} is an invalid lvalue")
-
-        resolve_expression(node.exp_left)
-        resolve_expression(node.exp_right)
-        return
-    if isinstance(node, CUnary):
-        resolve_expression(node.exp)
-        return
-    if isinstance(node, CBinary):
-        resolve_expression(node.exp_left)
-        resolve_expression(node.exp_right)
-        return
-    if isinstance(node, CConditional):
-        resolve_expression(node.condition)
-        resolve_expression(node.exp_middle)
-        resolve_expression(node.exp_right)
-        return
-
+cdef void resolve_var_expression(CVar node):
     cdef int i
     cdef int scope
     cdef TIdentifier name
+    for scope in range(len(scoped_variable_maps)):
+        i = - (scope + 1)
+        if node.name.str_t in scoped_variable_maps[i]:
+            name = TIdentifier(scoped_variable_maps[i][node.name.str_t])
+            node.name = name
+            break
+    else:
+
+        raise RuntimeError(
+            f"Variable {node.name.str_t} was not declared in this scope")
+
+
+cdef void resolve_constant_expression(CConstant node):
+    pass
+
+
+cdef void resolve_assignment_expression(CAssignment node):
+    if not isinstance(node.exp_left, CVar):
+        raise RuntimeError(
+            f"Left expression {type(node.exp_left)} is an invalid lvalue")
+
+    resolve_expression(node.exp_left)
+    resolve_expression(node.exp_right)
+
+
+cdef void resolve_assignment_compound_expression(CAssignmentCompound node):
+    if not isinstance(node.exp_left, CVar):
+        raise RuntimeError(
+            f"Left expression {type(node.exp_left)} is an invalid lvalue")
+
+    resolve_expression(node.exp_left)
+    resolve_expression(node.exp_right)
+
+
+cdef void resolve_unary_expression(CUnary node):
+    resolve_expression(node.exp)
+
+
+cdef void resolve_binary_expression(CBinary node):
+    resolve_expression(node.exp_left)
+    resolve_expression(node.exp_right)
+
+
+cdef void resolve_conditional_expression(CConditional node):
+    resolve_expression(node.condition)
+    resolve_expression(node.exp_middle)
+    resolve_expression(node.exp_right)
+
+
+cdef void resolve_expression(CExp node):
     if isinstance(node, CVar):
-        for scope in range(len(scoped_variable_maps)):
-            i = - (scope + 1)
-            if node.name.str_t in scoped_variable_maps[i]:
-                name = TIdentifier(scoped_variable_maps[i][node.name.str_t])
-                node.name = name
-                break
-        else:
+        resolve_var_expression(node)
+    elif isinstance(node, CConstant):
+        resolve_constant_expression(node)
+    elif isinstance(node, CAssignment):
+        resolve_assignment_expression(node)
+    elif isinstance(node, CAssignmentCompound):
+        resolve_assignment_compound_expression(node)
+    elif isinstance(node, CUnary):
+        resolve_unary_expression(node)
+    elif isinstance(node, CBinary):
+        resolve_binary_expression(node)
+    elif isinstance(node, CConditional):
+        resolve_conditional_expression(node)
+    else:
 
-            raise RuntimeError(
-                f"Variable {node.name.str_t} was not declared in this scope")
-        return
-
-    raise RuntimeError(
-        "An error occurred in variable resolution, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_block_items(list[CBlockItem] list_node):
@@ -229,10 +262,10 @@ cdef void resolve_block_items(list[CBlockItem] list_node):
 cdef void resolve_block(CBlock node):
     if isinstance(node, CB):
         resolve_block_items(node.block_items)
-        return
+    else:
 
-    raise RuntimeError(
-        "An error occurred in variable resolution, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in variable resolution, not all nodes were visited")
 
 
 cdef void resolve_label():
@@ -244,24 +277,28 @@ cdef void resolve_label():
                 f"An error occurred in variable resolution, goto \"{target}\" has no target label")
 
 
-cdef void resolve_function_def(CFunctionDef node):
+cdef void resolve_function(CFunction node):
     global goto_map
     global label_set
+    goto_map = {}
+    label_set = set()
 
+    begin_annotate_loop()
+    resolve_block(node.body)
+    resolve_label()
+    end_annotate_loop()
+
+
+cdef void resolve_function_def(CFunctionDef node):
     if isinstance(node, CFunction):
-        goto_map = {}
-        label_set = set()
-        begin_annotate_loop()
-        resolve_block(node.body)
-        resolve_label()
-        end_annotate_loop()
-        return
+        resolve_function(node)
+    else:
 
-    raise RuntimeError(
-        "An error occurred in variable resolution, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in variable resolution, not all nodes were visited")
 
 
-cdef void resolve_variable(CProgram node):
+cdef void resolve_variables(CProgram node):
     global scoped_variable_maps
     scoped_variable_maps = [{}]
 
@@ -270,4 +307,4 @@ cdef void resolve_variable(CProgram node):
 
 cdef void analyze_semantic(CProgram c_ast):
 
-    resolve_variable(c_ast)
+    resolve_variables(c_ast)
