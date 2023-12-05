@@ -124,6 +124,11 @@ cdef class CConditional(CExp):
     cdef public CExp exp_right
 
 
+cdef class CFunctionCall(CExp):
+    cdef public TIdentifier name
+    cdef public list[CExp] args
+
+
 cdef class CAssignmentCompound(CExp):
     cdef public CBinaryOp binary_op
     cdef public CExp exp_left
@@ -201,20 +206,10 @@ cdef class CForInit(AST):
 
 
 cdef class CInitDecl(CForInit):
-    cdef public CDeclaration init
+    cdef public CVariableDeclaration init
 
 
 cdef class CInitExp(CForInit):
-    # Optional
-    cdef public CExp init
-
-
-cdef class CDeclaration(AST):
-    pass
-
-
-cdef class CDecl(CDeclaration):
-    cdef public TIdentifier name
     # Optional
     cdef public CExp init
 
@@ -239,14 +234,38 @@ cdef class CD(CBlockItem):
     cdef public CDeclaration declaration
 
 
-cdef class CFunctionDef(AST):
+cdef class CFunctionDeclaration(AST):
     pass
 
 
-cdef class CFunction(CFunctionDef):
+cdef class CFunctionDecl(CFunctionDeclaration):
     cdef public TIdentifier name
+    cdef public list[TIdentifier] params
+    # Optional
     cdef public CBlock body
 
 
+cdef class CVariableDeclaration(AST):
+    pass
+
+
+cdef class CVariableDecl(CVariableDeclaration):
+    cdef public TIdentifier name
+    # Optional
+    cdef public CExp init
+
+
+cdef class CDeclaration(AST):
+    pass
+
+
+cdef class FunDecl(CDeclaration):
+    cdef public CFunctionDeclaration function_decl
+
+
+cdef class VarDecl(CDeclaration):
+    cdef public CVariableDeclaration variable_decl
+
+
 cdef class CProgram(AST):
-    cdef public CFunctionDef function_def
+    cdef public list[CFunctionDeclaration] function_decls

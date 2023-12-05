@@ -166,6 +166,7 @@ cdef class CExp(AST):
     #     | Assignment(exp, exp)
     #     | AssignmentCompound(binary_operator, exp, exp)
     #     | Conditional(exp, exp, exp)
+    #     | FunctionCall(identifier, exp*)
     def __cinit__(self):
         self._fields = ()
 
@@ -239,6 +240,16 @@ cdef class CConditional(CExp):
         self.condition = condition
         self.exp_middle = exp_middle
         self.exp_right = exp_right
+
+
+cdef class CFunctionCall(CExp):
+    # FunctionCall(identifier name, exp* args)
+    def __cinit__(self):
+        self._fields = ('name', 'args')
+
+    def __init__(self, TIdentifier name, list[CExp] args):
+        self.name = name
+        self.args = args
 
 
 cdef class CStatement(AST):
@@ -375,18 +386,18 @@ cdef class CNull(CStatement):
 
 
 cdef class CForInit(AST):
-    # for_init = InitDecl(declaration)
+    # for_init = InitDecl(variable_declaration)
     #          | InitExp(exp?)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class CInitDecl(CForInit):
-    # InitDecl(declaration)
+    # InitDecl(variable_declaration)
     def __cinit__(self):
         self._fields = ('init',)
 
-    def __init__(self, CDeclaration init):
+    def __init__(self, CVariableDeclaration init):
         self.init = init
 
 
@@ -396,22 +407,6 @@ cdef class CInitExp(CForInit):
         self._fields = ('init',)
 
     def __init__(self, CExp init):
-        self.init = init
-
-
-cdef class CDeclaration(AST):
-    # declaration = Declaration(identifier, exp?)
-    def __cinit__(self):
-        self._fields = ()
-
-
-cdef class CDecl(CDeclaration):
-    # Declaration(identifier name, exp? init)
-    def __cinit__(self):
-        self._fields = ('name', 'init')
-
-    def __init__(self, TIdentifier name, CExp init):
-        self.name = name
         self.init = init
 
 
@@ -455,26 +450,68 @@ cdef class CD(CBlockItem):
         self.declaration = declaration
 
 
-cdef class CFunctionDef(AST):
-    # function_definition = Function(identifier, block)
+cdef class CFunctionDeclaration(AST):
+    # function_declaration = FunctionDeclaration(identifier, identifier*, block?)
     def __cinit__(self):
         self._fields = ()
 
 
-cdef class CFunction(CFunctionDef):
-    # Function(identifier name, block body)
+cdef class CFunctionDecl(CFunctionDeclaration):
+    # FunctionDeclaration(identifier name, identifier* params, block? body)
     def __cinit__(self):
-        self._fields = ('name', 'body')
+        self._fields = ('name', 'params', 'body')
 
-    def __init__(self, TIdentifier name, CBlock body):
+    def __init__(self, TIdentifier name, list[TIdentifier] params, CBlock body):
         self.name = name
+        self.params = params
         self.body = body
 
 
-cdef class CProgram(AST):
-    # AST = Program(function_definition)
+cdef class CVariableDeclaration(AST):
+    # variable_declaration = VariableDeclaration(identifier, exp?)
     def __cinit__(self):
-        self._fields = ('function_def',)
+        self._fields = ()
 
-    def __init__(self, CFunctionDef function_def):
-        self.function_def = function_def
+
+cdef class CVariableDecl(CVariableDeclaration):
+    # VariableDeclaration(identifier name, exp? init)
+    def __cinit__(self):
+        self._fields = ('name', 'init')
+
+    def __init__(self, TIdentifier name, CExp init):
+        self.name = name
+        self.init = init
+
+
+cdef class CDeclaration(AST):
+    # declaration = FunDecl(function_declaration)
+    #             | VarDecl(variable_declaration)
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class FunDecl(CDeclaration):
+    # FunDecl(function_declaration function_decl)
+    def __cinit__(self):
+        self._fields = ('function_decl',)
+
+    def __init__(self, CFunctionDeclaration function_decl):
+        self.function_decl = function_decl
+
+
+cdef class VarDecl(CDeclaration):
+    # VarDecl(variable_declaration)
+    def __cinit__(self):
+        self._fields = ('variable_decl',)
+
+    def __init__(self, CVariableDeclaration variable_decl):
+        self.variable_decl = variable_decl
+
+
+cdef class CProgram(AST):
+    # AST = Program(function_declaration*)
+    def __cinit__(self):
+        self._fields = ('function_decls',)
+
+    def __init__(self, list[CFunctionDeclaration] function_decls):
+        self.function_decls = function_decls
