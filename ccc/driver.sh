@@ -6,44 +6,44 @@ PYTHON_VERSION="$(cat $(dirname $(readlink -f ${0}))/python_version.txt)"
 ARGC=${#}
 ARGV=(${@})
 
-function usage () {
-    echo ${@} |\
-       grep -q -e "--help"
-    if [ ${?} -eq 0 ]; then
-        if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
-            echo "Usage: ${PACKAGE_NAME} [Help option] [Link option] FILE"
-            echo ""
-            echo "[Help option]:"
-            echo "    --help       print help and exit"
-            echo "    -v           enable verbose mode"
-            echo ""
-            echo "[Link option]:"
-            echo "    -c           compile, but do not link"
-            echo ""
-            echo "FILE:            .c file to compile"
-        else
-            echo "Usage: ${PACKAGE_NAME} [Help option] [Debug option] [Link option] FILE"
-            echo ""
-            echo "[Help option]:"
-            echo "    --help       print help and exit"
-            echo "    -v           enable verbose mode"
-            echo ""
-            echo "[Debug option]:"
-            echo "    --lex        print lexing and exit"
-            echo "    --parse      print parsing and exit"
-            echo "    --validate   print semantic analysis and exit"
-            echo "    --tacky      print tac representation and exit"
-            echo "    --codegen    print assembly generation and exit"
-            echo "    --codeemit   print code emission and exit"
-            echo "    -S           print optimization and exit"
-            echo ""
-            echo "[Link option]:"
-            echo "    -c           compile, but do not link"
-            echo ""
-            echo "FILE:            .c file to compile"
-        fi
-        exit 0
+function verbose () {
+    if [ ${OPT_CODE} -gt 0 ]; then
+        echo "${1}"
     fi
+}
+
+function usage () {
+    if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
+        echo "Usage: ${PACKAGE_NAME} [Help] [Link] FILE"
+        echo ""
+        echo "[Help]:"
+        echo "    --help       print help and exit"
+        echo "    -v           enable verbose mode"
+        echo ""
+        echo "[Link]:"
+        echo "    -c           compile, but do not link"
+        echo ""
+        echo "FILE:            .c file to compile"
+    else
+        echo "Usage: ${PACKAGE_NAME} [Help] [Debug] [Link] FILE"
+        echo ""
+        echo "[Help]:"
+        echo "    --help       print help and exit"
+        echo ""
+        echo "[Debug]:"
+        echo "    --lex        print lexing and exit"
+        echo "    --parse      print parsing and exit"
+        echo "    --validate   print semantic analysis and exit"
+        echo "    --tacky      print tac representation and exit"
+        echo "    --codegen    print assembly generation and exit"
+        echo "    --codeemit   print code emission and exit"
+        echo ""
+        echo "[Link]:"
+        echo "    -c           compile, but do not link"
+        echo ""
+        echo "FILE:            .c file to compile"
+    fi
+    exit 0
 }
 
 function clean () {
@@ -62,14 +62,27 @@ function shift_arg () {
     fi
 }
 
-function debug_arg () {
-    if [ "${ARG}" = "--lex" ] ||\
-       [ "${ARG}" = "--parse" ] ||\
-       [ "${ARG}" = "--validate" ] ||\
-       [ "${ARG}" = "--tacky" ] ||\
-       [ "${ARG}" = "--codegen" ] ||\
-       [ "${ARG}" = "--codeemit" ]; then
-        DEBUG_FLAG="${ARG}"
+function help_arg () {
+    if [ "${ARG}" = "--help" ]; then
+        usage
+    fi
+}
+
+function opt_arg () {
+    if [ "${ARG}" = "-v" ]; then
+        OPT_CODE=1
+    elif [ "${ARG}" = "--lex" ]; then
+        OPT_CODE=255
+    elif [ "${ARG}" = "--parse" ]; then
+        OPT_CODE=254
+    elif [ "${ARG}" = "--validate" ]; then
+        OPT_CODE=253
+    elif [ "${ARG}" = "--tacky" ]; then
+        OPT_CODE=252
+    elif [ "${ARG}" = "--codegen" ]; then
+        OPT_CODE=251
+    elif [ "${ARG}" = "--codeemit" ]; then
+        OPT_CODE=250
     else
         return 1
     fi
@@ -95,7 +108,10 @@ function parse_args () {
 
     shift_arg
     if [ ${?} -ne 0 ]; then return; fi
-    debug_arg
+    help_arg
+
+    if [ ${?} -ne 0 ]; then return; fi
+    opt_arg
 
     if [ ${?} -eq 0 ]; then
         shift_arg
@@ -118,7 +134,7 @@ function parse_args () {
 }
 
 function preprocess () {
-    echo "Preprocess -> ${FILE}.c"
+    verbose "Preprocess -> ${FILE}.c"
     gcc -E -P ${FILE}.c -o ${FILE}.i
     if [ ${?} -ne 0 ]; then clean; exit 1; fi
 }
@@ -128,37 +144,36 @@ function compile () {
         export PYTHONPATH="$PYTHONPATH:$HOME/.${PACKAGE_NAME}"
     fi
 
-    echo "Compile    -> ${FILE}.i"
+    verbose "Compile    -> ${FILE}.i"
 
     if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
-        $HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME} ${DEBUG_FLAG} ${FILE}.i
+        $HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME} ${OPT_CODE} ${FILE}.i
         if [ ${?} -ne 0 ]; then clean; exit 1; fi
     else
-        python${PYTHON_VERSION} -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${DEBUG_FLAG} ${FILE}.i
+        python${PYTHON_VERSION} -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${OPT_CODE} ${FILE}.i
         if [ ${?} -ne 0 ]; then clean; exit 1; fi
     fi
 }
 
 function link () {
-    if [ -z "${DEBUG_FLAG}" ]; then
-        echo "Link       -> ${FILE}.s"
+    if [ ${OPT_CODE} -lt 200 ]; then
+        verbose "Link       -> ${FILE}.s"
         if [ ${LINK_CODE} -eq 0 ]; then
             gcc ${FILE}.s -o ${FILE}
             if [ ${?} -ne 0 ]; then clean; exit 1; fi
-            echo "Executable -> ${FILE}"
+            verbose "Executable -> ${FILE}"
         elif [ ${LINK_CODE} -eq 1 ]; then
             gcc -c ${FILE}.s -o ${FILE}.o
             if [ ${?} -ne 0 ]; then clean; exit 1; fi
-            echo "Object     -> ${FILE}.o"
+            verbose "Object     -> ${FILE}.o"
         else
             if [ ${?} -ne 0 ]; then clean; exit 1; fi
         fi
     fi
 }
 
-usage ${@}
 
-DEBUG_FLAG=""
+OPT_CODE=0
 LINK_CODE=0
 FILE=""
 parse_args

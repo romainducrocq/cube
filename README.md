@@ -55,13 +55,13 @@ ccc path/to/file.c
 
 ### Help
 ```
-Usage: ccc [Help option] [Link option] FILE
+Usage: ccc [Help] [Link] FILE
 
-[Help option]:
+[Help]:
     --help       print help and exit
     -v           enable verbose mode
 
-[Link option]:
+[Link]:
     -c           compile, but do not link
 
 FILE:            .c file to compile
@@ -69,22 +69,20 @@ FILE:            .c file to compile
 
 ### Help for dev
 ```
-Usage: ccc [Help option] [Debug option] [Link option] FILE
+Usage: ccc [Help] [Debug] [Link] FILE
 
-[Help option]:
+[Help]:
     --help       print help and exit
-    -v           enable verbose mode
 
-[Debug option]:
+[Debug]:
     --lex        print lexing and exit
     --parse      print parsing and exit
     --validate   print semantic analysis and exit
     --tacky      print tac representation and exit
     --codegen    print assembly generation and exit
     --codeemit   print code emission and exit
-    -S           print optimization and exit
 
-[Link option]:
+[Link]:
     -c           compile, but do not link
 
 FILE:            .c file to compile

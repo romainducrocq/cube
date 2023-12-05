@@ -1,4 +1,3 @@
-from ccc.util_iota_enum cimport IotaEnum
 from ccc.util_ast cimport AST, ast_pretty_string
 
 from ccc.lexer_lexer cimport lexing, Token
@@ -16,88 +15,78 @@ from ccc.assembly_code_emitter cimport code_emission
 from ccc.assembly_code_emitter cimport code_emission_print #
 
 
-cdef IotaEnum OPT = IotaEnum((
-    "none",
-    "--lex",
-    "--parse",
-    "--validate",
-    "--tacky",
-    "--codegen",
-    "--codeemit", #
-    "-S"
-))
+cdef bint VERBOSE = False
 
-#
-cdef bint DEBUG = True #
-#
-#
-cdef void debug(str string = "", str end="\n"): #
-    if DEBUG: #
-        print(string, end=end) #
-#
+
+cdef void verbose(str string = "", str end="\n"):
+    if VERBOSE:
+        print(string, end=end)
+
 #
 cdef void debug_tokens(list[Token] tokens): #
     cdef int token #
     for token in range(len(tokens)): #
-        debug(str(token) + ': ("' + tokens[token].token + #
+        verbose(str(token) + ': ("' + tokens[token].token + #
               '", ' + str(tokens[token].token_kind) + ')') #
 #
 #
 cdef void debug_ast(AST ast): #
-    debug(ast_pretty_string(ast)) #
+    verbose(ast_pretty_string(ast)) #
 #
 #
 cdef void debug_code(list[str] code): #
     cdef int code_line #
     for code_line in range(len(code)): #
-        debug(code[code_line]) #
+        verbose(code[code_line]) #
 #
 
-cdef void compile(str filename, int opt_exit, int opt_s):
+cdef void compile(str filename, int opt_code, int opt_s_code):
 
-    debug("-- Start lexer...") #
+    verbose("-- Start lexer...")
     cdef list[Token] tokens = lexing(filename)
-    debug("-- Exit lexer: OK") #
-    if opt_exit == OPT.get('--lex'):
+    verbose("-- Exit lexer: OK")
+    if opt_code == 255:
         debug_tokens(tokens) #
         return
 
-    debug("-- Start parser...") #
+    verbose("-- Start parser...")
     cdef CProgram c_ast = parsing(tokens)
-    debug("-- Exit parser: OK") #
-    if opt_exit == OPT.get('--parse'):
+    verbose("-- Exit parser: OK")
+    if opt_code == 254:
         debug_ast(c_ast) #
         return
 
-    debug("-- Start semantic analysis...") #
+    verbose("-- Start semantic analysis...")
     analyze_semantic(c_ast)
-    debug("-- Exit semantic analysis: OK") #
-    if opt_exit == OPT.get('--validate'):
+    verbose("-- Exit semantic analysis: OK")
+    if opt_code == 253:
         debug_ast(c_ast) #
         return
 
-    debug("-- Start tac representation...") #
+    verbose("-- Start tac representation...")
     cdef TacProgram tac_ast = three_address_code_representation(c_ast)
-    debug("-- Exit tac representation: OK") #
-    if opt_exit == OPT.get('--tacky'):
+    verbose("-- Exit tac representation: OK")
+    if opt_code == 252:
         debug_ast(tac_ast) #
         return
 
-    debug("-- Start assembly generation...") #
+    verbose("-- Start assembly generation...")
     cdef AsmProgram asm_ast = assembly_generation(tac_ast)
-    debug("-- Exit assembly generation: OK") #
-    if opt_exit == OPT.get('--codegen'):
+    verbose("-- Exit assembly generation: OK")
+    if opt_code == 251:
         debug_ast(asm_ast) #
         return
 
-    if opt_exit == OPT.get('--codeemit'): #
-        debug("-- Start code emission...") #
+    if opt_code == 250: #
+        verbose("-- Start code emission...") #
         debug_code(code_emission_print(asm_ast)) #
-        debug("-- Exit code emission: OK") #
+        verbose("-- Exit code emission: OK") #
         return #
 
     filename = f"{filename.rsplit('.', 1)[0]}.s"
+    verbose("-- Start code emission...")
     code_emission(asm_ast, filename)
+    verbose("-- Exit code emission: OK")
 
 
 cdef str shift_args(list[str] argv):
@@ -109,50 +98,34 @@ cdef str shift_args(list[str] argv):
 cdef tuple[str, int, int] arg_parse(list[str] argv):
 
     _ = shift_args(argv)
-
     cdef str arg
-    cdef list[str] argv_opts = []
-    while True:
-        arg = shift_args(argv)
-        if not arg in OPT.iter():
-            break
-        argv_opts.append(arg)
 
-    cdef int opt_exit = OPT.get('none')
-    if "--codegen" in argv_opts:
-        opt_exit = OPT.get('--codegen')
-    elif "--tacky" in argv_opts:
-        opt_exit = OPT.get('--tacky')
-    elif "--validate" in argv_opts:
-        opt_exit = OPT.get('--validate')
-    elif "--parse" in argv_opts:
-        opt_exit = OPT.get('--parse')
-    elif "--lex" in argv_opts:
-        opt_exit = OPT.get('--lex')
-    if "--codeemit" in argv_opts: #
-        opt_exit = OPT.get('--codeemit') #
+    arg = shift_args(argv)
+    if not arg:
+        raise RuntimeError(
+            f"No option code passed in args[0]")
+    cdef int opt_code = int(arg)
 
-    cdef int opt_s = OPT.get('none')
-    if "-S" in argv_opts:
-        opt_s = OPT.get('-S')
-
+    arg = shift_args(argv)
+    if not arg:
+        raise RuntimeError(
+            f"No file name passed in args[1]")
     cdef str filename = arg
 
-    if not filename:
-        raise RuntimeError(
-            f"No file was provided in args")
-
-    return filename, opt_exit, opt_s
+    return filename, opt_code, 0
 
 
 cdef void entry(list[str] args):
+    global VERBOSE
 
     cdef str filename
-    cdef int opt_exit
-    cdef int opt_s
+    cdef int opt_code
+    cdef int opt_s_code
 
-    filename, opt_exit, opt_s = arg_parse(args)
-    compile(filename, opt_exit, opt_s)
+    filename, opt_code, opt_s_code = arg_parse(args)
+    if opt_code > 0:
+        VERBOSE = True
+    compile(filename, opt_code, opt_s_code)
 
 
 cdef public int main_c(int argc, char **argv):
