@@ -40,53 +40,52 @@ cdef void debug_code(list[str] code): #
         verbose(code[code_line]) #
 #
 
-cdef void compile(str filename, int opt_code, int opt_s_code):
+cdef void do_compile(str filename, int opt_code, int opt_s_code):
 
-    verbose("-- Start lexer...")
+    verbose("-- Lexing ... ", end="")
     cdef list[Token] tokens = lexing(filename)
-    verbose("-- Exit lexer: OK")
+    verbose("OK")
     if opt_code == 255:
         debug_tokens(tokens) #
         return
 
-    verbose("-- Start parser...")
+    verbose("-- Parsing ... ", end="")
     cdef CProgram c_ast = parsing(tokens)
-    verbose("-- Exit parser: OK")
+    verbose("OK")
     if opt_code == 254:
         debug_ast(c_ast) #
         return
 
-    verbose("-- Start semantic analysis...")
+    verbose("-- Semantic analysis ... ", end="")
     analyze_semantic(c_ast)
-    verbose("-- Exit semantic analysis: OK")
+    verbose("OK")
     if opt_code == 253:
         debug_ast(c_ast) #
         return
 
-    verbose("-- Start tac representation...")
+    verbose("-- TAC representation ... ", end="")
     cdef TacProgram tac_ast = three_address_code_representation(c_ast)
-    verbose("-- Exit tac representation: OK")
+    verbose("OK")
     if opt_code == 252:
         debug_ast(tac_ast) #
         return
 
-    verbose("-- Start assembly generation...")
+    verbose("-- Assembly generation ... ", end="")
     cdef AsmProgram asm_ast = assembly_generation(tac_ast)
-    verbose("-- Exit assembly generation: OK")
+    verbose("OK")
     if opt_code == 251:
         debug_ast(asm_ast) #
         return
 
+    verbose("-- Code emission ... ", end="")
     if opt_code == 250: #
-        verbose("-- Start code emission...") #
         debug_code(code_emission_print(asm_ast)) #
-        verbose("-- Exit code emission: OK") #
+        verbose("OK") #
         return #
 
     filename = f"{filename.rsplit('.', 1)[0]}.s"
-    verbose("-- Start code emission...")
     code_emission(asm_ast, filename)
-    verbose("-- Exit code emission: OK")
+    verbose("OK")
 
 
 cdef str shift_args(list[str] argv):
@@ -121,11 +120,11 @@ cdef void entry(list[str] args):
     cdef str filename
     cdef int opt_code
     cdef int opt_s_code
-
     filename, opt_code, opt_s_code = arg_parse(args)
     if opt_code > 0:
         VERBOSE = True
-    compile(filename, opt_code, opt_s_code)
+
+    do_compile(filename, opt_code, opt_s_code)
 
 
 cdef public int main_c(int argc, char **argv):

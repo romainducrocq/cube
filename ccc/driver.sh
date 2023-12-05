@@ -148,10 +148,10 @@ function compile () {
 
     if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
         $HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME} ${OPT_CODE} ${FILE}.i
-        if [ ${?} -ne 0 ]; then clean; exit 1; fi
+        if [ ${?} -ne 0 ]; then echo "ERROR"; clean; exit 1; fi
     else
         python${PYTHON_VERSION} -c "from ${PACKAGE_NAME}.main_compiler import main_py; main_py()" ${OPT_CODE} ${FILE}.i
-        if [ ${?} -ne 0 ]; then clean; exit 1; fi
+        if [ ${?} -ne 0 ]; then echo "ERROR"; clean; exit 1; fi
     fi
 }
 
