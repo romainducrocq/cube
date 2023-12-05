@@ -54,6 +54,7 @@ TOKEN_KIND = IotaEnum((
     "assignment_simple",
     "ternary_if",
     "ternary_else",
+    "separator_comma",
 
     "key_int",
     "key_void",
@@ -117,6 +118,7 @@ cdef dict[int, str] TOKEN_REGEX = {
     TOKEN_KIND.get('assignment_simple'): r"=",
     TOKEN_KIND.get('ternary_if'): r"\?",
     TOKEN_KIND.get('ternary_else'): r":",
+    TOKEN_KIND.get('separator_comma'): r",",
 
     TOKEN_KIND.get('key_int'): r"int\b",
     TOKEN_KIND.get('key_void'): r"void\b",

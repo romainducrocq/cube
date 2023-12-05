@@ -20,6 +20,7 @@ else
     for i in $(seq 1 8); do
         test --chapter ${i} --latest-only --bitwise --compound --goto
     done
+    test --chapter 9 --stage lex --latest-only
 fi
 
 exit 0
