@@ -21,7 +21,7 @@ ext_modules = [
     Extension(f"{PACKAGE_NAME}.parser_parser",  ["./parser_parser.pyx"]),
     Extension(f"{PACKAGE_NAME}.parser_precedence", ["./parser_precedence.pyx"]),
     Extension(f"{PACKAGE_NAME}.semantic_name", ["./semantic_name.pyx"]),
-    Extension(f"{PACKAGE_NAME}.semantic_variable_resolver", ["./semantic_variable_resolver.pyx"]),
+    Extension(f"{PACKAGE_NAME}.semantic_identifier_resolver", ["./semantic_identifier_resolver.pyx"]),
     Extension(f"{PACKAGE_NAME}.semantic_loop_annotater", ["./semantic_loop_annotater.pyx"]),
     # Extension(f"{PACKAGE_NAME}.intermediate_tac_ast", ["./intermediate_tac_ast.pyx"]),
     # Extension(f"{PACKAGE_NAME}.intermediate_three_address_generator", ["./intermediate_three_address_generator.pyx"]),

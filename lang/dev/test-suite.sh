@@ -22,9 +22,9 @@ else
         if [[ ${i} -eq 5 ]]; then
             continue
         fi
-        test --chapter ${i} --stage parse --latest-only --bitwise --compound --goto
+        test --chapter ${i} --stage validate --latest-only --bitwise --compound --goto
     done
-    test --chapter 9 --stage parse --latest-only
+#    test --chapter 9 --stage parse --latest-only
 fi
 
 exit 0
