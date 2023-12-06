@@ -288,14 +288,6 @@ cdef void resolve_block(CBlock node):
             "An error occurred in variable resolution, not all nodes were visited")
 
 
-cdef void resolve_param(TIdentifier node):
-    global scoped_identifier_maps
-
-    cdef TIdentifier name = resolve_variable_identifier(node.name)
-    scoped_identifier_maps[-1][node.name.str_t] = name.str_t
-    node.name = name
-
-
 cdef void resolve_function_declaration(CFunctionDeclaration node):
     global scoped_identifier_maps
 
@@ -308,8 +300,15 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
 
     enter_scope()
     cdef int param
+    cdef TIdentifier name
     for param in range(len(node.params)):
-        resolve_param(node.params[param])
+        if node.params[param].str_t in scoped_identifier_maps[-1]:
+            raise RuntimeError(
+                f"Variable {node.params[param]} was already declared in this scope")
+
+        name = resolve_variable_identifier(node.params[param])
+        scoped_identifier_maps[-1][node.params[param].str_t] = name.str_t
+        node.params[param] = name
     if node.body:
         resolve_block(node.body)
     exit_scope()
