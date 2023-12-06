@@ -502,8 +502,7 @@ cdef CFunctionDecl parse_function_decl_function_declaration():
 
 cdef CFunctionDeclaration parse_function_declaration():
     # <function-declaration> ::= "int" <identifier> "(" <param-list> ")" ( <block> | ";")
-    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
-        return parse_function_decl_function_declaration()
+    return parse_function_decl_function_declaration()
 
 
 cdef CVariableDecl parse_variable_decl_variable_declaration():
@@ -521,8 +520,7 @@ cdef CVariableDecl parse_variable_decl_variable_declaration():
 
 cdef CVariableDeclaration parse_variable_declaration():
     # <variable-declaration> ::= "int" <identifier> [ "=" <exp> ] ";"
-    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
-        return parse_variable_decl_variable_declaration()
+    return parse_variable_decl_variable_declaration()
 
 
 cdef CFunDecl parse_fun_decl_declaration():
@@ -537,10 +535,11 @@ cdef CVarDecl parse_var_decl_declaration():
 
 cdef CDeclaration parse_declaration():
     # <declaration> ::= <variable-declaration> | <function-declaration>
-    if peek_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
-        return parse_fun_decl_declaration()
-    else:
-        return parse_var_decl_declaration()
+    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
+        if peek_next_i(2).token_kind == TOKEN_KIND.get('parenthesis_open'):
+            return parse_fun_decl_declaration()
+        else:
+            return parse_var_decl_declaration()
 
 
 cdef CProgram parse_program():
