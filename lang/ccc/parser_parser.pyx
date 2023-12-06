@@ -475,17 +475,18 @@ cdef list[TIdentifier] parse_param_list():
     # <param-list> ::= "void" | "int" <identifier> { "," "int" <identifier> }
     cdef list[TIdentifier] params = []
     if pop_next().token_kind == TOKEN_KIND.get('key_void'):
-        pass
+        return None
     elif next_token.token_kind == TOKEN_KIND.get('key_int'):
         params.append(parse_identifier())
         while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):
             _ = pop_next()
             expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
             params.append(parse_identifier())
-    return params
+        return params
 
 
-cdef CFunctionDecl parse_function_decl_function_declaration():
+cdef CFunctionDeclaration parse_function_declaration():
+    # <function-declaration> ::= "int" <identifier> "(" <param-list> ")" ( <block> | ";")
     _ = pop_next()
     cdef TIdentifier name = parse_identifier()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
@@ -497,15 +498,11 @@ cdef CFunctionDecl parse_function_decl_function_declaration():
         body = None
     else:
         body = parse_block()
-    return CFunctionDecl(name, params, body)
+    return CFunctionDeclaration(name, params, body)
 
 
-cdef CFunctionDeclaration parse_function_declaration():
-    # <function-declaration> ::= "int" <identifier> "(" <param-list> ")" ( <block> | ";")
-    return parse_function_decl_function_declaration()
-
-
-cdef CVariableDecl parse_variable_decl_variable_declaration():
+cdef CVariableDeclaration parse_variable_declaration():
+    # <variable-declaration> ::= "int" <identifier> [ "=" <exp> ] ";"
     _ = pop_next()
     cdef TIdentifier name = parse_identifier()
     cdef CExp init
@@ -515,12 +512,7 @@ cdef CVariableDecl parse_variable_decl_variable_declaration():
     else:
         init = None
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-    return CVariableDecl(name, init)
-
-
-cdef CVariableDeclaration parse_variable_declaration():
-    # <variable-declaration> ::= "int" <identifier> [ "=" <exp> ] ";"
-    return parse_variable_decl_variable_declaration()
+    return CVariableDeclaration(name, init)
 
 
 cdef CFunDecl parse_fun_decl_declaration():

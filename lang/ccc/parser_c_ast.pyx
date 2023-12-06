@@ -451,13 +451,7 @@ cdef class CD(CBlockItem):
 
 
 cdef class CFunctionDeclaration(AST):
-    # function_declaration = FunctionDeclaration(identifier, identifier*, block?)
-    def __cinit__(self):
-        self._fields = ()
-
-
-cdef class CFunctionDecl(CFunctionDeclaration):
-    # FunctionDeclaration(identifier name, identifier* params, block? body)
+    # function_declaration = FunctionDeclaration(identifier name, identifier* params, block? body)
     def __cinit__(self):
         self._fields = ('name', 'params', 'body')
 
@@ -468,13 +462,7 @@ cdef class CFunctionDecl(CFunctionDeclaration):
 
 
 cdef class CVariableDeclaration(AST):
-    # variable_declaration = VariableDeclaration(identifier, exp?)
-    def __cinit__(self):
-        self._fields = ()
-
-
-cdef class CVariableDecl(CVariableDeclaration):
-    # VariableDeclaration(identifier name, exp? init)
+    # variable_declaration = VariableDeclaration(identifier name, exp? init)
     def __cinit__(self):
         self._fields = ('name', 'init')
 

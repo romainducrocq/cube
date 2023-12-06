@@ -235,10 +235,6 @@ cdef class CD(CBlockItem):
 
 
 cdef class CFunctionDeclaration(AST):
-    pass
-
-
-cdef class CFunctionDecl(CFunctionDeclaration):
     cdef public TIdentifier name
     cdef public list[TIdentifier] params
     # Optional
@@ -246,10 +242,6 @@ cdef class CFunctionDecl(CFunctionDeclaration):
 
 
 cdef class CVariableDeclaration(AST):
-    pass
-
-
-cdef class CVariableDecl(CVariableDeclaration):
     cdef public TIdentifier name
     # Optional
     cdef public CExp init
