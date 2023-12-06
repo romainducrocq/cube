@@ -124,15 +124,15 @@ cdef class CConditional(CExp):
     cdef public CExp exp_right
 
 
-cdef class CFunctionCall(CExp):
-    cdef public TIdentifier name
-    cdef public list[CExp] args
-
-
 cdef class CAssignmentCompound(CExp):
     cdef public CBinaryOp binary_op
     cdef public CExp exp_left
     cdef public CExp exp_right
+
+
+cdef class CFunctionCall(CExp):
+    cdef public TIdentifier name
+    cdef public list[CExp] args
 
 
 cdef class CStatement(AST):
@@ -259,11 +259,11 @@ cdef class CDeclaration(AST):
     pass
 
 
-cdef class FunDecl(CDeclaration):
+cdef class CFunDecl(CDeclaration):
     cdef public CFunctionDeclaration function_decl
 
 
-cdef class VarDecl(CDeclaration):
+cdef class CVarDecl(CDeclaration):
     cdef public CVariableDeclaration variable_decl
 
 

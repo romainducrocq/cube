@@ -131,6 +131,16 @@ cdef CUnaryOp parse_unary_op():
             f"Expected token type \"unary_op\" but found token \"{next_token.token}\"")
 
 
+cdef list[CExp] parse_argument_list():
+    # <exp> { "," <exp> }
+    cdef list[CExp] args = []
+    args.append(parse_exp())
+    while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):
+        _ = pop_next()
+        args.append(parse_exp())
+    return args
+
+
 cdef CVar parse_var_factor():
     cdef TIdentifier name = parse_identifier()
     return CVar(name)
@@ -153,10 +163,25 @@ cdef CExp parse_inner_exp_factor():
     return inner_exp
 
 
+cdef CExp parse_function_call_factor():
+    cdef TIdentifier name = parse_identifier()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
+    cdef list[CExp] args
+    if peek_next().token_kind == TOKEN_KIND.get('parenthesis_close'):
+        args = None
+    else:
+        args = parse_argument_list()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
+    return CFunctionCall(name, args)
+
+
 cdef CExp parse_factor():
-    # <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")"
+    # <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" | <identifier> "(" [ <argument-list> ] ")"
     if peek_next().token_kind == TOKEN_KIND.get('identifier'):
-        return parse_var_factor()
+        if peek_next_i(1).token_kind == TOKEN_KIND.get('parenthesis_open'):
+            return parse_function_call_factor()
+        else:
+            return parse_var_factor()
     elif peek_token.token_kind == TOKEN_KIND.get('constant'):
         return parse_constant_factor()
     elif peek_token.token_kind in (TOKEN_KIND.get('unop_complement'),
@@ -389,7 +414,7 @@ cdef CStatement parse_statement():
 
 
 cdef CInitDecl parse_decl_for_init():
-    cdef CDeclaration init = parse_declaration()
+    cdef CVariableDeclaration init = parse_variable_declaration()
     return CInitDecl(init)
 
 
@@ -404,30 +429,11 @@ cdef CInitExp parse_exp_for_init():
 
 
 cdef CForInit parse_for_init():
-    # <for-init> ::= <declaration> | [<exp>] ";"
+    # <for-init> ::= <variable-declaration> | [<exp>] ";"
     if peek_next().token_kind == TOKEN_KIND.get('key_int'):
         return parse_decl_for_init()
     else:
         return parse_exp_for_init()
-
-
-cdef CDecl parse_decl_declaration():
-    _ = pop_next()
-    cdef TIdentifier name = parse_identifier()
-    cdef CExp init
-    if peek_next().token_kind == TOKEN_KIND.get('assignment_simple'):
-        _ = pop_next()
-        init = parse_exp()
-    else:
-        init = None
-    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-    return CDecl(name, init)
-
-
-cdef CDeclaration parse_declaration():
-    # <declaration> ::= "int" <identifier> [ "=" <exp> ] ";"
-    if peek_token.token_kind == TOKEN_KIND.get('key_int'):
-        return parse_decl_declaration()
 
 
 cdef CD parse_d_block_item():
@@ -465,21 +471,85 @@ cdef CBlock parse_block():
     return block
 
 
-cdef CFunctionDef parse_function_def():
-    # <function> ::= "int" <identifier> "(" "void" ")" <block>
-    expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
+cdef list[TIdentifier] parse_param_list():
+    # <param-list> ::= "void" | "int" <identifier> { "," "int" <identifier> }
+    cdef list[TIdentifier] params = []
+    if pop_next().token_kind == TOKEN_KIND.get('key_void'):
+        pass
+    elif next_token.token_kind == TOKEN_KIND.get('key_int'):
+        params.append(parse_identifier())
+        while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):
+            _ = pop_next()
+            expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
+            params.append(parse_identifier())
+    return params
+
+
+cdef CFunctionDecl parse_function_decl_function_declaration():
+    _ = pop_next()
     cdef TIdentifier name = parse_identifier()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
-    expect_next_is(pop_next(), TOKEN_KIND.get('key_void'))
+    cdef list[TIdentifier] params = parse_param_list()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
-    cdef CBlock body = parse_block()
-    return CFunction(name, body)
+    cdef CBlock body
+    if peek_next().token_kind == TOKEN_KIND.get('semicolon'):
+        _ = pop_next()
+        body = None
+    else:
+        body = parse_block()
+    return CFunctionDecl(name, params, body)
+
+
+cdef CFunctionDeclaration parse_function_declaration():
+    # <function-declaration> ::= "int" <identifier> "(" <param-list> ")" ( <block> | ";")
+    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
+        return parse_function_decl_function_declaration()
+
+
+cdef CVariableDecl parse_variable_decl_variable_declaration():
+    _ = pop_next()
+    cdef TIdentifier name = parse_identifier()
+    cdef CExp init
+    if peek_next().token_kind == TOKEN_KIND.get('assignment_simple'):
+        _ = pop_next()
+        init = parse_exp()
+    else:
+        init = None
+    expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
+    return CVariableDecl(name, init)
+
+
+cdef CVariableDeclaration parse_variable_declaration():
+    # <variable-declaration> ::= "int" <identifier> [ "=" <exp> ] ";"
+    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
+        return parse_variable_decl_variable_declaration()
+
+
+cdef CFunDecl parse_fun_decl_declaration():
+    cdef CFunctionDeclaration function_decl = parse_function_declaration()
+    return CFunDecl(function_decl)
+
+
+cdef CVarDecl parse_var_decl_declaration():
+    cdef CVariableDeclaration variable_decl = parse_variable_declaration()
+    return CVarDecl(variable_decl)
+
+
+cdef CDeclaration parse_declaration():
+    # <declaration> ::= <variable-declaration> | <function-declaration>
+    if peek_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
+        return parse_fun_decl_declaration()
+    else:
+        return parse_var_decl_declaration()
 
 
 cdef CProgram parse_program():
-    # <program> ::= <function>
-    cdef CFunctionDef function_def = parse_function_def()
-    return CProgram(function_def)
+    # <program> ::= { <function-declaration> }
+    cdef list[CFunctionDeclaration] function_decls = []
+    while tokens:
+        function_decls.append(parse_function_declaration())
+
+    return CProgram(function_decls)
 
 
 cdef CProgram parsing(list[Token] lex_tokens):

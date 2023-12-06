@@ -490,7 +490,7 @@ cdef class CDeclaration(AST):
         self._fields = ()
 
 
-cdef class FunDecl(CDeclaration):
+cdef class CFunDecl(CDeclaration):
     # FunDecl(function_declaration function_decl)
     def __cinit__(self):
         self._fields = ('function_decl',)
@@ -499,7 +499,7 @@ cdef class FunDecl(CDeclaration):
         self.function_decl = function_decl
 
 
-cdef class VarDecl(CDeclaration):
+cdef class CVarDecl(CDeclaration):
     # VarDecl(variable_declaration)
     def __cinit__(self):
         self._fields = ('variable_decl',)
