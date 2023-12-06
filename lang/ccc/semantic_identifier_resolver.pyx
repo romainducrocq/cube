@@ -296,6 +296,7 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
         raise RuntimeError(
             f"Function {node.name.str_t} was already declared in this scope")
 
+    external_linkage_set.add(node.name.str_t)
     scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
 
     enter_scope()
