@@ -168,7 +168,7 @@ cdef CExp parse_function_call_factor():
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
     cdef list[CExp] args
     if peek_next().token_kind == TOKEN_KIND.get('parenthesis_close'):
-        args = None
+        args = []
     else:
         args = parse_argument_list()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
@@ -475,7 +475,7 @@ cdef list[TIdentifier] parse_param_list():
     # <param-list> ::= "void" | "int" <identifier> { "," "int" <identifier> }
     cdef list[TIdentifier] params = []
     if pop_next().token_kind == TOKEN_KIND.get('key_void'):
-        return None
+        return params
     elif next_token.token_kind == TOKEN_KIND.get('key_int'):
         params.append(parse_identifier())
         while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):
