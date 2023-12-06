@@ -4,8 +4,8 @@ from ccc.lexer_lexer cimport lexing, Token
 from ccc.parser_c_ast cimport CProgram
 from ccc.parser_parser cimport parsing
 
-# from ccc.semantic_variable_resolver cimport analyze_semantic
-#
+from ccc.semantic_identifier_resolver cimport analyze_semantic
+
 # from ccc.intermediate_tac_ast cimport TacProgram
 # from ccc.intermediate_three_address_generator cimport three_address_code_representation
 #
@@ -56,13 +56,13 @@ cdef void do_compile(str filename, int opt_code, int opt_s_code):
         debug_ast(c_ast) #
         return
 
-    # verbose("-- Semantic analysis ... ", end="")
-    # analyze_semantic(c_ast)
-    # verbose("OK")
-    # if opt_code == 253:
-    #     debug_ast(c_ast) #
-    #     return
-    #
+    verbose("-- Semantic analysis ... ", end="")
+    analyze_semantic(c_ast)
+    verbose("OK")
+    if opt_code == 253:
+        debug_ast(c_ast) #
+        return
+
     # verbose("-- TAC representation ... ", end="")
     # cdef TacProgram tac_ast = three_address_code_representation(c_ast)
     # verbose("OK")

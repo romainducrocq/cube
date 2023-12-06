@@ -9,18 +9,18 @@ from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_
 from ccc.semantic_loop_annotater cimport init_annotate_loop
 
 
-cdef list[dict[str, str]] scoped_variable_maps = [{}]
+cdef list[dict[str, str]] scoped_id_maps = [{}]
 
 cdef dict[str, str] goto_map = {}
 cdef set[str] label_set = set()
 
 
 cdef void enter_scope():
-    scoped_variable_maps.append({})
+    scoped_id_maps.append({})
 
 
 cdef void exit_scope():
-    del scoped_variable_maps[-1]
+    del scoped_id_maps[-1]
 
 
 cdef void resolve_for_init(CForInit node):
@@ -156,16 +156,16 @@ cdef void resolve_statement(CStatement node):
 
 
 cdef void resolve_decl_declaration(CDecl node):
-    global scoped_variable_maps
+    global scoped_id_maps
 
     cdef TIdentifier name
-    if node.name.str_t in scoped_variable_maps[-1]:
+    if node.name.str_t in scoped_id_maps[-1]:
 
         raise RuntimeError(
             f"Variable {node.name.str_t} was already declared in this scope")
 
     name = resolve_variable_identifier(node.name)
-    scoped_variable_maps[-1][node.name.str_t] = name.str_t
+    scoped_id_maps[-1][node.name.str_t] = name.str_t
     node.name = name
     if node.init:
         resolve_expression(node.init)
@@ -184,10 +184,10 @@ cdef void resolve_var_expression(CVar node):
     cdef int i
     cdef int scope
     cdef TIdentifier name
-    for scope in range(len(scoped_variable_maps)):
+    for scope in range(len(scoped_id_maps)):
         i = - (scope + 1)
-        if node.name.str_t in scoped_variable_maps[i]:
-            name = TIdentifier(scoped_variable_maps[i][node.name.str_t])
+        if node.name.str_t in scoped_id_maps[i]:
+            name = TIdentifier(scoped_id_maps[i][node.name.str_t])
             node.name = name
             break
     else:
@@ -306,13 +306,13 @@ cdef void resolve_function_def(CFunctionDef node):
             "An error occurred in variable resolution, not all nodes were visited")
 
 
-cdef void resolve_variables(CProgram node):
-    global scoped_variable_maps
-    scoped_variable_maps = [{}]
+cdef void resolve_identifiers(CProgram node):
+    global scoped_id_maps
+    scoped_id_maps = [{}]
 
     resolve_function_def(node.function_def)
 
 
 cdef void analyze_semantic(CProgram c_ast):
 
-    resolve_variables(c_ast)
+    resolve_identifiers(c_ast)
