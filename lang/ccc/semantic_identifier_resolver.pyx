@@ -10,7 +10,8 @@ from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
 from ccc.semantic_loop_annotater cimport init_annotate_loop
 
-from ccc.semantic_type_checker cimport check_types
+from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration, checktype_variable_declaration
+from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
 
 
 cdef set[str] external_linkage_set = set()
@@ -115,8 +116,10 @@ cdef void resolve_conditional_expression(CConditional node):
 cdef void resolve_expression(CExp node):
     if isinstance(node, CFunctionCall):
         resolve_function_call_expression(node)
+        checktype_function_call_expression(node)
     elif isinstance(node, CVar):
         resolve_var_expression(node)
+        checktype_var_expression(node)
     elif isinstance(node, CConstant):
         resolve_constant_expression(node)
     elif isinstance(node, CAssignment):
@@ -291,18 +294,7 @@ cdef void resolve_block(CBlock node):
             "An error occurred in variable resolution, not all nodes were visited")
 
 
-cdef void resolve_function_declaration(CFunctionDeclaration node):
-    global scoped_identifier_maps
-
-    if node.name.str_t in scoped_identifier_maps[-1] and \
-       node.name.str_t not in external_linkage_set:
-        raise RuntimeError(
-            f"Function {node.name.str_t} was already declared in this scope")
-
-    external_linkage_set.add(node.name.str_t)
-    scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
-
-    enter_scope()
+cdef void resolve_params(CFunctionDeclaration node):
     cdef int param
     cdef TIdentifier name
     for param in range(len(node.params)):
@@ -313,6 +305,26 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
         name = resolve_variable_identifier(node.params[param])
         scoped_identifier_maps[-1][node.params[param].str_t] = name.str_t
         node.params[param] = name
+
+    if node.body:
+        checktype_params(node)
+
+
+cdef void resolve_function_declaration(CFunctionDeclaration node):
+    global scoped_identifier_maps
+
+    if node.name.str_t in scoped_identifier_maps[-1] and \
+       node.name.str_t not in external_linkage_set:
+        raise RuntimeError(
+            f"Function {node.name.str_t} was already declared in this scope")
+
+    external_linkage_set.add(node.name.str_t)
+    scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
+    checktype_function_declaration(node)
+
+    enter_scope()
+    if node.params:
+        resolve_params(node)
     if node.body:
         resolve_block(node.body)
     exit_scope()
@@ -328,6 +340,8 @@ cdef void resolve_variable_declaration(CVariableDeclaration node):
     cdef TIdentifier name = resolve_variable_identifier(node.name)
     scoped_identifier_maps[-1][node.name.str_t] = name.str_t
     node.name = name
+    checktype_variable_declaration(node)
+
     if node.init:
         resolve_expression(node.init)
 
@@ -362,6 +376,7 @@ cdef void resolve_identifiers(CProgram node):
     global label_set
     external_linkage_set = set()
     scoped_identifier_maps = [{}]
+    init_check_types()
 
     cdef int function_decl
     for function_decl in range(len(node.function_decls)):
@@ -371,8 +386,7 @@ cdef void resolve_identifiers(CProgram node):
         resolve_function_declaration(node.function_decls[function_decl])
         resolve_label()
 
+
 cdef void analyze_semantic(CProgram c_ast):
 
     resolve_identifiers(c_ast)
-
-    check_types(c_ast)
