@@ -1,11 +1,6 @@
 cdef void file_open_read(str filename)
-
 cdef void file_open_write(str filename)
-
 cdef tuple[bint, str] read_line()
-
 cdef void write_line(str line)
-
 cdef void file_close_read()
-
 cdef void file_close_write()

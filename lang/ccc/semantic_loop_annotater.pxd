@@ -1,6 +1,5 @@
 from ccc.parser_c_ast cimport CWhile, CDoWhile, CFor, CBreak, CContinue
 
-
 cdef void annotate_while_loop(CWhile node)
 cdef void annotate_do_while_loop(CDoWhile node)
 cdef void annotate_for_loop(CFor node)

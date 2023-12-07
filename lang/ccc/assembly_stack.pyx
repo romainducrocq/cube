@@ -124,7 +124,7 @@ cdef void correct_instructions(AsmProgram node):
     correct_function_def(node.function_def)
 
 
-cdef generate_stack(AsmProgram asm_ast):
+cdef void correct_stack(AsmProgram asm_ast):
     global counter
     global pseudo_map
     counter = -1
