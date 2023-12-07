@@ -8,7 +8,7 @@ from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
 from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_loop, annotate_for_loop
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
-from ccc.semantic_loop_annotater cimport init_annotate_loop
+from ccc.semantic_loop_annotater cimport init_annotate_loops
 
 from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration, checktype_variable_declaration
 from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
@@ -369,20 +369,28 @@ cdef void resolve_declaration(CDeclaration node):
             "An error occurred in variable resolution, not all nodes were visited")
 
 
-cdef void resolve_identifiers(CProgram node):
-    global external_linkage_set
-    global scoped_identifier_maps
+cdef void init_resolve_labels():
     global goto_map
     global label_set
+    goto_map = {}
+    label_set = set()
+
+
+cdef void init_resolve_identifiers():
+    global external_linkage_set
+    global scoped_identifier_maps
     external_linkage_set = set()
     scoped_identifier_maps = [{}]
+
+
+cdef void resolve_identifiers(CProgram node):
+    init_resolve_identifiers()
     init_check_types()
 
     cdef int function_decl
     for function_decl in range(len(node.function_decls)):
-        goto_map = {}
-        label_set = set()
-        init_annotate_loop()
+        init_resolve_labels()
+        init_annotate_loops()
         resolve_function_declaration(node.function_decls[function_decl])
         resolve_label()
 

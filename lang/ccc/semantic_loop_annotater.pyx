@@ -43,6 +43,6 @@ cdef void deannotate_loop():
     del loop_labels[-1]
 
 
-cdef void init_annotate_loop():
+cdef void init_annotate_loops():
     global loop_labels
     loop_labels = []
