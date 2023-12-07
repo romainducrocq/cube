@@ -10,6 +10,9 @@ from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
 from ccc.semantic_loop_annotater cimport init_annotate_loop
 
+from ccc.semantic_type_checker cimport check_types
+
+
 cdef set[str] external_linkage_set = set()
 cdef list[dict[str, str]] scoped_identifier_maps = [{}]
 
@@ -371,3 +374,5 @@ cdef void resolve_identifiers(CProgram node):
 cdef void analyze_semantic(CProgram c_ast):
 
     resolve_identifiers(c_ast)
+
+    check_types(c_ast)
