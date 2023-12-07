@@ -141,14 +141,21 @@ cdef class TacLabel(TacInstruction):
     cdef public TIdentifier name
 
 
+cdef class TacFunCall(TacInstruction):
+    cdef public TIdentifier name
+    cdef public list[TacValue] args
+    cdef public TacValue dst
+
+
 cdef class TacFunctionDef(AST):
     pass
 
 
 cdef class TacFunction(TacFunctionDef):
     cdef public TIdentifier name
+    cdef public list[TIdentifier] params
     cdef public list[TacInstruction] body
 
 
 cdef class TacProgram(AST):
-    cdef public TacFunctionDef function_def
+    cdef public list[TacFunctionDef] function_defs

@@ -178,6 +178,7 @@ cdef class TacInstruction(AST):
     #             | JumpIfZero(val condition, identifier target)
     #             | JumpIfNotZero(val condition, identifier target)
     #             | Label(identifier name)
+    #             | FunCall(identifier fun_name, val* args, val dst)
     def __cinit__(self):
         self._fields = ()
 
@@ -262,26 +263,38 @@ cdef class TacLabel(TacInstruction):
         self.name = name
 
 
+cdef class TacFunCall(TacInstruction):
+    # FunCall(identifier fun_name, val* args, val dst)
+    def __cinit__(self):
+        self._fields = ('name', 'args', 'dst')
+
+    def __init__(self, TIdentifier name, list[TacValue] args, TacValue dst):
+        self.name = name
+        self.args = args
+        self.dst = dst
+
+
 cdef class TacFunctionDef(AST):
-    # function_definition = Function(identifier, instruction* body)
+    # function_definition = Function(identifier, identifier* params, instruction* body)
     def __cinit__(self):
         self._fields = ()
 
 
 cdef class TacFunction(TacFunctionDef):
-    # Function(identifier, instruction* body)
+    # Function(identifier, identifier* params, instruction* body)
     def __cinit__(self):
-        self._fields = ('name', 'body')
+        self._fields = ('name', 'params', 'body')
 
-    def __init__(self, TIdentifier name, list[TacInstruction] body):
+    def __init__(self, TIdentifier name, list[TIdentifier] params, list[TacInstruction] body):
         self.name = name
+        self.params = params
         self.body = body
 
 
 cdef class TacProgram(AST):
-    # AST = Program(function_definition)
+    # AST = Program(function_definition*)
     def __cinit__(self):
-        self._fields = ('function_def',)
+        self._fields = ('function_defs',)
 
-    def __init__(self, TacFunctionDef function_def):
-        self.function_def = function_def
+    def __init__(self, list[TacFunctionDef] function_defs):
+        self.function_defs = function_defs
