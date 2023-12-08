@@ -105,6 +105,12 @@ cdef class TacReturn(TacInstruction):
     cdef public TacValue val
 
 
+cdef class TacFunCall(TacInstruction):
+    cdef public TIdentifier name
+    cdef public list[TacValue] args
+    cdef public TacValue dst
+
+
 cdef class TacUnary(TacInstruction):
     cdef public TacUnaryOp unary_op
     cdef public TacValue src
@@ -139,12 +145,6 @@ cdef class TacJumpIfNotZero(TacInstruction):
 
 cdef class TacLabel(TacInstruction):
     cdef public TIdentifier name
-
-
-cdef class TacFunCall(TacInstruction):
-    cdef public TIdentifier name
-    cdef public list[TacValue] args
-    cdef public TacValue dst
 
 
 cdef class TacFunctionDef(AST):

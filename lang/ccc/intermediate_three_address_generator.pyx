@@ -68,16 +68,21 @@ cdef TacUnaryOp represent_unary_op(CUnaryOp node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef TacConstant represent_constant_value(CConstant node):
-    cdef TInt value
-    value = represent_int(node.value)
-    return TacConstant(value)
+cdef TacVariable represent_function_value(CVar node):
+    cdef name = represent_identifier(node.name)
+    return TacVariable(name)
 
 
 cdef TacVariable represent_variable_value(CVar node):
     cdef TIdentifier name
     name = represent_identifier(node.name)
     return TacVariable(name)
+
+
+cdef TacConstant represent_constant_value(CConstant node):
+    cdef TInt value
+    value = represent_int(node.value)
+    return TacConstant(value)
 
 
 cdef TacVariable represent_inner_exp_value(CExp node):
@@ -89,10 +94,12 @@ cdef TacVariable represent_inner_exp_value(CExp node):
 cdef TacValue represent_value(CExp node, bint outer = True):
     # val = Constant(int) | Var(identifier)
     if outer:
-        if isinstance(node, CConstant):
-            return represent_constant_value(node)
+        if isinstance(node, CFunctionCall):
+            return represent_function_value(node)
         elif isinstance(node, CVar):
             return represent_variable_value(node)
+        elif isinstance(node, CConstant):
+            return represent_constant_value(node)
         else:
 
             raise RuntimeError(
@@ -105,12 +112,23 @@ cdef TacValue represent_value(CExp node, bint outer = True):
 cdef list[TacInstruction] instructions = []
 
 
+cdef TacConstant represent_exp_constant_instructions(CConstant node):
+    return represent_value(node)
+
+
 cdef TacVariable represent_exp_var_instructions(CVar node):
     return represent_value(node)
 
 
-cdef TacConstant represent_exp_constant_instructions(CConstant node):
-    return represent_value(node)
+cdef TacFunCall represent_exp_fun_call_instructions(CFunctionCall node):
+    cdef TIdentifier name = represent_identifier(node.name)
+    cdef int i
+    cdef list[TacValue] args = []
+    for i in range(len(node.args)):
+        args.append(represent_exp_instructions(node.args[i]))
+    cdef dst = represent_value(node)
+    instructions.append(TacFunCall(name, args, dst))
+    return dst
 
 
 cdef TacValue represent_exp_assignment_instructions(CAssignment node):
@@ -201,7 +219,9 @@ cdef TacValue represent_exp_binary_instructions(CBinary node):
 
 
 cdef TacValue represent_exp_instructions(CExp node):
-    if isinstance(node, CVar):
+    if isinstance(node, CFunctionCall):
+        return represent_exp_fun_call_instructions(node)
+    elif isinstance(node, CVar):
         return represent_exp_var_instructions(node)
     elif isinstance(node, CConstant):
         return represent_exp_constant_instructions(node)
@@ -386,18 +406,26 @@ cdef void represent_statement_instructions(CStatement node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef void represent_declaration_decl_instructions(CDecl node):
-    cdef TacValue src
-    cdef TacValue dst
-    if node.init:
-        src = represent_exp_instructions(node.init)
-        dst = represent_value(CVar(node.name))
-        instructions.append(TacCopy(src, dst))
+cdef void represent_variable_declaration_instructions(CVariableDeclaration node):
+    cdef TacValue src = represent_exp_instructions(node.init)
+    cdef TacValue dst = represent_value(CVar(node.name))
+    instructions.append(TacCopy(src, dst))
+
+
+cdef void represent_declaration_var_decl_instructions(CVarDecl node):
+    if node.variable_decl.init:
+        represent_variable_declaration_instructions(node.variable_decl)
+
+
+cdef void represent_declaration_fun_decl_instructions(CFunDecl node):
+    pass
 
 
 cdef void represent_declaration_instructions(CDeclaration node):
-    if isinstance(node, CDecl):
-        represent_declaration_decl_instructions(node)
+    if isinstance(node, CFunDecl):
+        represent_declaration_fun_decl_instructions(node)
+    elif isinstance(node, CVarDecl):
+        represent_declaration_var_decl_instructions(node)
     else:
 
         raise RuntimeError(
@@ -405,9 +433,9 @@ cdef void represent_declaration_instructions(CDeclaration node):
 
 
 cdef void represent_list_instructions(list[CBlockItem] list_node):
-    # instruction = Return(val) | Unary(unary_operator, val src, val dst)
-    #             | Binary(binary_operator, val src1, val src2, val dst) | Copy(val src, val dst)
-    #             | Jump(identifier target) | JumpIfZero(val condition, identifier target)
+    # instruction = Return(val) | FunCall(identifier fun_name, val* args, val dst)
+    #             | Unary(unary_operator, val src, val dst) | Binary(binary_operator, val src1, val src2, val dst)
+    #             | Copy(val src, val dst) | Jump(identifier target) | JumpIfZero(val condition, identifier target)
     #             | JumpIfNotZero(val condition, identifier target) | Label(identifier name)
 
     cdef int block_item
@@ -432,27 +460,30 @@ cdef void represent_block(CBlock node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef TacFunctionDef represent_function_def(CFunctionDef node):
-    # function_definition = Function(identifier, block body)
+cdef TacFunctionDef represent_function_def(CFunctionDeclaration node):
     global instructions
-    instructions = []
 
-    cdef TIdentifier name
-    if isinstance(node, CFunction):
-        name = represent_identifier(node.name)
-        represent_block(node.body)
-        instructions.append(TacReturn(TacConstant(TInt(0))))
-        return TacFunction(name, instructions)
-    else:
-
-        raise RuntimeError(
-            "An error occurred in three address code representation, not all nodes were visited")
+    cdef TIdentifier name = represent_identifier(node.name)
+    cdef int param
+    cdef list[TIdentifier] params = []
+    for param in range(len(node.params)):
+        params.append(represent_identifier(node.params[param]))
+    cdef list[TacInstruction] body = []
+    instructions = body
+    represent_block(node.body)
+    instructions.append(TacReturn(TacConstant(TInt(0))))
+    return TacFunction(name, params, body)
 
 
 cdef TacProgram represent_program(CProgram node):
-    # program = Program(function_definition)
-    cdef TacFunctionDef function_def = represent_function_def(node.function_def)
-    return TacProgram(function_def)
+    # program = Program(function_definition*)
+    cdef list[TacFunctionDef] function_defs
+    cdef int function_decl
+    for function_decl in range(len(node.function_decls)):
+        if node.function_decls[function_decl].body:
+            represent_function_def(node.function_decls[function_decl])
+
+    return TacProgram(function_defs)
 
 
 cdef TacProgram three_address_code_representation(CProgram c_ast):

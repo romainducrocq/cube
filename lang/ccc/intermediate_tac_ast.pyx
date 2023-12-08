@@ -171,6 +171,7 @@ cdef class TacVariable(TacValue):
 
 cdef class TacInstruction(AST):
     # instruction = Return(val)
+    #             | FunCall(identifier fun_name, val* args, val dst)
     #             | Unary(unary_operator, val src, val dst)
     #             | Binary(binary_operator, val src1, val src2, val dst)
     #             | Copy(val src, val dst)
@@ -178,7 +179,6 @@ cdef class TacInstruction(AST):
     #             | JumpIfZero(val condition, identifier target)
     #             | JumpIfNotZero(val condition, identifier target)
     #             | Label(identifier name)
-    #             | FunCall(identifier fun_name, val* args, val dst)
     def __cinit__(self):
         self._fields = ()
 
@@ -190,6 +190,17 @@ cdef class TacReturn(TacInstruction):
 
     def __init__(self, TacValue val):
         self.val = val
+
+
+cdef class TacFunCall(TacInstruction):
+    # FunCall(identifier fun_name, val* args, val dst)
+    def __cinit__(self):
+        self._fields = ('name', 'args', 'dst')
+
+    def __init__(self, TIdentifier name, list[TacValue] args, TacValue dst):
+        self.name = name
+        self.args = args
+        self.dst = dst
 
 
 cdef class TacUnary(TacInstruction):
@@ -261,17 +272,6 @@ cdef class TacLabel(TacInstruction):
 
     def __init__(self, TIdentifier name):
         self.name = name
-
-
-cdef class TacFunCall(TacInstruction):
-    # FunCall(identifier fun_name, val* args, val dst)
-    def __cinit__(self):
-        self._fields = ('name', 'args', 'dst')
-
-    def __init__(self, TIdentifier name, list[TacValue] args, TacValue dst):
-        self.name = name
-        self.args = args
-        self.dst = dst
 
 
 cdef class TacFunctionDef(AST):

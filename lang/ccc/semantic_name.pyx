@@ -1,5 +1,6 @@
 from ccc.parser_c_ast cimport TIdentifier, CExp
-from ccc.parser_c_ast cimport CVar, CConstant, CUnary, CBinary, CConditional, CAssignment, CAssignmentCompound
+from ccc.parser_c_ast cimport CFunctionCall, CVar, CConstant, CAssignment, CAssignmentCompound
+from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 
 
 cdef int label_counter = 0
@@ -33,20 +34,22 @@ cdef TIdentifier represent_variable_identifier(CExp node):
     global variable_counter
 
     cdef str variable
-    if isinstance(node, CVar):
+    if isinstance(node, CFunctionCall):
+        variable = "funcall"
+    elif isinstance(node, CVar):
         variable = "var"
     elif isinstance(node, CConstant):
         variable = "constant"
+    elif isinstance(node, CAssignment):
+        variable = "assignment"
+    elif isinstance(node, CAssignmentCompound):
+        variable = "compound"
     elif isinstance(node, CUnary):
         variable = "unary"
     elif isinstance(node, CBinary):
         variable = "binary"
     elif isinstance(node, CConditional):
         variable = "ternary"
-    elif isinstance(node, CAssignment):
-        variable = "assignment"
-    elif isinstance(node, CAssignmentCompound):
-        variable = "compound"
     else:
 
         raise RuntimeError(
