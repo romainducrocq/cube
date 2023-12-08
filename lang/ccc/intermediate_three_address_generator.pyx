@@ -68,7 +68,7 @@ cdef TacUnaryOp represent_unary_op(CUnaryOp node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef TacVariable represent_function_value(CVar node):
+cdef TacVariable represent_function_value(CFunctionCall node):
     cdef name = represent_identifier(node.name)
     return TacVariable(name)
 
@@ -120,7 +120,7 @@ cdef TacVariable represent_exp_var_instructions(CVar node):
     return represent_value(node)
 
 
-cdef TacFunCall represent_exp_fun_call_instructions(CFunctionCall node):
+cdef TacValue represent_exp_fun_call_instructions(CFunctionCall node):
     cdef TIdentifier name = represent_identifier(node.name)
     cdef int i
     cdef list[TacValue] args = []
@@ -314,7 +314,7 @@ cdef void represent_statement_do_while_instructions(CDoWhile node):
 
 
 cdef void represent_for_init_decl_instructions(CInitDecl node):
-    represent_declaration_instructions(node.init)
+    represent_variable_declaration_instructions(node.init)
 
 
 cdef void represent_for_init_exp_instructions(CInitExp node):
@@ -477,11 +477,11 @@ cdef TacFunctionDef represent_function_def(CFunctionDeclaration node):
 
 cdef TacProgram represent_program(CProgram node):
     # program = Program(function_definition*)
-    cdef list[TacFunctionDef] function_defs
     cdef int function_decl
+    cdef list[TacFunctionDef] function_defs = []
     for function_decl in range(len(node.function_decls)):
         if node.function_decls[function_decl].body:
-            represent_function_def(node.function_decls[function_decl])
+            function_defs.append(represent_function_def(node.function_decls[function_decl]))
 
     return TacProgram(function_defs)
 
