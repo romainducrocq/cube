@@ -1,7 +1,7 @@
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-from ccc.assembly_stack_corrector cimport correct_stack
+# from ccc.assembly_stack_corrector cimport correct_stack
 
 
 cdef TIdentifier generate_identifier(TIdentifier node):
@@ -249,21 +249,44 @@ cdef void generate_list_instructions(list[TacInstruction] list_node):
     # instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | Cmp(operand, operand)
     #             | Idiv(operand) | Cdq | Jmp(identifier) | JmpCC(cond_code, identifier)
     #             | SetCC(cond_code, operand) | Label(identifier) | AllocateStack(int) | Ret
-    global instructions
-    instructions = []
 
     cdef int instruction
     for instruction in range(len(list_node)):
         generate_instructions(list_node[instruction])
 
 
+cdef list[str] arg_registers = ["Di", "Si", "Dx", "Cx", "R8", "R9"]
+
+
+cdef void generate_param_function_def(TIdentifier param, int i):
+    cdef AsmOperand src
+    cdef AsmOperand dst = AsmPseudo(param)
+    if i < 6:
+        src = generate_register(REGISTER_KIND.get(arg_registers[i]))
+    else:
+        src = AsmStack(TInt((i - 4) * 8))
+    instructions.append(AsmMov(src, dst))
+
+
+cdef AsmFunctionDef generate_function_function_def(TacFunction node):
+    global instructions
+
+    cdef TIdentifier name
+    name = generate_identifier(node.name)
+
+    cdef list[TacInstruction] body = []
+    instructions = body
+    cdef int param
+    for param in range(len(node.params)):
+        generate_param_function_def(node.params[param], param)
+    generate_list_instructions(node.body)
+    return AsmFunction(name, body)
+
+
 cdef AsmFunctionDef generate_function_def(TacFunctionDef node):
     # function_definition = Function(identifier name, instruction* instructions)
-    cdef TIdentifier name
     if isinstance(node, TacFunction):
-        name = generate_identifier(node.name)
-        generate_list_instructions(node.body)
-        return AsmFunction(name, instructions)
+        return generate_function_function_def(node)
     else:
 
         raise RuntimeError(
@@ -272,8 +295,11 @@ cdef AsmFunctionDef generate_function_def(TacFunctionDef node):
 
 cdef AsmProgram generate_program(TacProgram node):
     # program = Program(function_definition)
-    cdef AsmFunctionDef function_def = generate_function_def(node.function_def)
-    return AsmProgram(function_def)
+    cdef int function_def
+    cdef list[AsmFunctionDef] function_defs = []
+    for function_def in range(len(node.function_defs)):
+        function_defs.append(generate_function_def(node.function_defs[function_def]))
+    return AsmProgram(function_defs)
 
 
 cdef AsmProgram assembly_generation(TacProgram tac_ast):
@@ -284,6 +310,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
         raise RuntimeError(
             "An error occurred in assembly generation, ASM was not generated")
 
-    correct_stack(asm_ast)
+    # correct_stack(asm_ast)
 
     return asm_ast
