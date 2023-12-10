@@ -428,9 +428,9 @@ cdef class AsmFunction(AsmFunctionDef):
 
 
 cdef class AsmProgram(AST):
-    # AST = Program(function_definition)
+    # AST = Program(function_definition*)
     def __cinit__(self):
-        self._fields = ('function_def',)
+        self._fields = ('function_defs',)
 
-    def __init__(self, AsmFunctionDef function_def):
-        self.function_def = function_def
+    def __init__(self, list[AsmFunctionDef] function_defs):
+        self.function_defs = function_defs

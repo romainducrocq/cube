@@ -218,4 +218,4 @@ cdef class AsmFunction(AsmFunctionDef):
 
 
 cdef class AsmProgram(AST):
-    cdef public AsmFunctionDef function_def
+    cdef public list[AsmFunctionDef] function_defs
