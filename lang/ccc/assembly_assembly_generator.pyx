@@ -95,6 +95,49 @@ cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
 
 
 cdef list[AsmInstruction] instructions = []
+cdef list[str] arg_registers = ["Di", "Si", "Dx", "Cx", "R8", "R9"]
+
+
+cdef void generate_reg_arg_fun_call_instructions(TacValue node, int arg):
+    cdef AsmOperand src = generate_operand(node)
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get(arg_registers[arg]))
+    instructions.append(AsmMov(src, dst))
+
+
+cdef void generate_stack_arg_fun_call_instructions(TacValue node, int arg):
+    cdef AsmOperand src = generate_operand(node)
+    if isinstance(node, (AsmRegister, AsmImm)):
+        instructions.append(AsmPush(src))
+        return
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Ax'))
+    instructions.append(AsmMov(src, dst))
+    instructions.append(AsmPush(dst))
+
+
+cdef void generate_fun_call_instructions(TacFunCall node):
+    cdef int stack_padding = 0
+    if len(node.args) % 2 == 1:
+        stack_padding = 8
+        instructions.append(AsmAllocStack(TInt(stack_padding)))
+
+    cdef int i
+    for i in range(len(node.args)):
+        if i < 6:
+            generate_reg_arg_fun_call_instructions(node.args[i], i)
+        else:
+            stack_padding += 8
+            i = len(node.args) - i + 5
+            generate_stack_arg_fun_call_instructions(node.args[i], i)
+
+    cdef TIdentifier name = generate_identifier(node.name)
+    instructions.append(AsmCall(name))
+
+    if stack_padding:
+        instructions.append(AsmDeallocateStack(TInt(stack_padding)))
+
+    cdef AsmOperand src = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand dst = generate_operand(node.dst)
+    instructions.append(AsmMov(src, dst))
 
 
 cdef void generate_label_instructions(TacLabel node):
@@ -201,7 +244,9 @@ cdef void generate_binary_operator_arithmetic_remainder_instructions(TacBinary n
 
 
 cdef void generate_instructions(TacInstruction node):
-    if isinstance(node, TacLabel):
+    if isinstance(node, TacFunCall):
+        generate_fun_call_instructions(node)
+    elif isinstance(node, TacLabel):
         generate_label_instructions(node)
     elif isinstance(node, TacJump):
         generate_jump_instructions(node)
@@ -255,16 +300,17 @@ cdef void generate_list_instructions(list[TacInstruction] list_node):
         generate_instructions(list_node[instruction])
 
 
-cdef list[str] arg_registers = ["Di", "Si", "Dx", "Cx", "R8", "R9"]
+cdef void generate_reg_param_function_instructions(TIdentifier node, int param):
+    cdef AsmOperand src = generate_register(REGISTER_KIND.get(arg_registers[param]))
+    cdef TIdentifier name = generate_identifier(node)
+    cdef AsmOperand dst = AsmPseudo(name)
+    instructions.append(AsmMov(src, dst))
 
 
-cdef void generate_param_function_def(TIdentifier param, int i):
-    cdef AsmOperand src
-    cdef AsmOperand dst = AsmPseudo(param)
-    if i < 6:
-        src = generate_register(REGISTER_KIND.get(arg_registers[i]))
-    else:
-        src = AsmStack(TInt((i - 4) * 8))
+cdef void generate_stack_param_function_instructions(TIdentifier node, int param):
+    cdef AsmOperand src = AsmStack(TInt((param - 4) * 8))
+    cdef TIdentifier name = generate_identifier(node)
+    cdef AsmOperand dst = AsmPseudo(name)
     instructions.append(AsmMov(src, dst))
 
 
@@ -278,7 +324,10 @@ cdef AsmFunctionDef generate_function_function_def(TacFunction node):
     instructions = body
     cdef int param
     for param in range(len(node.params)):
-        generate_param_function_def(node.params[param], param)
+        if param < 6:
+            generate_reg_param_function_instructions(node.params[param], param)
+        else:
+            generate_stack_param_function_instructions(node.params[param], param)
     generate_list_instructions(node.body)
     return AsmFunction(name, body)
 
