@@ -6,6 +6,10 @@ cdef class AsmReg(AST):
     # reg = AX
     #     | CX
     #     | DX
+    #     | DI
+    #     | SI
+    #     | R8
+    #     | R9
     #     | R10
     #     | R11
     # 
@@ -27,6 +31,30 @@ cdef class AsmCx(AsmReg):
 
 cdef class AsmDx(AsmReg):
     # DX
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmDi(AsmReg):
+    # DI
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmSi(AsmReg):
+    # SI
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmR8(AsmReg):
+    # R8
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmR9(AsmReg):
+    # R9
     def __cinit__(self):
         self._fields = ()
 
@@ -236,6 +264,9 @@ cdef class AsmInstruction(AST):
     #             | SetCC(cond_code, operand)
     #             | Label(identifier)
     #             | AllocateStack(int)
+    #             | DeallocateStack(int)
+    #             | Push(operand)
+    #             | Call(identifier)
     #             | Ret
     # 
     def __cinit__(self):
@@ -343,6 +374,33 @@ cdef class AsmAllocStack(AsmInstruction):
 
     def __init__(self, TInt value):
         self.value = value
+
+
+cdef class AsmDeallocateStack(AsmInstruction):
+    # DeallocateStack(int value)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TInt value):
+        self.value = value
+
+
+cdef class AsmPush(AsmInstruction):
+    # Push(operand src)
+    def __cinit__(self):
+        self._fields = ('src',)
+
+    def __init__(self, AsmOperand src):
+        self.src = src
+
+
+cdef class AsmCall(AsmInstruction):
+    # Call(identifier name)
+    def __cinit__(self):
+        self._fields = ('name',)
+
+    def __init__(self, TIdentifier name):
+        self.name = name
 
 
 cdef class AsmRet(AsmInstruction):

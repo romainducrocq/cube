@@ -17,6 +17,22 @@ cdef class AsmDx(AsmReg):
     pass
 
 
+cdef class AsmDi(AsmReg):
+    pass
+
+
+cdef class AsmSi(AsmReg):
+    pass
+
+
+cdef class AsmR8(AsmReg):
+    pass
+
+
+cdef class AsmR9(AsmReg):
+    pass
+
+
 cdef class AsmR10(AsmReg):
     pass
 
@@ -174,6 +190,18 @@ cdef class AsmLabel(AsmInstruction):
 
 cdef class AsmAllocStack(AsmInstruction):
     cdef public TInt value
+
+
+cdef class AsmDeallocateStack(AsmInstruction):
+    cdef public TInt value
+
+
+cdef class AsmPush(AsmInstruction):
+    cdef public AsmOperand src
+
+
+cdef class AsmCall(AsmInstruction):
+    cdef public TIdentifier name
 
 
 cdef class AsmRet(AsmInstruction):
