@@ -100,62 +100,68 @@ cdef void correct_function_def(AsmFunctionDef node):
             i = l - e
             replace_pseudo_registers(instruction)
 
-            # mov | cmp (addr, addr)
-            # $ movl addr1, addr2 ->
-            #     $ movl addr1, reg
-            #     $ movl reg  , addr2
             if isinstance(instruction, (AsmMov, AsmCmp)) and \
                     isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
+                # mov | cmp (addr, addr)
+                # $ movl addr1, addr2 ->
+                #     $ movl addr1, reg
+                #     $ movl reg  , addr2
                 src_src = instruction.src
                 instruction.src = generate_register(REGISTER_KIND.get('R10'))
                 node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+
+            elif isinstance(instruction, AsmCmp) and \
+                    isinstance(instruction.dst, AsmImm):
+                # $ cmpl reg1, imm ->
+                #     $ movl imm , reg2
+                #     $ cmpl reg1, reg2
+                src_src = instruction.dst
+                instruction.dst = generate_register(REGISTER_KIND.get('R11'))
+                node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
+
             elif isinstance(instruction, AsmBinary):
-                # add | sub | and | or | xor (addr, addr)
-                # $ addl addr1, addr2 ->
-                #     $ movl addr1, reg
-                #     $ addl reg  , addr2
+
                 if isinstance(instruction.binary_op, (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)) and \
                         isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
+                    # add | sub | and | or | xor (addr, addr)
+                    # $ addl addr1, addr2 ->
+                    #     $ movl addr1, reg
+                    #     $ addl reg  , addr2
                     src_src = instruction.src
                     instruction.src = generate_register(REGISTER_KIND.get('R10'))
                     node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
-                # shl | shr (addr, addr)
-                # $ addl addr1, addr2 ->
-                #     $ movl addr1, reg
-                #     $ addl reg  , addr2
+
                 elif isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)) and \
                         isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
+                    # shl | shr (addr, addr)
+                    # $ addl addr1, addr2 ->
+                    #     $ movl addr1, reg
+                    #     $ addl reg  , addr2
                     src_src = instruction.src
                     instruction.src = generate_register(REGISTER_KIND.get('Cx'))
                     node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
-                # mul (_, addr)
-                # $ imull imm, addr ->
-                #     $ movl  addr, reg
-                #     $ imull imm , reg
-                #     $ movl  reg , addr
+
                 elif isinstance(instruction.binary_op, AsmMult) and \
                         isinstance(instruction.dst, AsmStack):
+                    # mul (_, addr)
+                    # $ imull imm, addr ->
+                    #     $ movl  addr, reg
+                    #     $ imull imm , reg
+                    #     $ movl  reg , addr
                     src_src = instruction.dst
                     instruction.dst = generate_register(REGISTER_KIND.get('R11'))
                     node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
                     node.instructions.insert(i + 1, AsmMov(instruction.dst, src_src))
-            # idiv (imm)
-            # $ idivl imm ->
-            #     $ movl  imm, reg
-            #     $ idivl reg
+
             elif isinstance(instruction, AsmIdiv) and \
                     isinstance(instruction.src, AsmImm):
+                # idiv (imm)
+                # $ idivl imm ->
+                #     $ movl  imm, reg
+                #     $ idivl reg
                 src_src = instruction.src
                 instruction.src = generate_register(REGISTER_KIND.get('R10'))
                 node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
-            # $ cmpl reg1, imm ->
-            #     $ movl imm , reg2
-            #     $ cmpl reg1, reg2
-            elif isinstance(instruction, AsmCmp) and \
-                    isinstance(instruction.dst, AsmImm):
-                src_src = instruction.dst
-                instruction.dst = generate_register(REGISTER_KIND.get('R11'))
-                node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
 
         prepend_alloc_stack(node.instructions)
 
