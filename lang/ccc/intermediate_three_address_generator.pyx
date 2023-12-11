@@ -126,7 +126,7 @@ cdef TacValue represent_exp_fun_call_instructions(CFunctionCall node):
     cdef list[TacValue] args = []
     for i in range(len(node.args)):
         args.append(represent_exp_instructions(node.args[i]))
-    cdef dst = represent_value(node)
+    cdef dst = represent_value(node, outer=False)
     instructions.append(TacFunCall(name, args, dst))
     return dst
 
