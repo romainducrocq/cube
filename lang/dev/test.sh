@@ -34,9 +34,9 @@ function CHECK_FAIL () {
     else
         RES="${LIGHT_RED}[n]"
     fi
-    echo -e "${RES} ${FILE}.c${NC} -> ${PACKAGE_NAME}: ${RET_CCC}"
 
     let TOTAL+=1
+    echo -e "${TOTAL} ${RES} ${FILE}.c${NC} - check failure -> ${PACKAGE_NAME}: ${RET_CCC}"
 }
 
 function CHECK_RET () {
@@ -64,9 +64,9 @@ function CHECK_RET () {
     else
         RES="${LIGHT_RED}[n]"
     fi
-    echo -e "${RES} ${FILE}.c${NC} -> gcc: ${RET_GCC}, ${PACKAGE_NAME}: ${RET_CCC}"
 
     let TOTAL+=1
+    echo -e "${TOTAL} ${RES} ${FILE}.c${NC} - check return -> gcc ${RET_GCC}, ${PACKAGE_NAME} ${RET_CCC}"
 }
 
 function 1_int_constants () {
