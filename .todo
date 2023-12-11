@@ -5,6 +5,4 @@ BACKLOG
     => https://gist.github.com/raoulduke/1babb0592e9062d8b330c57ea08862cb
     => performance: http://romankleiner.blogspot.com/2015/06/cython-and-regular-expressions.html
 
-- see if can transform assembly_stack correct_instructions for to c for loop
-
 - (?) add timeit to ./test.sh to time exec
