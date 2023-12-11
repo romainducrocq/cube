@@ -53,7 +53,7 @@ cdef str emit_register_4byte(AsmReg node):
     # Reg(DI)  -> $ %edi
     # Reg(SI)  -> $ %esi
     # Reg(R8)  -> $ %r8d
-    # Reg(R9)  -> $ %r9b
+    # Reg(R9)  -> $ %r9d
     # Reg(R10) -> $ %r10d
     # Reg(R11) -> $ %r11d
     if isinstance(node, AsmAx):
@@ -69,7 +69,7 @@ cdef str emit_register_4byte(AsmReg node):
     elif isinstance(node, AsmR8):
         return "r8d"
     elif isinstance(node, AsmR9):
-        return "r9b"
+        return "r9d"
     elif isinstance(node, AsmR10):
         return "r10d"
     elif isinstance(node, AsmR11):
