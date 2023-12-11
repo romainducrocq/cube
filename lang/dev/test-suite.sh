@@ -18,7 +18,7 @@ if [ ${#} -ne 0 ]; then
     test ${@}
 else
     for i in $(seq 1 9); do
-        test --chapter ${i} --stage codegen --latest-only --bitwise --compound --goto
+        test --chapter ${i} --latest-only --bitwise --compound --goto
     done
 fi
 
