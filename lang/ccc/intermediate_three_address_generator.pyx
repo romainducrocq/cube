@@ -68,11 +68,6 @@ cdef TacUnaryOp represent_unary_op(CUnaryOp node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef TacVariable represent_function_value(CFunctionCall node):
-    cdef name = represent_identifier(node.name)
-    return TacVariable(name)
-
-
 cdef TacVariable represent_variable_value(CVar node):
     cdef TIdentifier name
     name = represent_identifier(node.name)
@@ -97,9 +92,7 @@ cdef TacValue represent_inner_value(CExp node):
 
 cdef TacValue represent_value(CExp node):
     # val = Constant(int) | Var(identifier)
-    if isinstance(node, CFunctionCall):
-        return represent_function_value(node)
-    elif isinstance(node, CVar):
+    if isinstance(node, CVar):
         return represent_variable_value(node)
     elif isinstance(node, CConstant):
         return represent_constant_value(node)
