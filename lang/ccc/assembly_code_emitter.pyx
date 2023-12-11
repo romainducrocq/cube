@@ -217,8 +217,8 @@ cdef bint debug = False #
 cdef list[str] print_code = [] #
 
 
-cdef void emit(str line, int t = 0):
-    line = " " * 4 * t + line
+cdef void emit(str line, int indent):
+    line = " " * 4 * indent + line
 
     if debug: #
         print_code.append(line) #
@@ -227,85 +227,85 @@ cdef void emit(str line, int t = 0):
 
 
 cdef void emit_ret_instructions(AsmRet node):
-    emit("movq %rbp, %rsp", t=1)
-    emit("popq %rbp", t=1)
-    emit("ret", t=1)
+    emit("movq %rbp, %rsp", 1)
+    emit("popq %rbp", 1)
+    emit("ret", 1)
 
 
 cdef void emit_mov_instructions(AsmMov node):
-    cdef str src = emit_operand(node.src, byte=4)
-    cdef str dst = emit_operand(node.dst, byte=4)
-    emit(f"movl {src}, {dst}", t=1)
+    cdef str src = emit_operand(node.src, 4)
+    cdef str dst = emit_operand(node.dst, 4)
+    emit(f"movl {src}, {dst}", 1)
 
 
 cdef void emit_alloc_stack_instructions(AsmAllocStack node):
     cdef str value = emit_int(node.value)
-    emit(f"subq ${value}, %rsp", t=1)
+    emit(f"subq ${value}, %rsp", 1)
 
 
 cdef void emit_dealloc_stack_instructions(AsmDeallocateStack node):
     cdef str value = emit_int(node.value)
-    emit(f"addq ${value}, %rsp", t=1)
+    emit(f"addq ${value}, %rsp", 1)
 
 
 cdef void emit_push_instructions(AsmPush node):
-    cdef str src = emit_operand(node.src, byte=8)
-    emit(f"pushq {src}", t=1)
+    cdef str src = emit_operand(node.src, 8)
+    emit(f"pushq {src}", 1)
 
 
 cdef void emit_call_instructions(AsmCall node):
     cdef str label = emit_identifier(node.name)
-    emit(f"call {label}@PLT", t=1)
+    emit(f"call {label}@PLT", 1)
 
 
 cdef void emit_label_instructions(AsmLabel node):
     cdef str label = emit_identifier(node.name)
-    emit(f".L{label}:")
+    emit(f".L{label}:", 0)
 
 
 cdef void emit_cmp_instructions(AsmCmp node):
-    cdef str src = emit_operand(node.src, byte=4)
-    cdef str dst = emit_operand(node.dst, byte=4)
-    emit(f"cmpl {src}, {dst}", t=1)
+    cdef str src = emit_operand(node.src, 4)
+    cdef str dst = emit_operand(node.dst, 4)
+    emit(f"cmpl {src}, {dst}", 1)
 
 
 cdef void emit_jmp_instructions(AsmJmp node):
     cdef str label = emit_identifier(node.target)
-    emit(f"jmp .L{label}", t=1)
+    emit(f"jmp .L{label}", 1)
 
 
 cdef void emit_jmp_cc_instructions(AsmJmpCC node):
     cdef str cond_code = emit_condition_code(node.cond_code)
     cdef str label = emit_identifier(node.target)
-    emit(f"j{cond_code} .L{label}", t=1)
+    emit(f"j{cond_code} .L{label}", 1)
 
 
 cdef void emit_set_cc_instructions(AsmSetCC node):
     cdef str cond_code = emit_condition_code(node.cond_code)
-    cdef str dst = emit_operand(node.dst, byte=1)
-    emit(f"set{cond_code} {dst}", t=1)
+    cdef str dst = emit_operand(node.dst, 1)
+    emit(f"set{cond_code} {dst}", 1)
 
 
 cdef void emit_unary_instructions(AsmUnary node):
     cdef str unary_op = emit_unary_op(node.unary_op)
-    cdef str dst = emit_operand(node.dst, byte=4)
-    emit(f"{unary_op} {dst}", t=1)
+    cdef str dst = emit_operand(node.dst, 4)
+    emit(f"{unary_op} {dst}", 1)
 
 
 cdef void emit_binary_instructions(AsmBinary node):
     cdef str binary_op = emit_binary_op(node.binary_op)
-    cdef str src = emit_operand(node.src, byte=4)
-    cdef str dst = emit_operand(node.dst, byte=4)
-    emit(f"{binary_op} {src}, {dst}", t=1)
+    cdef str src = emit_operand(node.src, 4)
+    cdef str dst = emit_operand(node.dst, 4)
+    emit(f"{binary_op} {src}, {dst}", 1)
 
 
 cdef void emit_idiv_instructions(AsmIdiv node):
-    cdef str src = emit_operand(node.src, byte=4)
-    emit(f"idivl {src}", t=1)
+    cdef str src = emit_operand(node.src, 4)
+    emit(f"idivl {src}", 1)
 
 
 cdef void emit_cdq_instructions(AsmCdq node):
-    emit("cdq", t=1)
+    emit("cdq", 1)
 
 
 cdef void emit_instructions(AsmInstruction node):
@@ -370,10 +370,10 @@ cdef void emit_list_instructions(list[AsmInstruction] list_node):
 
 cdef void emit_function_function_def(AsmFunction node):
     cdef str name = emit_identifier(node.name)
-    emit(f".globl {name}", t=1)
-    emit(f"{name}:", t=0)
-    emit("pushq %rbp", t=1)
-    emit("movq %rsp, %rbp", t=1)
+    emit(f".globl {name}", 1)
+    emit(f"{name}:", 0)
+    emit("pushq %rbp", 1)
+    emit("movq %rsp, %rbp", 1)
     emit_list_instructions(node.instructions)
 
 
@@ -398,7 +398,7 @@ cdef void emit_program(AsmProgram node):
     cdef int function_def
     for function_def in range(len(node.function_defs)):
         emit_function_def(node.function_defs[function_def])
-    emit(".section .note.GNU-stack,\"\",@progbits", t=1)
+    emit(".section .note.GNU-stack,\"\",@progbits", 1)
 
 
 #
