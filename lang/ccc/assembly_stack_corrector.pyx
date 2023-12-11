@@ -91,13 +91,13 @@ cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
 
 cdef void correct_function_def(AsmFunctionDef node):
 
-    cdef int e, i, l
+    cdef int i, k, l
     cdef AsmInstruction instruction
     cdef AsmOperand src_src
     if isinstance(node, AsmFunction):
         l = len(node.instructions)
-        for e, instruction in enumerate(reversed(node.instructions)):
-            i = l - e
+        for i, instruction in enumerate(reversed(node.instructions)):
+            k = l - i
             replace_pseudo_registers(instruction)
 
             if isinstance(instruction, (AsmMov, AsmCmp)) and \
@@ -108,7 +108,7 @@ cdef void correct_function_def(AsmFunctionDef node):
                 #     $ movl reg  , addr2
                 src_src = instruction.src
                 instruction.src = generate_register(REGISTER_KIND.get('R10'))
-                node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                node.instructions.insert(k - 1, AsmMov(src_src, instruction.src))
 
             elif isinstance(instruction, AsmCmp) and \
                     isinstance(instruction.dst, AsmImm):
@@ -117,7 +117,7 @@ cdef void correct_function_def(AsmFunctionDef node):
                 #     $ cmpl reg1, reg2
                 src_src = instruction.dst
                 instruction.dst = generate_register(REGISTER_KIND.get('R11'))
-                node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
+                node.instructions.insert(k - 1, AsmMov(src_src, instruction.dst))
 
             elif isinstance(instruction, AsmBinary):
 
@@ -129,7 +129,7 @@ cdef void correct_function_def(AsmFunctionDef node):
                     #     $ addl reg  , addr2
                     src_src = instruction.src
                     instruction.src = generate_register(REGISTER_KIND.get('R10'))
-                    node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                    node.instructions.insert(k - 1, AsmMov(src_src, instruction.src))
 
                 elif isinstance(instruction.binary_op, (AsmBitShiftLeft, AsmBitShiftRight)) and \
                         isinstance(instruction.src, AsmStack) and isinstance(instruction.dst, AsmStack):
@@ -139,7 +139,7 @@ cdef void correct_function_def(AsmFunctionDef node):
                     #     $ addl reg  , addr2
                     src_src = instruction.src
                     instruction.src = generate_register(REGISTER_KIND.get('Cx'))
-                    node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                    node.instructions.insert(k - 1, AsmMov(src_src, instruction.src))
 
                 elif isinstance(instruction.binary_op, AsmMult) and \
                         isinstance(instruction.dst, AsmStack):
@@ -150,8 +150,8 @@ cdef void correct_function_def(AsmFunctionDef node):
                     #     $ movl  reg , addr
                     src_src = instruction.dst
                     instruction.dst = generate_register(REGISTER_KIND.get('R11'))
-                    node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
-                    node.instructions.insert(i + 1, AsmMov(instruction.dst, src_src))
+                    node.instructions.insert(k - 1, AsmMov(src_src, instruction.dst))
+                    node.instructions.insert(k + 1, AsmMov(instruction.dst, src_src))
 
             elif isinstance(instruction, AsmIdiv) and \
                     isinstance(instruction.src, AsmImm):
@@ -161,7 +161,7 @@ cdef void correct_function_def(AsmFunctionDef node):
                 #     $ idivl reg
                 src_src = instruction.src
                 instruction.src = generate_register(REGISTER_KIND.get('R10'))
-                node.instructions.insert(i - 1, AsmMov(src_src, instruction.src))
+                node.instructions.insert(k - 1, AsmMov(src_src, instruction.src))
 
         prepend_alloc_stack(node.instructions)
 
