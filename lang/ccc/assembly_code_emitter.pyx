@@ -255,7 +255,7 @@ cdef void emit_push_instructions(AsmPush node):
 
 cdef void emit_call_instructions(AsmCall node):
     cdef str label = emit_identifier(node.name)
-    emit(f"call {label}@PLT")
+    emit(f"call {label}@PLT", t=1)
 
 
 cdef void emit_label_instructions(AsmLabel node):

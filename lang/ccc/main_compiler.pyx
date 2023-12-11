@@ -79,8 +79,7 @@ cdef void do_compile(str filename, int opt_code, int opt_s_code):
 
     verbose("-- Code emission ... ", end="")
     if opt_code == 250: #
-        debug_code(code_emission_print(asm_ast)) #
-        verbose("OK") #
+        debug_code(["OK"] + code_emission_print(asm_ast)) #
         return #
 
     filename = f"{filename.rsplit('.', 1)[0]}.s"
