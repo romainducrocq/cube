@@ -91,22 +91,22 @@ cdef TacVariable represent_inner_exp_value(CExp node):
     return TacVariable(name)
 
 
-cdef TacValue represent_value(CExp node, bint outer = True):
+cdef TacValue represent_inner_value(CExp node):
+    return represent_inner_exp_value(node)
+
+
+cdef TacValue represent_value(CExp node):
     # val = Constant(int) | Var(identifier)
-    if outer:
-        if isinstance(node, CFunctionCall):
-            return represent_function_value(node)
-        elif isinstance(node, CVar):
-            return represent_variable_value(node)
-        elif isinstance(node, CConstant):
-            return represent_constant_value(node)
-        else:
-
-            raise RuntimeError(
-                "An error occurred in three address code representation, not all nodes were visited")
-
+    if isinstance(node, CFunctionCall):
+        return represent_function_value(node)
+    elif isinstance(node, CVar):
+        return represent_variable_value(node)
+    elif isinstance(node, CConstant):
+        return represent_constant_value(node)
     else:
-        return represent_inner_exp_value(node)
+
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef list[TacInstruction] instructions = []
@@ -126,7 +126,7 @@ cdef TacValue represent_exp_fun_call_instructions(CFunctionCall node):
     cdef list[TacValue] args = []
     for i in range(len(node.args)):
         args.append(represent_exp_instructions(node.args[i]))
-    cdef dst = represent_value(node, outer=False)
+    cdef dst = represent_inner_value(node)
     instructions.append(TacFunCall(name, args, dst))
     return dst
 
@@ -141,7 +141,7 @@ cdef TacValue represent_exp_assignment_instructions(CAssignment node):
 cdef TacValue represent_exp_assignment_compound_instructions(CAssignmentCompound node):
     cdef TacValue src1 = represent_exp_instructions(node.exp_left)
     cdef TacValue src2 = represent_exp_instructions(node.exp_right)
-    cdef TacValue val = represent_value(node.exp_left, outer=False)
+    cdef TacValue val = represent_inner_value(node.exp_left)
     cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
     instructions.append(TacBinary(binary_op, src1, src2, val))
     cdef TacValue dst = represent_value(node.exp_left)
@@ -154,7 +154,7 @@ cdef TacValue represent_exp_conditional_instructions(CConditional node):
     cdef TacValue condition = represent_exp_instructions(node.condition)
     instructions.append(TacJumpIfZero(condition, target_else))
     cdef TacValue src_middle = represent_exp_instructions(node.exp_middle)
-    cdef TacValue dst = represent_value(node, outer=False)
+    cdef TacValue dst = represent_inner_value(node)
     instructions.append(TacCopy(src_middle, dst))
     cdef TIdentifier target_false = represent_label_identifier("ternary_false")
     instructions.append(TacJump(target_false))
@@ -167,7 +167,7 @@ cdef TacValue represent_exp_conditional_instructions(CConditional node):
 
 cdef TacValue represent_exp_unary_instructions(CUnary node):
     cdef TacValue src = represent_exp_instructions(node.exp)
-    cdef TacValue dst = represent_value(node.exp, outer=False)
+    cdef TacValue dst = represent_inner_value(node.exp)
     cdef TacUnaryOp unary_op = represent_unary_op(node.unary_op)
     instructions.append(TacUnary(unary_op, src, dst))
     return dst
@@ -182,7 +182,7 @@ cdef TacValue represent_exp_binary_and_instructions(CBinary node):
     cdef TacValue src_true = TacConstant(TInt(1))
     cdef TacValue src_false = TacConstant(TInt(0))
     cdef TIdentifier target_true = represent_label_identifier("and_true")
-    cdef TacValue dst = represent_value(node.exp_left, outer=False)
+    cdef TacValue dst = represent_inner_value(node.exp_left)
     instructions.append(TacCopy(src_true, dst))
     instructions.append(TacJump(target_true))
     instructions.append(TacLabel(target_false))
@@ -200,7 +200,7 @@ cdef TacValue represent_exp_binary_or_instructions(CBinary node):
     cdef TacValue src_true = TacConstant(TInt(1))
     cdef TacValue src_false = TacConstant(TInt(0))
     cdef TIdentifier target_false = represent_label_identifier("or_false")
-    cdef TacValue dst = represent_value(node.exp_left, outer=False)
+    cdef TacValue dst = represent_inner_value(node.exp_left)
     instructions.append(TacCopy(src_false, dst))
     instructions.append(TacJump(target_false))
     instructions.append(TacLabel(target_true))
@@ -212,7 +212,7 @@ cdef TacValue represent_exp_binary_or_instructions(CBinary node):
 cdef TacValue represent_exp_binary_instructions(CBinary node):
     cdef TacValue src1 = represent_exp_instructions(node.exp_left)
     cdef TacValue src2 = represent_exp_instructions(node.exp_right)
-    cdef TacValue dst = represent_value(node.exp_left, outer=False)
+    cdef TacValue dst = represent_inner_value(node.exp_left)
     cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
     instructions.append(TacBinary(binary_op, src1, src2, dst))
     return dst
