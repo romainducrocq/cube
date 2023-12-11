@@ -144,18 +144,27 @@ function check_test () {
     check_single
 }
 
-function tests () {
+function test_dir () {
+    DIR=${1}
+    for FILE in $(find ${DIR} -name "*.c" -type f | sort --uniq)
+    do
+        check_test ${FILE}
+    done
+}
+
+function test_all () {
     for DIR in ${TEST_DIRS[@]}
     do
-        for FILE in $(find ${DIR} -name "*.c" -type f | sort --uniq)
-        do
-            check_test ${FILE}
-        done
+        test_dir ${DIR}
     done
 }
 
 PASS=0
 TOTAL=0
 cd ${TEST_DIR}
-tests
+if [ ! -z "${1}" ]; then
+    test_dir ${TEST_DIRS["$((${1} - 1))"]}
+else
+    test_all
+fi
 total
