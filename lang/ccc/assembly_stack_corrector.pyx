@@ -5,7 +5,7 @@ from ccc.assembly_asm_ast cimport AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 
 
-cdef int offset = -4
+cdef int OFFSET = -4
 cdef int counter = -1
 cdef dict[str, int] pseudo_map = {}
 
@@ -24,7 +24,7 @@ cdef void replace_pseudo_registers(AST node):
     for child_node, attr, item in ast_iter_child_nodes(node):
         if isinstance(child_node, AsmPseudo):
             if child_node.name.str_t not in pseudo_map:
-                counter += offset
+                counter += OFFSET
                 pseudo_map[child_node.name.str_t] = counter
 
             value = TInt(pseudo_map[child_node.name.str_t])
@@ -121,15 +121,17 @@ cdef void correct_function_def(AsmFunctionDef node):
 
 
 cdef void correct_instructions(AsmProgram node):
-    correct_function_def(node.function_def)
+    global counter
+    global pseudo_map
+
+    cdef int function_def
+    for function_def in range(len(node.function_defs)):
+        counter = -1
+        pseudo_map = {}
+        replace_pseudo_registers(node.function_defs[function_def])
+        correct_function_def(node.function_defs[function_def])
 
 
 cdef void correct_stack(AsmProgram asm_ast):
-    global counter
-    global pseudo_map
-    counter = -1
-    pseudo_map = {}
-
-    replace_pseudo_registers(asm_ast)
 
     correct_instructions(asm_ast)

@@ -17,7 +17,7 @@ ln -s ../LANG-CCC/${PACKAGE_NAME}/* .
 if [ ${#} -ne 0 ]; then
     test ${@}
 else
-    for i in $(seq 1 8); do
+    for i in $(seq 1 9); do
         test --chapter ${i} --stage codegen --latest-only --bitwise --compound --goto
     done
 fi
