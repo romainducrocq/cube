@@ -14,16 +14,28 @@ cdef str emit_int(TInt node):
 
 cdef str emit_register_1byte(AsmReg node):
     # Reg(AX)  -> $ %al
-    # Reg(CX)  -> $ %cl
     # Reg(DX)  -> $ %dl
+    # Reg(CX)  -> $ %cl
+    # Reg(DI)  -> $ %dil
+    # Reg(SI)  -> $ %sil
+    # Reg(R8)  -> $ %r8b
+    # Reg(R9)  -> $ %r9b
     # Reg(R10) -> $ %r10b
     # Reg(R11) -> $ %r11b
     if isinstance(node, AsmAx):
         return "al"
-    elif isinstance(node, AsmCx):
-        return "cl"
     elif isinstance(node, AsmDx):
         return "dl"
+    elif isinstance(node, AsmCx):
+        return "cl"
+    elif isinstance(node, AsmDi):
+        return "dil"
+    elif isinstance(node, AsmSi):
+        return "sil"
+    elif isinstance(node, AsmR8):
+        return "r8b"
+    elif isinstance(node, AsmR9):
+        return "r9b"
     elif isinstance(node, AsmR10):
         return "r10b"
     elif isinstance(node, AsmR11):
@@ -36,20 +48,66 @@ cdef str emit_register_1byte(AsmReg node):
 
 cdef str emit_register_4byte(AsmReg node):
     # Reg(AX)  -> $ %eax
-    # Reg(CX)  -> $ %ecx
     # Reg(DX)  -> $ %edx
+    # Reg(CX)  -> $ %ecx
+    # Reg(DI)  -> $ %edi
+    # Reg(SI)  -> $ %esi
+    # Reg(R8)  -> $ %r8d
+    # Reg(R9)  -> $ %r9b
     # Reg(R10) -> $ %r10d
     # Reg(R11) -> $ %r11d
     if isinstance(node, AsmAx):
         return "eax"
-    elif isinstance(node, AsmCx):
-        return "ecx"
     elif isinstance(node, AsmDx):
         return "edx"
+    elif isinstance(node, AsmCx):
+        return "ecx"
+    elif isinstance(node, AsmDi):
+        return "edi"
+    elif isinstance(node, AsmSi):
+        return "esi"
+    elif isinstance(node, AsmR8):
+        return "r8d"
+    elif isinstance(node, AsmR9):
+        return "r9b"
     elif isinstance(node, AsmR10):
         return "r10d"
     elif isinstance(node, AsmR11):
         return "r11d"
+    else:
+
+        raise RuntimeError(
+            "An error occurred in code emission, not all nodes were visited")
+
+
+cdef str emit_register_8byte(AsmReg node):
+    # Reg(AX)  -> $ %rax
+    # Reg(DX)  -> $ %rdx
+    # Reg(CX)  -> $ %rcx
+    # Reg(DI)  -> $ %rdi
+    # Reg(SI)  -> $ %rsi
+    # Reg(R8)  -> $ %r8
+    # Reg(R9)  -> $ %r9
+    # Reg(R10) -> $ %r10
+    # Reg(R11) -> $ %r11
+    if isinstance(node, AsmAx):
+        return "rax"
+    elif isinstance(node, AsmDx):
+        return "rdx"
+    elif isinstance(node, AsmCx):
+        return "rcx"
+    elif isinstance(node, AsmDi):
+        return "rdi"
+    elif isinstance(node, AsmSi):
+        return "rsi"
+    elif isinstance(node, AsmR8):
+        return "r8"
+    elif isinstance(node, AsmR9):
+        return "r9"
+    elif isinstance(node, AsmR10):
+        return "r10"
+    elif isinstance(node, AsmR11):
+        return "r11"
     else:
 
         raise RuntimeError(
@@ -81,7 +139,7 @@ cdef str emit_condition_code(AsmCondCode node):
             "An error occurred in code emission, not all nodes were visited")
 
 
-cdef str emit_operand(AsmOperand node, int byte = 4):
+cdef str emit_operand(AsmOperand node, int byte):
     # Imm(int)      -> $ $<int>
     # Register(reg) -> $ %reg
     # Stack(int)    -> $ <int>(%rbp)
@@ -94,6 +152,8 @@ cdef str emit_operand(AsmOperand node, int byte = 4):
             operand = emit_register_1byte(node.reg)
         elif byte == 4:
             operand = emit_register_4byte(node.reg)
+        elif byte == 8:
+            operand = emit_register_8byte(node.reg)
         else:
 
             raise RuntimeError(
@@ -183,6 +243,21 @@ cdef void emit_alloc_stack_instructions(AsmAllocStack node):
     emit(f"subq ${value}, %rsp", t=1)
 
 
+cdef void emit_dealloc_stack_instructions(AsmDeallocateStack node):
+    cdef str value = emit_int(node.value)
+    emit(f"addq ${value}, %rsp", t=1)
+
+
+cdef void emit_push_instructions(AsmPush node):
+    cdef str src = emit_operand(node.src, byte=8)
+    emit(f"pushq {src}", t=1)
+
+
+cdef void emit_call_instructions(AsmCall node):
+    cdef str label = emit_identifier(node.name)
+    emit(f"call {label}@PLT")
+
+
 cdef void emit_label_instructions(AsmLabel node):
     cdef str label = emit_identifier(node.name)
     emit(f".L{label}:")
@@ -239,6 +314,9 @@ cdef void emit_instructions(AsmInstruction node):
     #                                      $ ret
     # Mov(src, dst)                     -> $ movl <src>, <dst>
     # AllocateStack(int)                -> $ subq $<int>, %rsp
+    # DeallocateStack(int)              -> $ addq $<int>, %rsp
+    # Push(operand)                     -> $ pushq <operand>
+    # Call(label)                       -> $ call <label>@PLT
     # Label(label)                      -> $ .L<label>:
     # Cmp(operand, operand)             -> $ cmpl <operand>, <operand>
     # Jmp(label)                        -> $ jmp .L<label>
@@ -254,6 +332,12 @@ cdef void emit_instructions(AsmInstruction node):
         emit_mov_instructions(node)
     elif isinstance(node, AsmAllocStack):
         emit_alloc_stack_instructions(node)
+    elif isinstance(node, AsmDeallocateStack):
+        emit_dealloc_stack_instructions(node)
+    elif isinstance(node, AsmPush):
+        emit_push_instructions(node)
+    elif isinstance(node, AsmCall):
+        emit_call_instructions(node)
     elif isinstance(node, AsmLabel):
         emit_label_instructions(node)
     elif isinstance(node, AsmCmp):
@@ -284,6 +368,15 @@ cdef void emit_list_instructions(list[AsmInstruction] list_node):
         emit_instructions(list_node[instruction])
 
 
+cdef void emit_function_function_def(AsmFunction node):
+    cdef str name = emit_identifier(node.name)
+    emit(f".globl {name}", t=1)
+    emit(f"{name}:", t=0)
+    emit("pushq %rbp", t=1)
+    emit("movq %rsp, %rbp", t=1)
+    emit_list_instructions(node.instructions)
+
+
 cdef void emit_function_def(AsmFunctionDef node):
     # Function(name, instructions) -> $     .globl <name>
     #                                 $ <name>:
@@ -292,12 +385,7 @@ cdef void emit_function_def(AsmFunctionDef node):
     #                                 $     <instructions>
     cdef str name
     if isinstance(node, AsmFunction):
-        name = emit_identifier(node.name)
-        emit(f".globl {name}", t=1)
-        emit(f"{name}:", t=0)
-        emit("pushq %rbp", t=1)
-        emit("movq %rsp, %rbp", t=1)
-        emit_list_instructions(node.instructions)
+        emit_function_function_def(node)
     else:
 
         raise RuntimeError(
@@ -305,9 +393,11 @@ cdef void emit_function_def(AsmFunctionDef node):
 
 
 cdef void emit_program(AsmProgram node):
-    # Program(function_definition) -> $ <function_definition>
+    # Program(function_definition*) -> $ [<function_definition>]
     #                                 $     .section .note.GNU-stack,"",@progbits
-    emit_function_def(node.function_def)
+    cdef int function_def
+    for function_def in range(len(node.function_defs)):
+        emit_function_def(node.function_defs[function_def])
     emit(".section .note.GNU-stack,\"\",@progbits", t=1)
 
 
