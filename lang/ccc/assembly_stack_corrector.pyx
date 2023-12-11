@@ -91,17 +91,15 @@ cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
 
 cdef void correct_function_def(AsmFunctionDef node):
 
-    cdef int e
-    cdef int i
-    cdef int size
+    cdef int e, i, l
     cdef AsmInstruction instruction
     cdef AsmOperand src_src
     if isinstance(node, AsmFunction):
-        prepend_alloc_stack(node.instructions)
-
-        size = len(node.instructions)
+        l = len(node.instructions)
         for e, instruction in enumerate(reversed(node.instructions)):
-            i = size - e
+            i = l - e
+            replace_pseudo_registers(instruction)
+
             # mov | cmp (addr, addr)
             # $ movl addr1, addr2 ->
             #     $ movl addr1, reg
@@ -159,23 +157,25 @@ cdef void correct_function_def(AsmFunctionDef node):
                 instruction.dst = generate_register(REGISTER_KIND.get('R11'))
                 node.instructions.insert(i - 1, AsmMov(src_src, instruction.dst))
 
+        prepend_alloc_stack(node.instructions)
+
     else:
 
         raise RuntimeError(
             "An error occurred in stack management, not all nodes were visited")
 
 
-cdef void correct_instructions(AsmProgram node):
+cdef void init_correct_instructions():
     global counter
     global pseudo_map
+    counter = 0
+    pseudo_map = {}
 
+
+cdef void correct_instructions(AsmProgram node):
     cdef int function_def
-    cdef int instruction
     for function_def in range(len(node.function_defs)):
-        counter = 0
-        pseudo_map = {}
-        for instruction in  range(len(node.function_defs[function_def].instructions)):
-            replace_pseudo_registers(node.function_defs[function_def].instructions[instruction])
+        init_correct_instructions()
         correct_function_def(node.function_defs[function_def])
 
 
