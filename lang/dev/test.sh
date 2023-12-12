@@ -20,14 +20,6 @@ TEST_DIRS=(
 "9_functions"
 )
 
-function print_check () {
-    echo " - check ${1} -> ${2}"
-}
-
-function indent () {
-    echo -n "$(echo "${TOTAL} [ ] ${FILE}.c" | sed -r 's/./ /g')"
-}
-
 function file () {
     FILE=${1%.*}
     if [ -f "${FILE}" ]; then rm ${FILE}; fi
@@ -45,9 +37,52 @@ function total () {
     echo -e "${RES}"
 }
 
+function print_check () {
+    echo " - check ${1} -> ${2}"
+}
+
+function indent () {
+    echo -n "$(echo "${TOTAL} [ ] ${FILE}.c" | sed -r 's/./ /g')"
+}
+
 function print_fail () {
     echo -e -n "${TOTAL} ${RES} ${FILE}.c${NC}"
-    print_check "fail" "[${PACKAGE_NAME}: ${RET_CCC}]"
+    PRINT="${PACKAGE_NAME}: ${RET_CCC}"
+    print_check "fail" "[${PRINT}]"
+}
+
+function print_single () {
+    echo -e -n "${TOTAL} ${RES} ${FILE}.c${NC}"
+    if [ ${RET_PASS} -ne 0 ]; then
+        PRINT="${COMP_2}: ${RET_CCC}"
+        print_check "return" "[${PRINT}]"
+    else
+        PRINT="${COMP_1}: ${RET_GCC}, ${COMP_2}: ${RET_CCC}"
+        print_check "return" "[${PRINT}]"
+        if [ ! -z "${OUT_CCC}" ]; then
+            indent
+            PRINT="${COMP_1}: \"${OUT_GCC}\", ${COMP_2}: \"${OUT_CCC}\""
+            print_check "stdout" "[${PRINT}]"
+        fi
+    fi
+}
+
+print_client () {
+    echo -e -n "${TOTAL} ${RES} ${FILE}.c${NC}"
+    if [ ${RET_PASS} -ne 0 ]; then
+        PRINT="${COMP_4}: ${RET_CCC}"
+        print_check "return" "[${PRINT}]"
+    else
+        PRINT="${COMP_1}: ${RET_GCC}, ${COMP_2}: ${RET_GCC_CCC}, "
+        PRINT="${PRINT}${COMP_3}: ${RET_CCC_GCC}, ${COMP_4}: ${RET_CCC}"
+        print_check "return" "[${PRINT}]"
+        if [ ! -z "${OUT_CCC}" ]; then
+            indent
+            PRINT="${COMP_1}: \"${OUT_GCC}\", ${COMP_2}: \"${OUT_GCC_CCC}\", "
+            PRINT="${PRINT}${COMP_3}: \"${OUT_CCC_GCC}\", ${COMP_4}: \"${OUT_CCC}\""
+            print_check "stdout" "[${PRINT}]"
+        fi
+    fi
 }
 
 function check_fail () {
@@ -56,7 +91,9 @@ function check_fail () {
 
     if [ ${RET_CCC} -ne 0 ]; then
         RES="${LIGHT_GREEN}[y]"
-        let PASS+=1
+        if [ ${1} -eq 0 ]; then
+            let PASS+=1
+        fi
     else
         RES="${LIGHT_RED}[n]"
     fi
@@ -77,7 +114,9 @@ function check_pass () {
     if [ ${RET_GCC} -eq ${RET_CCC} ]; then
         if [[ "${OUT_GCC}" == "${OUT_CCC}" ]]; then
             RES="${LIGHT_GREEN}[y]"
-            let PASS+=1
+            if [ ${1} -eq 0 ]; then
+                let PASS+=1
+            fi
         fi
     else
         RES="${LIGHT_RED}[n]"
@@ -86,25 +125,12 @@ function check_pass () {
     return 0
 }
 
-print_single () {
-    echo -e -n "${TOTAL} ${RES} ${FILE}.c${NC}"
-    if [ ${RET_PASS} -ne 0 ]; then
-        print_check "return" "[${COMP_2}: ${RET_CCC}]"
-    else
-        print_check "return" "[${COMP_1}: ${RET_GCC}, ${COMP_2}: ${RET_CCC}]"
-        if [ ! -z "${OUT_CCC}" ]; then
-            indent
-            print_check "stdout" "[${COMP_1}: \"${OUT_GCC}\", ${COMP_2}: \"${OUT_CCC}\"]"
-        fi
-    fi
-}
-
 function check_single () {
     gcc -pedantic -Werror ${FILE}.c -o ${FILE} > /dev/null 2>&1
     RET_GCC=${?}
 
     if [ ${RET_GCC} -ne 0 ]; then
-        check_fail
+        check_fail 0
         return
     fi
 
@@ -115,7 +141,7 @@ function check_single () {
     ${PACKAGE_NAME} ${FILE}.c > /dev/null 2>&1
     RET_CCC=${?}
 
-    check_pass
+    check_pass 0
     RET_PASS=${?}
 
     COMP_1="gcc"
@@ -123,9 +149,59 @@ function check_single () {
     print_single
 }
 
+function compile_client () {
+    ${PACKAGE_NAME} -c ${1} > /dev/null 2>&1
+    RET_CCC=${?}
+
+    if [ ${RET_CCC} -eq 0 ]; then
+        gcc -pedantic -Werror ${FILE}.o ${FILE}_client.o -o ${FILE} > /dev/null 2>&1
+        RET_CCC=${?}
+    fi
+
+    if [ -f "${FILE}.o" ]; then rm ${FILE}.o; fi
+    if [ -f "${FILE}_client.o" ]; then rm ${FILE}_client.o; fi
+}
+
 function check_client () {
-    echo -e -n "${TOTAL} ${FILE}.c${NC}"
-    echo " -> CLIENT"
+    gcc -pedantic -Werror ${FILE}.c ${FILE}_client.c -o ${FILE} > /dev/null 2>&1
+    OUT_GCC=$(${FILE})
+    RET_GCC=${?}
+    rm ${FILE}
+
+    gcc -pedantic -Werror -c ${FILE}_client.c -o ${FILE}_client.o > /dev/null 2>&1
+    compile_client ${FILE}.c
+    check_pass 1
+    RET_PASS=${?}
+    RET_GCC_CCC=${RET_CCC}
+    OUT_GCC_CCC=${OUT_CCC}
+    if [ ${RET_PASS} -ne 0 ]; then
+        COMP_4="gcc+${PACKAGE_NAME}"
+        print_client
+        return
+    fi
+
+    gcc -pedantic -Werror -c ${FILE}.c  -o ${FILE}.o > /dev/null 2>&1
+    compile_client ${FILE}_client.c
+    check_pass 1
+    RET_PASS=${?}
+    RET_CCC_GCC=${RET_CCC}
+    OUT_CCC_GCC=${OUT_CCC}
+    if [ ${RET_PASS} -ne 0 ]; then
+        COMP_4="${PACKAGE_NAME}+gcc"
+        print_client
+        return
+    fi
+
+    ${PACKAGE_NAME} -c ${FILE}.c > /dev/null 2>&1
+    compile_client ${FILE}_client.c
+    check_pass 0
+    RET_PASS=${?}
+
+    COMP_1="gcc"
+    COMP_2="gcc+${PACKAGE_NAME}"
+    COMP_3="${PACKAGE_NAME}+gcc"
+    COMP_4="${PACKAGE_NAME}"
+    print_client
 }
 
 function check_test () {
