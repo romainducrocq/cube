@@ -121,7 +121,7 @@ FILE:            .c file to compile
 - All local imports must have format `from <package_name>.<file_name> cimport <a_class>, <a_func>`.
 - All comments must be hashtags comments `#`, triple quotes `"""` comments are not supported.
 - All comments must be on a separate line, inlined comments are not supported.
-- There must be none of special characters `#`, `\n`, `\r`, `\t` `\f`, `\v` in hardcoded strings.
+- There must be no special character `#` in hardcoded strings, matching lines are stripped.
 - There must be no global scope symbols (variables, functions and classes) in hardcoded strings.
 - There must be no double whitespaces in code lines, except from python indentation and format.
 - All global variables must be declared with `cdef` (`cdef object` must be used for python objects).
@@ -131,7 +131,7 @@ FILE:            .c file to compile
 - Python entry point `main.py` in `lang/ccc/<file_main>.{pyx,pxd}` must be declared with `cpdef`.
 - Python entry point `main.py` must be at the end of file, everything from here on is ignored. 
 - C entry point `main_c` in `lang/ccc/<file_main>.pyx` must be the only public symbol.
-- Avoid python `import` as much as possible, it makes the generated code bulky and slower. 
+- Avoid python `import` as much as possible, it makes the generated code bulky and slower.
 
 ****
 
