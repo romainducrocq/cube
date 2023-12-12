@@ -18,6 +18,7 @@ TEST_DIRS=(
 "7_compound_statements"
 "8_loops"
 "9_functions"
+"10_file-scope_variables_and_storage-class_specifiers"
 )
 
 function file () {
