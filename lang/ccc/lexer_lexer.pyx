@@ -67,6 +67,8 @@ TOKEN_KIND = IotaEnum((
     "key_for",
     "key_break",
     "key_continue",
+    "key_static",
+    "key_extern",
 
     "identifier",
     "constant",
@@ -131,6 +133,8 @@ cdef dict[int, str] TOKEN_REGEX = {
     TOKEN_KIND.get('key_for'): r"for\b",
     TOKEN_KIND.get('key_break'): r"break\b",
     TOKEN_KIND.get('key_continue'): r"continue\b",
+    TOKEN_KIND.get('key_static'): r"static\b",
+    TOKEN_KIND.get('key_extern'): r"extern\b",
 
     TOKEN_KIND.get('identifier'): r"[a-zA-Z_]\w*\b",
     TOKEN_KIND.get('constant'): r"[0-9]+\b",
