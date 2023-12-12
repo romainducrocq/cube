@@ -64,7 +64,7 @@ cd ../../ccc/
 ### Test
 ```
 cd lang/dev/
-./test.sh ../../tests/
+./test.sh [Test suite]
 ```
 
 ### Run
