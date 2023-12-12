@@ -168,6 +168,9 @@ function check_client () {
     RET_GCC=${?}
     rm ${FILE}
 
+    if [ -f "${FILE}.o" ]; then rm ${FILE}.o; fi
+    if [ -f "${FILE}_client.o" ]; then rm ${FILE}_client.o; fi
+
     gcc -pedantic -Werror -c ${FILE}_client.c -o ${FILE}_client.o > /dev/null 2>&1
     compile_client ${FILE}.c
     check_pass 1
