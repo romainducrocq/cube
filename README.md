@@ -10,7 +10,9 @@
 
 ## Development
 
-- [x] Int constants  
+### Language features
+
+- [x] Integer constants  
 - [x] Unary operators  
 - [x] Binary operators  
 - [x] Logical and relational operators  
@@ -18,7 +20,24 @@
 - [x] Statements and conditional expressions  
 - [x] Compound statements  
 - [x] Loops  
-- [ ] Functions  
+- [x] Functions  
+- [ ] File-scope variables and storage-class specifiers  
+
+### Types
+
+- [ ] Long integers  
+- [ ] Unsigned integers  
+- [ ] Floating-point numbers  
+- [ ] Pointers  
+- [ ] Arrays and pointer arithmetic  
+- [ ] Characters and strings  
+- [ ] Supporting dynamic memory allocation  
+- [ ] Structures  
+
+### Optimization
+
+- [ ] Optimizing TAC programs  
+- [ ] Register allocation  
 
 ## How To _
 
