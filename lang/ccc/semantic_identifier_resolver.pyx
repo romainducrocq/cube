@@ -1,5 +1,5 @@
 from ccc.parser_c_ast cimport TIdentifier, CProgram, CFunctionDeclaration, CVariableDeclaration
-from ccc.parser_c_ast cimport CDeclaration, CFunDecl, CVarDecl, CBlock, CB, CBlockItem, CD, CS
+from ccc.parser_c_ast cimport CDeclaration, CFunDecl, CVarDecl, CStatic, CExtern, CBlock, CB, CBlockItem, CD, CS
 from ccc.parser_c_ast cimport CStatement, CReturn, CExpression, CIf, CLabel, CGoto, CCompound
 from ccc.parser_c_ast cimport CWhile, CDoWhile, CFor, CBreak, CContinue, CForInit, CInitDecl, CInitExp, CNull
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CConstant, CAssignment, CAssignmentCompound
@@ -19,6 +19,10 @@ cdef list[dict[str, str]] scoped_identifier_maps = [{}]
 
 cdef dict[str, str] goto_map = {}
 cdef set[str] label_set = set()
+
+
+cdef bint is_file_scope():
+    return len(scoped_identifier_maps) == 1
 
 
 cdef void enter_scope():
@@ -140,7 +144,7 @@ cdef void resolve_expression(CExp node):
 
 cdef void resolve_for_init(CForInit node):
     if isinstance(node, CInitDecl):
-        resolve_variable_declaration(node.init)
+        resolve_block_scope_variable_declaration(node.init)
     elif isinstance(node, CInitExp):
         if node.init:
             resolve_expression(node.init)
@@ -313,6 +317,15 @@ cdef void resolve_params(CFunctionDeclaration node):
 cdef void resolve_function_declaration(CFunctionDeclaration node):
     global scoped_identifier_maps
 
+    if not is_file_scope():
+        if node.body:
+            raise RuntimeError(
+                f"Block scoped function definition {node.name.str_t} can not be nested")
+
+        if isinstance(node.storage_class, CStatic):
+            raise RuntimeError(
+                f"Block scoped function definition {node.name.str_t} can not be static")
+
     if node.name.str_t in scoped_identifier_maps[-1] and \
        node.name.str_t not in external_linkage_set:
         raise RuntimeError(
@@ -330,12 +343,25 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
     exit_scope()
 
 
-cdef void resolve_variable_declaration(CVariableDeclaration node):
+cdef void resolve_file_scope_variable_declaration(CVariableDeclaration node):
     global scoped_identifier_maps
 
-    if node.name.str_t in scoped_identifier_maps[-1]:
+    external_linkage_set.add(node.name.str_t)
+    scoped_identifier_maps[0][node.name.str_t] = node.name.str_t
+
+
+cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
+    global scoped_identifier_maps
+
+    if node.name.str_t in scoped_identifier_maps[-1] and \
+        not (node.name.str_t in external_linkage_set and
+             isinstance(node.storage_class, CExtern)):
         raise RuntimeError(
             f"Variable {node.name.str_t} was already declared in this scope")
+
+    if isinstance(node.storage_class, CExtern):
+        resolve_file_scope_variable_declaration(node)
+        return
 
     cdef TIdentifier name = resolve_variable_identifier(node.name)
     scoped_identifier_maps[-1][node.name.str_t] = name.str_t
@@ -347,15 +373,19 @@ cdef void resolve_variable_declaration(CVariableDeclaration node):
 
 
 cdef void resolve_fun_decl_declaration(CFunDecl node):
-    if node.function_decl.body:
-        raise RuntimeError(
-            f"Function definition {node.name.str_t} can not be nested")
-
+    if is_file_scope():
+        init_resolve_labels()
+        init_annotate_loops()
     resolve_function_declaration(node.function_decl)
+    if is_file_scope():
+        resolve_label()
 
 
 cdef void resolve_var_decl_declaration(CVarDecl node):
-    resolve_variable_declaration(node.variable_decl)
+    if is_file_scope():
+        resolve_file_scope_variable_declaration(node.variable_decl)
+    else:
+        resolve_block_scope_variable_declaration(node.variable_decl)
 
 
 cdef void resolve_declaration(CDeclaration node):
@@ -387,11 +417,9 @@ cdef void resolve_identifiers(CProgram node):
     init_resolve_identifiers()
     init_check_types()
 
-    cdef int function_decl
-    for function_decl in range(len(node.function_decls)):
-        init_resolve_labels()
-        init_annotate_loops()
-        resolve_function_declaration(node.function_decls[function_decl])
+    cdef int declaration
+    for declaration in range(len(node.declarations)):
+        resolve_declaration(node.declarations[declaration])
         resolve_label()
 
 
