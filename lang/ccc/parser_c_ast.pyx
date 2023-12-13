@@ -450,25 +450,46 @@ cdef class CD(CBlockItem):
         self.declaration = declaration
 
 
-cdef class CFunctionDeclaration(AST):
-    # function_declaration = FunctionDeclaration(identifier name, identifier* params, block? body)
+cdef class CStorageClass(AST):
+    # storage_class = Static
+    #               | Extern
     def __cinit__(self):
-        self._fields = ('name', 'params', 'body')
+        self._fields = ()
 
-    def __init__(self, TIdentifier name, list[TIdentifier] params, CBlock body):
+
+cdef class CStatic(CStorageClass):
+    # Static
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class CExtern(CStorageClass):
+    # Extern
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class CFunctionDeclaration(AST):
+    # function_declaration = FunctionDeclaration(identifier name, identifier* params, block? body, storage_class?)
+    def __cinit__(self):
+        self._fields = ('name', 'params', 'body', 'storage_class')
+
+    def __init__(self, TIdentifier name, list[TIdentifier] params, CBlock body, CStorageClass storage_class):
         self.name = name
         self.params = params
         self.body = body
+        self.storage_class = storage_class
 
 
 cdef class CVariableDeclaration(AST):
-    # variable_declaration = VariableDeclaration(identifier name, exp? init)
+    # variable_declaration = VariableDeclaration(identifier name, exp? init, storage_class?)
     def __cinit__(self):
-        self._fields = ('name', 'init')
+        self._fields = ('name', 'init', 'storage_class')
 
-    def __init__(self, TIdentifier name, CExp init):
+    def __init__(self, TIdentifier name, CExp init, CStorageClass storage_class):
         self.name = name
         self.init = init
+        self.storage_class = storage_class
 
 
 cdef class CDeclaration(AST):
@@ -497,9 +518,9 @@ cdef class CVarDecl(CDeclaration):
 
 
 cdef class CProgram(AST):
-    # AST = Program(function_declaration*)
+    # AST = Program(declaration*)
     def __cinit__(self):
-        self._fields = ('function_decls',)
+        self._fields = ('declarations',)
 
-    def __init__(self, list[CFunctionDeclaration] function_decls):
-        self.function_decls = function_decls
+    def __init__(self, list[CDeclaration] declarations):
+        self.declarations = declarations

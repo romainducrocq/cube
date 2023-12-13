@@ -19,6 +19,10 @@
 
 BACKLOG
 
+- Writing C software without the standard library: https://gist.github.com/tcoppex/443d1dd45f873d96260195d6431b0989
+    - example of assembly syscall
+    - example of strlen, puts
+
 - regex findall in c (is slower?):
     => https://gist.github.com/ianmackinnon/3294587
     => https://gist.github.com/raoulduke/1babb0592e9062d8b330c57ea08862cb

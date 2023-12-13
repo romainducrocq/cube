@@ -234,17 +234,33 @@ cdef class CD(CBlockItem):
     cdef public CDeclaration declaration
 
 
+cdef class CStorageClass(AST):
+    pass
+
+
+cdef class CStatic(CStorageClass):
+    pass
+
+
+cdef class CExtern(CStorageClass):
+    pass
+
+
 cdef class CFunctionDeclaration(AST):
     cdef public TIdentifier name
     cdef public list[TIdentifier] params
     # Optional
     cdef public CBlock body
+    # Optional
+    cdef public CStorageClass storage_class
 
 
 cdef class CVariableDeclaration(AST):
     cdef public TIdentifier name
     # Optional
     cdef public CExp init
+    # Optional
+    cdef public CStorageClass storage_class
 
 
 cdef class CDeclaration(AST):
@@ -260,4 +276,4 @@ cdef class CVarDecl(CDeclaration):
 
 
 cdef class CProgram(AST):
-    cdef public list[CFunctionDeclaration] function_decls
+    cdef public list[CDeclaration] declarations
