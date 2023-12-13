@@ -1,4 +1,5 @@
 from ccc.parser_c_ast cimport *
+from ccc.semantic_symbol_table cimport *
 from ccc.lexer_lexer cimport TOKEN_KIND, Token
 from ccc.parser_precedence cimport parse_token_precedence
 
@@ -23,6 +24,17 @@ cdef Token pop_next():
     if tokens:
         next_token = tokens.pop(0)
         return next_token
+    else:
+
+        raise RuntimeError(
+            "An error occurred in parser, all Tokens were consumed before end of program")
+
+
+cdef Token pop_next_i(int i):
+    global next_token
+
+    if i < len(tokens):
+        return tokens.pop(i)
     else:
 
         raise RuntimeError(
@@ -414,6 +426,7 @@ cdef CStatement parse_statement():
 
 
 cdef CInitDecl parse_decl_for_init():
+    cdef Type type_specifier = parse_type()
     cdef CVariableDeclaration init = parse_variable_declaration()
     return CInitDecl(init)
 
@@ -430,7 +443,9 @@ cdef CInitExp parse_exp_for_init():
 
 cdef CForInit parse_for_init():
     # <for-init> ::= <variable-declaration> | [<exp>] ";"
-    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
+    if peek_next().token_kind in (TOKEN_KIND.get('key_int'),
+                                  TOKEN_KIND.get('key_static'),
+                                  TOKEN_KIND.get('key_extern')):
         return parse_decl_for_init()
     else:
         return parse_exp_for_init()
@@ -448,7 +463,9 @@ cdef CS parse_s_block_item():
 
 cdef CBlockItem parse_block_item():
     # <block-item> ::= <statement> | <declaration>
-    if peek_token.token_kind == TOKEN_KIND.get('key_int'):
+    if peek_token.token_kind in (TOKEN_KIND.get('key_int'),
+                                 TOKEN_KIND.get('key_static'),
+                                 TOKEN_KIND.get('key_extern')):
         return parse_d_block_item()
     else:
         return parse_s_block_item()
@@ -471,6 +488,43 @@ cdef CBlock parse_block():
     return block
 
 
+cdef Type parse_type():
+    # <type> ::= "int"
+    cdef int specifier = 0
+    cdef list[int] type_token_kinds = []
+    while True:
+        if peek_next_i(specifier).token_kind == TOKEN_KIND.get("identifier"):
+            break
+        elif peek_next_i(specifier).token_kind == TOKEN_KIND.get("key_int"):
+            type_token_kinds.append(pop_next_i(specifier).token_kind)
+        elif peek_next_i(specifier).token_kind in (TOKEN_KIND.get('key_static'),
+                                                   TOKEN_KIND.get('key_extern')):
+            specifier += 1
+        else:
+
+            raise RuntimeError(
+                f"Expected token type \"specifier\" but found token \"{peek_next_i(specifier).token}\"")
+
+    if len(type_token_kinds) != 1:
+
+        raise RuntimeError(
+            f"Expected token type \"type specifier\" but found token \"{pop_next().token}\"")
+
+    return Int()
+
+
+cdef CStorageClass parse_storage_class():
+    # <storage_class> ::= "static" | "extern"
+    if pop_next().token_kind == TOKEN_KIND.get("key_static"):
+        return CStatic()
+    elif next_token.token_kind == TOKEN_KIND.get("key_extern"):
+        return CExtern()
+    else:
+
+        raise RuntimeError(
+            f"Expected token type \"storage class\" but found token \"{next_token.token}\"")
+
+
 cdef list[TIdentifier] parse_param_list():
     # <param-list> ::= "void" | "int" <identifier> { "," "int" <identifier> }
     cdef list[TIdentifier] params = []
@@ -486,8 +540,12 @@ cdef list[TIdentifier] parse_param_list():
 
 
 cdef CFunctionDeclaration parse_function_declaration():
-    # <function-declaration> ::= "int" <identifier> "(" <param-list> ")" ( <block> | ";")
-    _ = pop_next()
+    # <function-declaration> ::= [ <storage-class> ] <identifier> "(" <param-list> ")" ( <block> | ";")
+    cdef storage_class
+    if peek_next().token_kind == TOKEN_KIND.get('identifier'):
+        storage_class = None
+    else:
+        storage_class = parse_storage_class()
     cdef TIdentifier name = parse_identifier()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
     cdef list[TIdentifier] params = parse_param_list()
@@ -498,12 +556,16 @@ cdef CFunctionDeclaration parse_function_declaration():
         body = None
     else:
         body = parse_block()
-    return CFunctionDeclaration(name, params, body)
+    return CFunctionDeclaration(name, params, body, storage_class)
 
 
 cdef CVariableDeclaration parse_variable_declaration():
-    # <variable-declaration> ::= "int" <identifier> [ "=" <exp> ] ";"
-    _ = pop_next()
+    # <variable-declaration> ::= [ <storage-class> ] <identifier> [ "=" <exp> ] ";"
+    cdef storage_class
+    if peek_next().token_kind == TOKEN_KIND.get('identifier'):
+        storage_class = None
+    else:
+        storage_class = parse_storage_class()
     cdef TIdentifier name = parse_identifier()
     cdef CExp init
     if peek_next().token_kind == TOKEN_KIND.get('assignment_simple'):
@@ -512,7 +574,7 @@ cdef CVariableDeclaration parse_variable_declaration():
     else:
         init = None
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-    return CVariableDeclaration(name, init)
+    return CVariableDeclaration(name, init, storage_class)
 
 
 cdef CFunDecl parse_fun_decl_declaration():
@@ -526,21 +588,24 @@ cdef CVarDecl parse_var_decl_declaration():
 
 
 cdef CDeclaration parse_declaration():
-    # <declaration> ::= <variable-declaration> | <function-declaration>
-    if peek_next().token_kind == TOKEN_KIND.get('key_int'):
-        if peek_next_i(2).token_kind == TOKEN_KIND.get('parenthesis_open'):
-            return parse_fun_decl_declaration()
-        else:
-            return parse_var_decl_declaration()
+    # <declaration> ::= { <specifier> }+ (<variable-declaration> | <function-declaration>)
+    cdef Type type_specifier = parse_type()
+    cdef int i = 2
+    if peek_next().token_kind == TOKEN_KIND.get("identifier"):
+        i = 1
+    if peek_next_i(i).token_kind == TOKEN_KIND.get('parenthesis_open'):
+        return parse_fun_decl_declaration()
+    else:
+        return parse_var_decl_declaration()
 
 
 cdef CProgram parse_program():
-    # <program> ::= { <function-declaration> }
-    cdef list[CFunctionDeclaration] function_decls = []
+    # <program> ::= { <declaration> }
+    cdef list[CDeclaration] declarations = []
     while tokens:
-        function_decls.append(parse_function_declaration())
+        declarations.append(parse_declaration())
 
-    return CProgram(function_decls)
+    return CProgram(declarations)
 
 
 cdef CProgram parsing(list[Token] lex_tokens):

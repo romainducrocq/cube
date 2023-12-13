@@ -1,9 +1,9 @@
 from ccc.util_ast cimport AST, ast_pretty_string
 
 from ccc.lexer_lexer cimport lexing, Token
-# from ccc.parser_c_ast cimport CProgram
-# from ccc.parser_parser cimport parsing
-#
+from ccc.parser_c_ast cimport CProgram
+from ccc.parser_parser cimport parsing
+
 # from ccc.semantic_identifier_resolver cimport analyze_semantic
 #
 # from ccc.intermediate_tac_ast cimport TacProgram
@@ -49,13 +49,13 @@ cdef void do_compile(str filename, int opt_code, int opt_s_code):
         debug_tokens(tokens) #
         return
 
-    # verbose("-- Parsing ... ", end="")
-    # cdef CProgram c_ast = parsing(tokens)
-    # verbose("OK")
-    # if opt_code == 254:
-    #     debug_ast(c_ast) #
-    #     return
-    #
+    verbose("-- Parsing ... ", end="")
+    cdef CProgram c_ast = parsing(tokens)
+    verbose("OK")
+    if opt_code == 254:
+        debug_ast(c_ast) #
+        return
+
     # verbose("-- Semantic analysis ... ", end="")
     # analyze_semantic(c_ast)
     # verbose("OK")
