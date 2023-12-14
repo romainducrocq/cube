@@ -15,7 +15,7 @@ from ccc.semantic_type_checker cimport checktype_file_scope_variable_declaration
 from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
 
 
-cdef set[str] external_linkage_set = set()
+cdef dict[str] external_linkage_scope_map = {}
 cdef list[dict[str, str]] scoped_identifier_maps = [{}]
 
 cdef dict[str, str] goto_map = {}
@@ -31,17 +31,11 @@ cdef void enter_scope():
 
 
 cdef void exit_scope():
-    cdef int scope
     cdef str identifier
-    for scope in range(len(scoped_identifier_maps) - 1):
-        if not scoped_identifier_maps[-1]:
-            break
-        for identifier in scoped_identifier_maps[scope]:
-            if scoped_identifier_maps[scope][identifier] in scoped_identifier_maps[-1]:
-                del scoped_identifier_maps[-1][identifier]
-                break
     for identifier in scoped_identifier_maps[-1]:
-        external_linkage_set.discard(identifier)
+        if identifier in external_linkage_scope_map and \
+           external_linkage_scope_map[identifier] == len(scoped_identifier_maps):
+            del external_linkage_scope_map[identifier]
     del scoped_identifier_maps[-1]
 
 
@@ -347,12 +341,14 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
             raise RuntimeError(
                 f"Block scoped function definition {node.name.str_t} can not be static")
 
-    if node.name.str_t in scoped_identifier_maps[-1] and \
-       node.name.str_t not in external_linkage_set:
-        raise RuntimeError(
-            f"Function {node.name.str_t} was already declared in this scope")
+    if node.name.str_t not in external_linkage_scope_map:
+        if node.name.str_t in scoped_identifier_maps[-1]:
 
-    external_linkage_set.add(node.name.str_t)
+            raise RuntimeError(
+                f"Function {node.name.str_t} was already declared in this scope")
+
+        external_linkage_scope_map[node.name.str_t] = len(scoped_identifier_maps)
+
     scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
     checktype_function_declaration(node)
 
@@ -367,7 +363,9 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
 cdef void resolve_file_scope_variable_declaration(CVariableDeclaration node):
     global scoped_identifier_maps
 
-    external_linkage_set.add(node.name.str_t)
+    if node.name.str_t not in external_linkage_scope_map:
+        external_linkage_scope_map[node.name.str_t] = len(scoped_identifier_maps)
+
     scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
     if is_file_scope():
         checktype_file_scope_variable_declaration(node)
@@ -379,8 +377,8 @@ cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
     global scoped_identifier_maps
 
     if node.name.str_t in scoped_identifier_maps[-1] and \
-        not (node.name.str_t in external_linkage_set and
-             isinstance(node.storage_class, CExtern)):
+       not (node.name.str_t in external_linkage_scope_map and
+            isinstance(node.storage_class, CExtern)):
 
         raise RuntimeError(
             f"Variable {node.name.str_t} was already declared in this scope")
@@ -434,9 +432,9 @@ cdef void init_resolve_labels():
 
 
 cdef void init_resolve_identifiers():
-    global external_linkage_set
+    global external_linkage_scope_map
     global scoped_identifier_maps
-    external_linkage_set = set()
+    external_linkage_scope_map = {}
     scoped_identifier_maps = [{}]
 
 
