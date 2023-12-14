@@ -348,8 +348,11 @@ cdef void resolve_file_scope_variable_declaration(CVariableDeclaration node):
     global scoped_identifier_maps
 
     external_linkage_set.add(node.name.str_t)
-    scoped_identifier_maps[0][node.name.str_t] = node.name.str_t
-    checktype_file_scope_variable_declaration(node)
+    scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
+    if is_file_scope():
+        checktype_file_scope_variable_declaration(node)
+    else:
+        checktype_block_scope_variable_declaration(node)
 
 
 cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):

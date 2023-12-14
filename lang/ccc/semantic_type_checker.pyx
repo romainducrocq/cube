@@ -121,12 +121,13 @@ cdef void checktype_file_scope_variable_declaration(CVariableDeclaration node):
                 f"File scope variable {node.name.str_t} was redeclared with conflicting linkage")
 
         if isinstance(symbol_table[node.name.str_t].attrs.init, Initial):
+            if isinstance(initial_value, Initial):
+                
+                raise RuntimeError(
+                    f"File scope variable {node.name.str_t} was defined with conflicting linkage")
 
-            raise RuntimeError(
-                f"File scope variable {node.name.str_t} was defined with conflicting linkage")
-
-        else:
-            initial_value = symbol_table[node.name.str_t].attrs.init
+            else:
+                initial_value = symbol_table[node.name.str_t].attrs.init
 
     cdef Type global_var_type = Int()
     cdef IdentifierAttr global_var_attrs = StaticAttr(initial_value, is_global)
