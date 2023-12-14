@@ -31,9 +31,17 @@ cdef void enter_scope():
 
 
 cdef void exit_scope():
+    cdef int scope
     cdef str identifier
+    for scope in range(len(scoped_identifier_maps) - 1):
+        if not scoped_identifier_maps[-1]:
+            break
+        for identifier in scoped_identifier_maps[scope]:
+            if scoped_identifier_maps[scope][identifier] in scoped_identifier_maps[-1]:
+                del scoped_identifier_maps[-1][identifier]
+                break
     for identifier in scoped_identifier_maps[-1]:
-        external_linkage_set.discard(identifier) # TODO
+        external_linkage_set.discard(identifier)
     del scoped_identifier_maps[-1]
 
 
@@ -339,16 +347,6 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
             raise RuntimeError(
                 f"Block scoped function definition {node.name.str_t} can not be static")
 
-    # TODO
-    # cdef int scope
-    # for scope in range(len(scoped_identifier_maps)):
-    #     if node.name.str_t in scoped_identifier_maps[scope] and \
-    #        node.name.str_t not in external_linkage_set:
-    #
-    #         raise RuntimeError(
-    #             f"Function {node.name.str_t} was already declared in this scope")
-    #
-    # print(external_linkage_set)
     if node.name.str_t in scoped_identifier_maps[-1] and \
        node.name.str_t not in external_linkage_set:
         raise RuntimeError(
