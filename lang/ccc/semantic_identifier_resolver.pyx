@@ -10,7 +10,8 @@ from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
 from ccc.semantic_loop_annotater cimport init_annotate_loops
 
-from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration, checktype_variable_declaration
+from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration
+from ccc.semantic_type_checker cimport checktype_file_scope_variable_declaration, checktype_block_scope_variable_declaration
 from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
 
 
@@ -348,6 +349,7 @@ cdef void resolve_file_scope_variable_declaration(CVariableDeclaration node):
 
     external_linkage_set.add(node.name.str_t)
     scoped_identifier_maps[0][node.name.str_t] = node.name.str_t
+    checktype_file_scope_variable_declaration(node)
 
 
 cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
@@ -366,9 +368,10 @@ cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
     cdef TIdentifier name = resolve_variable_identifier(node.name)
     scoped_identifier_maps[-1][node.name.str_t] = name.str_t
     node.name = name
-    checktype_variable_declaration(node)
+    checktype_block_scope_variable_declaration(node)
 
-    if node.init:
+    if node.init and \
+       not node.storage_class:
         resolve_expression(node.init)
 
 
