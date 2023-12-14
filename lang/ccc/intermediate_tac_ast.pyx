@@ -274,27 +274,40 @@ cdef class TacLabel(TacInstruction):
         self.name = name
 
 
-cdef class TacFunctionDef(AST):
-    # function_definition = Function(identifier, identifier* params, instruction* body)
+cdef class TacTopLevel(AST):
+    # top_level = Function(identifier, bool global, identifier* params, instruction* body)
+    #           | StaticVariable(identifier, bool global, int init)
     def __cinit__(self):
         self._fields = ()
 
 
-cdef class TacFunction(TacFunctionDef):
-    # Function(identifier, identifier* params, instruction* body)
+cdef class TacFunction(TacTopLevel):
+    # Function(identifier, bool global, identifier* params, instruction* body)
     def __cinit__(self):
-        self._fields = ('name', 'params', 'body')
+        self._fields = ('name', 'is_global', 'params', 'body')
 
-    def __init__(self, TIdentifier name, list[TIdentifier] params, list[TacInstruction] body):
+    def __init__(self, TIdentifier name, bint is_global, list[TIdentifier] params, list[TacInstruction] body):
         self.name = name
+        self.is_global = is_global
         self.params = params
         self.body = body
 
 
-cdef class TacProgram(AST):
-    # AST = Program(function_definition*)
+cdef class TacStaticVariable(TacTopLevel):
+    # StaticVariable(identifier, bool global, int init)
     def __cinit__(self):
-        self._fields = ('function_defs',)
+        self._fields = ('name', 'is_global', 'initial_value')
 
-    def __init__(self, list[TacFunctionDef] function_defs):
-        self.function_defs = function_defs
+    def __init__(self, TIdentifier name, bint is_global, TInt initial_value):
+        self.name = name
+        self.is_global = is_global
+        self.initial_value = initial_value
+
+
+cdef class TacProgram(AST):
+    # AST = Program(top_level*)
+    def __cinit__(self):
+        self._fields = ('top_levels',)
+
+    def __init__(self, list[TacTopLevel] top_levels):
+        self.top_levels = top_levels

@@ -147,15 +147,22 @@ cdef class TacLabel(TacInstruction):
     cdef public TIdentifier name
 
 
-cdef class TacFunctionDef(AST):
+cdef class TacTopLevel(AST):
     pass
 
 
-cdef class TacFunction(TacFunctionDef):
+cdef class TacFunction(TacTopLevel):
     cdef public TIdentifier name
+    cdef public bint is_global
     cdef public list[TIdentifier] params
     cdef public list[TacInstruction] body
 
 
+cdef class TacStaticVariable(TacTopLevel):
+    cdef public TIdentifier name
+    cdef public bint is_global
+    cdef public TInt initial_value
+
+
 cdef class TacProgram(AST):
-    cdef public list[TacFunctionDef] function_defs
+    cdef public list[TacTopLevel] top_levels
