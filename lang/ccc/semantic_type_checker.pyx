@@ -122,7 +122,7 @@ cdef void checktype_file_scope_variable_declaration(CVariableDeclaration node):
 
         if isinstance(symbol_table[node.name.str_t].attrs.init, Initial):
             if isinstance(initial_value, Initial):
-                
+
                 raise RuntimeError(
                     f"File scope variable {node.name.str_t} was defined with conflicting linkage")
 
@@ -184,5 +184,4 @@ cdef void checktype_block_scope_variable_declaration(CVariableDeclaration node):
 
 
 cdef void init_check_types():
-    global defined_set
-    defined_set = set()
+    defined_set.clear()

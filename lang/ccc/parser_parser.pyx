@@ -31,8 +31,6 @@ cdef Token pop_next():
 
 
 cdef Token pop_next_i(int i):
-    global next_token
-
     if i < len(tokens):
         return tokens.pop(i)
     else:

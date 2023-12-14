@@ -44,5 +44,4 @@ cdef void deannotate_loop():
 
 
 cdef void init_annotate_loops():
-    global loop_labels
-    loop_labels = []
+    loop_labels.clear()

@@ -186,9 +186,8 @@ cdef void correct_function_def(AsmFunctionDef node):
 
 cdef void init_correct_instructions():
     global counter
-    global pseudo_map
     counter = 0
-    pseudo_map = {}
+    pseudo_map.clear()
 
 
 cdef void correct_instructions(AsmProgram node):

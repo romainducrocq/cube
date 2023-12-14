@@ -404,9 +404,8 @@ cdef void emit_program(AsmProgram node):
 #
 cdef list[str] code_emission_print(AsmProgram asm_ast): #
     global debug #
-    global print_code #
     debug = True #
-    print_code = [] #
+    print_code.clear() #
 #
     emit_program(asm_ast) #
 #

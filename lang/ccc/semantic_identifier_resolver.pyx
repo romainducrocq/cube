@@ -429,17 +429,14 @@ cdef void resolve_declaration(CDeclaration node):
 
 
 cdef void init_resolve_labels():
-    global goto_map
-    global label_set
-    goto_map = {}
-    label_set = set()
+    goto_map.clear()
+    label_set.clear()
 
 
 cdef void init_resolve_identifiers():
-    global external_linkage_scope_map
-    global scoped_identifier_maps
-    external_linkage_scope_map = {}
-    scoped_identifier_maps = [{}]
+    external_linkage_scope_map.clear()
+    scoped_identifier_maps.clear()
+    enter_scope()
 
 
 cdef void resolve_identifiers(CProgram node):
