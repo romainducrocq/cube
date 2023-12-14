@@ -1,5 +1,7 @@
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
+from ccc.semantic_type_checker cimport symbol_table, Symbol
+from ccc.semantic_symbol_table cimport StaticAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
 
 
@@ -453,10 +455,11 @@ cdef void represent_block(CBlock node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef TacFunctionDef represent_function_def(CFunctionDeclaration node):
+cdef TacFunction represent_function_top_level(CFunctionDeclaration node):
     global instructions
 
     cdef TIdentifier name = represent_identifier(node.name)
+    cdef bint is_global = symbol_table[node.name.str_t].attrs.is_global
     cdef int param
     cdef list[TIdentifier] params = []
     for param in range(len(node.params)):
@@ -465,18 +468,76 @@ cdef TacFunctionDef represent_function_def(CFunctionDeclaration node):
     instructions = body
     represent_block(node.body)
     instructions.append(TacReturn(TacConstant(TInt(0))))
-    return TacFunction(name, params, body)
+    return TacFunction(name, is_global, params, body)
+
+
+cdef list[TacTopLevel] function_top_levels = []
+
+
+cdef void represent_fun_decl_top_level(CFunDecl node):
+    if node.function_decl.body:
+        function_top_levels.append(represent_function_top_level(node.function_decl))
+
+
+cdef void represent_var_decl_top_level(CVarDecl node):
+    pass
+
+
+cdef void represent_declaration_top_level(CDeclaration node):
+    # top_level = Function(identifier, bool global, identifier* params, instruction* body)
+    if isinstance(node, CFunDecl):
+        represent_fun_decl_top_level(node)
+    elif isinstance(node, CVarDecl):
+        represent_var_decl_top_level(node)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
+
+
+cdef list[TacTopLevel] static_variable_top_levels = []
+
+
+cdef void represent_static_variable_top_level(StaticAttr attr, str symbol):
+    if isinstance(attr.init, NoInitializer):
+        return
+
+    cdef TIdentifier name = TIdentifier(symbol)
+    cdef bint is_global = attr.is_global
+    cdef int initial_value
+    if isinstance(attr.init, Initial):
+        initial_value = attr.init.value
+    elif isinstance(attr.init, Tentative):
+        initial_value = 0
+    else:
+
+        raise RuntimeError(
+            "An error occurred in three address code representation, top level variable has invalid initializer")
+
+    static_variable_top_levels.append(TacStaticVariable(name, is_global, initial_value))
+
+
+cdef void represent_symbol_top_level(Symbol attr, str symbol):
+    # top_level = StaticVariable(identifier, bool global, int init)
+    if isinstance(attr, StaticAttr):
+        represent_static_variable_top_level(attr, symbol)
 
 
 cdef TacProgram represent_program(CProgram node):
-    # program = Program(function_definition*)
-    cdef int function_decl
-    cdef list[TacFunctionDef] function_defs = []
-    for function_decl in range(len(node.function_decls)):
-        if node.function_decls[function_decl].body:
-            function_defs.append(represent_function_def(node.function_decls[function_decl]))
+    # program = Program(top_level*)
+    cdef list[TacTopLevel] top_levels = []
+    function_top_levels = top_levels
+    cdef int declaration
+    for declaration in range(len(node.declarations)):
+        represent_declaration_top_level(node.declarations[declaration])
 
-    return TacProgram(function_defs)
+    static_variable_top_levels.clear()
+    cdef str symbol
+    for symbol in symbol_table:
+        represent_symbol_top_level(symbol_table[symbol], symbol)
+    top_levels = static_variable_top_levels + top_levels
+
+    return TacProgram(top_levels)
 
 
 cdef TacProgram three_address_code_representation(CProgram c_ast):
