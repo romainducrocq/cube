@@ -22,8 +22,12 @@ cdef dict[str, str] goto_map = {}
 cdef set[str] label_set = set()
 
 
+cdef int current_scope_depth():
+    return len(scoped_identifier_maps)
+
+
 cdef bint is_file_scope():
-    return len(scoped_identifier_maps) == 1
+    return current_scope_depth() == 1
 
 
 cdef void enter_scope():
@@ -34,7 +38,7 @@ cdef void exit_scope():
     cdef str identifier
     for identifier in scoped_identifier_maps[-1]:
         if identifier in external_linkage_scope_map and \
-           external_linkage_scope_map[identifier] == len(scoped_identifier_maps):
+           external_linkage_scope_map[identifier] == current_scope_depth():
             del external_linkage_scope_map[identifier]
     del scoped_identifier_maps[-1]
 
@@ -51,7 +55,7 @@ cdef void resolve_label():
 cdef void resolve_function_call_expression(CFunctionCall node):
     cdef int i, scope
     cdef TIdentifier name
-    for scope in range(len(scoped_identifier_maps)):
+    for scope in range(current_scope_depth()):
         i = - (scope + 1)
         if node.name.str_t in scoped_identifier_maps[i]:
             name = TIdentifier(scoped_identifier_maps[i][node.name.str_t])
@@ -69,7 +73,7 @@ cdef void resolve_function_call_expression(CFunctionCall node):
 cdef void resolve_var_expression(CVar node):
     cdef int i, scope
     cdef TIdentifier name
-    for scope in range(len(scoped_identifier_maps)):
+    for scope in range(current_scope_depth()):
         i = - (scope + 1)
         if node.name.str_t in scoped_identifier_maps[i]:
             name = TIdentifier(scoped_identifier_maps[i][node.name.str_t])
@@ -347,7 +351,7 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
             raise RuntimeError(
                 f"Function {node.name.str_t} was already declared in this scope")
 
-        external_linkage_scope_map[node.name.str_t] = len(scoped_identifier_maps)
+        external_linkage_scope_map[node.name.str_t] = current_scope_depth()
 
     scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
     checktype_function_declaration(node)
@@ -364,7 +368,7 @@ cdef void resolve_file_scope_variable_declaration(CVariableDeclaration node):
     global scoped_identifier_maps
 
     if node.name.str_t not in external_linkage_scope_map:
-        external_linkage_scope_map[node.name.str_t] = len(scoped_identifier_maps)
+        external_linkage_scope_map[node.name.str_t] = current_scope_depth()
 
     scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
     if is_file_scope():
