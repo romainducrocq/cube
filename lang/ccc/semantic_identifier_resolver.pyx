@@ -33,7 +33,7 @@ cdef void enter_scope():
 cdef void exit_scope():
     cdef str identifier
     for identifier in scoped_identifier_maps[-1]:
-        external_linkage_set.discard(identifier)
+        external_linkage_set.discard(identifier) # TODO
     del scoped_identifier_maps[-1]
 
 
@@ -47,8 +47,7 @@ cdef void resolve_label():
 
 
 cdef void resolve_function_call_expression(CFunctionCall node):
-    cdef int i
-    cdef int scope
+    cdef int i, scope
     cdef TIdentifier name
     for scope in range(len(scoped_identifier_maps)):
         i = - (scope + 1)
@@ -66,8 +65,7 @@ cdef void resolve_function_call_expression(CFunctionCall node):
 
 
 cdef void resolve_var_expression(CVar node):
-    cdef int i
-    cdef int scope
+    cdef int i, scope
     cdef TIdentifier name
     for scope in range(len(scoped_identifier_maps)):
         i = - (scope + 1)
@@ -87,6 +85,7 @@ cdef void resolve_constant_expression(CConstant node):
 
 cdef void resolve_assignment_expression(CAssignment node):
     if not isinstance(node.exp_left, CVar):
+
         raise RuntimeError(
             f"Left expression {type(node.exp_left)} is an invalid lvalue")
 
@@ -96,6 +95,7 @@ cdef void resolve_assignment_expression(CAssignment node):
 
 cdef void resolve_assignment_compound_expression(CAssignmentCompound node):
     if not isinstance(node.exp_left, CVar):
+
         raise RuntimeError(
             f"Left expression {type(node.exp_left)} is an invalid lvalue")
 
@@ -143,9 +143,18 @@ cdef void resolve_expression(CExp node):
             "An error occurred in variable resolution, not all nodes were visited")
 
 
+cdef void resolve_for_block_scope_variable_declaration(CVariableDeclaration node):
+    if node.storage_class:
+
+        raise RuntimeError(
+            f"Variable {node.name.str_t} was not declared with automatic linkage in for loop initializer")
+
+    resolve_block_scope_variable_declaration(node)
+
+
 cdef void resolve_for_init(CForInit node):
     if isinstance(node, CInitDecl):
-        resolve_block_scope_variable_declaration(node.init)
+        resolve_for_block_scope_variable_declaration(node.init)
     elif isinstance(node, CInitExp):
         if node.init:
             resolve_expression(node.init)
@@ -304,6 +313,7 @@ cdef void resolve_params(CFunctionDeclaration node):
     cdef TIdentifier name
     for param in range(len(node.params)):
         if node.params[param].str_t in scoped_identifier_maps[-1]:
+
             raise RuntimeError(
                 f"Variable {node.params[param]} was already declared in this scope")
 
@@ -320,13 +330,25 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
 
     if not is_file_scope():
         if node.body:
+
             raise RuntimeError(
                 f"Block scoped function definition {node.name.str_t} can not be nested")
 
         if isinstance(node.storage_class, CStatic):
+
             raise RuntimeError(
                 f"Block scoped function definition {node.name.str_t} can not be static")
 
+    # TODO
+    # cdef int scope
+    # for scope in range(len(scoped_identifier_maps)):
+    #     if node.name.str_t in scoped_identifier_maps[scope] and \
+    #        node.name.str_t not in external_linkage_set:
+    #
+    #         raise RuntimeError(
+    #             f"Function {node.name.str_t} was already declared in this scope")
+    #
+    # print(external_linkage_set)
     if node.name.str_t in scoped_identifier_maps[-1] and \
        node.name.str_t not in external_linkage_set:
         raise RuntimeError(
@@ -361,6 +383,7 @@ cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
     if node.name.str_t in scoped_identifier_maps[-1] and \
         not (node.name.str_t in external_linkage_set and
              isinstance(node.storage_class, CExtern)):
+
         raise RuntimeError(
             f"Variable {node.name.str_t} was already declared in this scope")
 
