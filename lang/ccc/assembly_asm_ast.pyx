@@ -126,6 +126,7 @@ cdef class AsmOperand(AST):
     #         | Reg(reg)
     #         | Pseudo(identifier)
     #         | Stack(int)
+    #         | AsmData(identifier)
     # 
     def __cinit__(self):
         self._fields = ()
@@ -165,6 +166,16 @@ cdef class AsmStack(AsmOperand):
 
     def __init__(self, TInt value):
         self.value = value
+
+
+cdef class AsmData(AsmOperand):
+    # Data(identifier name)
+    def __cinit__(self):
+        self._fields = ('name',)
+
+    def __init__(self, TIdentifier name):
+        self.name = name
+
 
 
 cdef class AsmBinaryOp(AST):
@@ -409,28 +420,41 @@ cdef class AsmRet(AsmInstruction):
         self._fields = ()
 
 
-cdef class AsmFunctionDef(AST):
-    # 
-    # function_definition = Function(identifier name, instruction* instructions)
-    # 
+cdef class AsmTopLevel(AST):
+    #
+    # top_level = Function(identifier name, bool global, instruction* instructions)
+    #           | StaticVariable(identifier, bool global, int init)
+    #
     def __cinit__(self):
         self._fields = ()
 
 
-cdef class AsmFunction(AsmFunctionDef):
-    # Function(identifier name, instruction* instructions)
+cdef class AsmFunction(AsmTopLevel):
+    # Function(identifier name, bool global, instruction* instructions)
     def __cinit__(self):
-        self._fields = ('name', 'instructions')
+        self._fields = ('name', 'is_global', 'instructions')
 
-    def __init__(self, TIdentifier name, list[AsmInstruction] instructions):
+    def __init__(self, TIdentifier name, bint is_global, list[AsmInstruction] instructions):
         self.name = name
+        self.is_global = is_global
         self.instructions = instructions
 
 
-cdef class AsmProgram(AST):
-    # AST = Program(function_definition*)
+cdef class AsmStaticVariable(AsmTopLevel):
+    # StaticVariable(identifier, bool global, int init)
     def __cinit__(self):
-        self._fields = ('function_defs',)
+        self._fields = ('name', 'is_global', 'initial_value')
 
-    def __init__(self, list[AsmFunctionDef] function_defs):
-        self.function_defs = function_defs
+    def __init__(self, TIdentifier name, bint is_global, TInt initial_value):
+        self.name = name
+        self.is_global = is_global
+        self.initial_value = initial_value
+
+
+cdef class AsmProgram(AST):
+    # AST = Program(top_levels*)
+    def __cinit__(self):
+        self._fields = ('top_levels',)
+
+    def __init__(self, list[AsmTopLevel] top_levels):
+        self.top_levels = top_levels

@@ -1,7 +1,7 @@
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-from ccc.assembly_stack_corrector cimport correct_stack
+# from ccc.assembly_stack_corrector cimport correct_stack
 
 
 cdef TIdentifier generate_identifier(TIdentifier node):
@@ -314,11 +314,11 @@ cdef void generate_stack_param_function_instructions(TIdentifier node, int param
     instructions.append(AsmMov(src, dst))
 
 
-cdef AsmFunctionDef generate_function_function_def(TacFunction node):
+cdef AsmFunction generate_function_top_level(TacFunction node):
     global instructions
 
-    cdef TIdentifier name
-    name = generate_identifier(node.name)
+    cdef TIdentifier name = generate_identifier(node.name)
+    cdef bint is_global = node.is_global
 
     cdef list[TacInstruction] body = []
     instructions = body
@@ -329,13 +329,23 @@ cdef AsmFunctionDef generate_function_function_def(TacFunction node):
         else:
             generate_stack_param_function_instructions(node.params[param], param)
     generate_list_instructions(node.body)
-    return AsmFunction(name, body)
+    return AsmFunction(name, is_global, body)
 
 
-cdef AsmFunctionDef generate_function_def(TacFunctionDef node):
-    # function_definition = Function(identifier name, instruction* instructions)
+cdef AsmStaticVariable generate_static_variable_top_level(TacStaticVariable node):
+    cdef TIdentifier name = generate_identifier(node.name)
+    cdef bint is_global = node.is_global
+    cdef TInt initial_value = generate_identifier(node.initial_value)
+    return AsmStaticVariable(name, is_global, initial_value)
+
+
+cdef AsmTopLevel generate_top_level(TacTopLevel node):
+    # top_level = Function(identifier name, bool global, instruction* instructions)
+    #           | StaticVariable(identifier, bool global, int init)
     if isinstance(node, TacFunction):
-        return generate_function_function_def(node)
+        return generate_function_top_level(node)
+    elif isinstance(node, TacStaticVariable):
+        return generate_static_variable_top_level(node)
     else:
 
         raise RuntimeError(
@@ -344,11 +354,11 @@ cdef AsmFunctionDef generate_function_def(TacFunctionDef node):
 
 cdef AsmProgram generate_program(TacProgram node):
     # program = Program(function_definition)
-    cdef int function_def
-    cdef list[AsmFunctionDef] function_defs = []
-    for function_def in range(len(node.function_defs)):
-        function_defs.append(generate_function_def(node.function_defs[function_def]))
-    return AsmProgram(function_defs)
+    cdef int top_level
+    cdef list[AsmTopLevel] top_levels = []
+    for top_level in range(len(node.top_levels)):
+        top_levels.append(generate_top_level(node.top_levels[top_level]))
+    return AsmProgram(top_levels)
 
 
 cdef AsmProgram assembly_generation(TacProgram tac_ast):
@@ -359,6 +369,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
         raise RuntimeError(
             "An error occurred in assembly generation, ASM was not generated")
 
-    correct_stack(asm_ast)
+    # correct_stack(asm_ast)
 
     return asm_ast

@@ -9,8 +9,8 @@ from ccc.semantic_identifier_resolver cimport analyze_semantic
 from ccc.intermediate_tac_ast cimport TacProgram
 from ccc.intermediate_three_address_generator cimport three_address_code_representation
 
-# from ccc.assembly_asm_ast cimport AsmProgram
-# from ccc.assembly_assembly_generator cimport assembly_generation
+from ccc.assembly_asm_ast cimport AsmProgram
+from ccc.assembly_assembly_generator cimport assembly_generation
 # from ccc.assembly_code_emitter cimport code_emission
 # from ccc.assembly_code_emitter cimport code_emission_print #
 
@@ -70,13 +70,13 @@ cdef void do_compile(str filename, int opt_code, int opt_s_code):
         debug_ast(tac_ast) #
         return
 
-    # verbose("-- Assembly generation ... ", end="")
-    # cdef AsmProgram asm_ast = assembly_generation(tac_ast)
-    # verbose("OK")
-    # if opt_code == 251:
-    #     debug_ast(asm_ast) #
-    #     return
-    #
+    verbose("-- Assembly generation ... ", end="")
+    cdef AsmProgram asm_ast = assembly_generation(tac_ast)
+    verbose("OK")
+    if opt_code == 251:
+        debug_ast(asm_ast) #
+        return
+
     # verbose("-- Code emission ... ", end="")
     # if opt_code == 250: #
     #     debug_code(["OK"] + code_emission_print(asm_ast)) #

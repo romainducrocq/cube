@@ -27,10 +27,10 @@ ext_modules = [
     Extension(f"{PACKAGE_NAME}.semantic_type_checker", ["./semantic_type_checker.pyx"]),
     Extension(f"{PACKAGE_NAME}.intermediate_tac_ast", ["./intermediate_tac_ast.pyx"]),
     Extension(f"{PACKAGE_NAME}.intermediate_three_address_generator", ["./intermediate_three_address_generator.pyx"]),
-    # Extension(f"{PACKAGE_NAME}.assembly_asm_ast", ["./assembly_asm_ast.pyx"]),
-    # Extension(f"{PACKAGE_NAME}.assembly_assembly_generator", ["./assembly_assembly_generator.pyx"]),
+    Extension(f"{PACKAGE_NAME}.assembly_asm_ast", ["./assembly_asm_ast.pyx"]),
+    Extension(f"{PACKAGE_NAME}.assembly_assembly_generator", ["./assembly_assembly_generator.pyx"]),
     # Extension(f"{PACKAGE_NAME}.assembly_code_emitter", ["./assembly_code_emitter.pyx"]),
-    # Extension(f"{PACKAGE_NAME}.assembly_register", ["./assembly_register.pyx"]),
+    Extension(f"{PACKAGE_NAME}.assembly_register", ["./assembly_register.pyx"]),
     # Extension(f"{PACKAGE_NAME}.assembly_stack_corrector", ["./assembly_stack_corrector.pyx"]),
 ]
 

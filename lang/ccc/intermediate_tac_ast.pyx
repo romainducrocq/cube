@@ -275,8 +275,10 @@ cdef class TacLabel(TacInstruction):
 
 
 cdef class TacTopLevel(AST):
+    #
     # top_level = Function(identifier, bool global, identifier* params, instruction* body)
     #           | StaticVariable(identifier, bool global, int init)
+    #
     def __cinit__(self):
         self._fields = ()
 

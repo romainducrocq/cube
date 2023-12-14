@@ -89,6 +89,10 @@ cdef class AsmStack(AsmOperand):
     cdef public TInt value
 
 
+cdef class AsmData(AsmOperand):
+    cdef public TIdentifier name
+
+
 cdef class AsmBinaryOp(AST):
     pass
 
@@ -208,14 +212,21 @@ cdef class AsmRet(AsmInstruction):
     pass
 
 
-cdef class AsmFunctionDef(AST):
+cdef class AsmTopLevel(AST):
     pass
 
 
-cdef class AsmFunction(AsmFunctionDef):
+cdef class AsmFunction(AsmTopLevel):
     cdef public TIdentifier name
+    cdef public bint is_global
     cdef public list[AsmInstruction] instructions
 
 
+cdef class AsmStaticVariable(AsmTopLevel):
+    cdef public TIdentifier name
+    cdef public bint is_global
+    cdef public TInt initial_value
+
+
 cdef class AsmProgram(AST):
-    cdef public list[AsmFunctionDef] function_defs
+    cdef public list[AsmTopLevel] top_levels
