@@ -30,14 +30,15 @@ cdef void _ast_pretty_string_builtin(str _child_kind, object _child_node): #
 #
     if _child_node is None: #
         pretty_string += str(' ' * 4 * indent + _child_kind) + str(_child_node) + '\n' #
+        return #
+#
+    pretty_string += str(' ' * 4 * indent + _child_kind + type(_child_node).__name__ + ': ') #
+    if isinstance(_child_node, TIdentifier): #
+        pretty_string += str(_child_node.str_t) + '\n' #
+    elif isinstance(_child_node, TInt): #
+        pretty_string += str(_child_node.int_t) + '\n' #
     else: #
-        pretty_string += str(' ' * 4 * indent + _child_kind + type(_child_node).__name__ + ': ') #
-        if isinstance(_child_node, TIdentifier): #
-            pretty_string += str(_child_node.str_t) + '\n' #
-        elif isinstance(_child_node, TInt): #
-            pretty_string += str(_child_node.int_t) + '\n' #
-        else: #
-            pretty_string += str(_child_node) + '\n' #
+        pretty_string += str(_child_node) + '\n' #
 #
 #
 cdef void _ast_pretty_string_child(str _child_kind, object _child_node): #
