@@ -335,7 +335,7 @@ cdef AsmFunction generate_function_top_level(TacFunction node):
 cdef AsmStaticVariable generate_static_variable_top_level(TacStaticVariable node):
     cdef TIdentifier name = generate_identifier(node.name)
     cdef bint is_global = node.is_global
-    cdef TInt initial_value = generate_identifier(node.initial_value)
+    cdef TInt initial_value = generate_int(node.initial_value)
     return AsmStaticVariable(name, is_global, initial_value)
 
 

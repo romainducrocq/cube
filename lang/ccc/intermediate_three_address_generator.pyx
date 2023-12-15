@@ -1,7 +1,7 @@
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
 from ccc.semantic_type_checker cimport symbol_table
-from ccc.semantic_symbol_table cimport Symbol, StaticAttr, Initial, Tentative, NoInitializer
+from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
 
 
@@ -504,11 +504,11 @@ cdef void represent_static_variable_top_level(StaticAttr attr, str symbol):
 
     cdef TIdentifier name = TIdentifier(symbol)
     cdef bint is_global = attr.is_global
-    cdef int initial_value
+    cdef TInt initial_value
     if isinstance(attr.init, Initial):
-        initial_value = attr.init.value
+        initial_value = TInt(attr.init.value)
     elif isinstance(attr.init, Tentative):
-        initial_value = 0
+        initial_value = TInt(0)
     else:
 
         raise RuntimeError(
@@ -517,10 +517,10 @@ cdef void represent_static_variable_top_level(StaticAttr attr, str symbol):
     static_variable_top_levels.append(TacStaticVariable(name, is_global, initial_value))
 
 
-cdef void represent_symbol_top_level(Symbol attr, str symbol):
+cdef void represent_symbol_top_level(IdentifierAttr attrs, symbol):
     # top_level = StaticVariable(identifier, bool global, int init)
-    if isinstance(attr, StaticAttr):
-        represent_static_variable_top_level(attr, symbol)
+    if isinstance(attrs, StaticAttr):
+        represent_static_variable_top_level(attrs, symbol)
 
 
 cdef TacProgram represent_program(CProgram node):
@@ -536,7 +536,7 @@ cdef TacProgram represent_program(CProgram node):
     static_variable_top_levels.clear()
     cdef str symbol
     for symbol in symbol_table:
-        represent_symbol_top_level(symbol_table[symbol], symbol)
+        represent_symbol_top_level(symbol_table[symbol].attrs, symbol)
     top_levels = static_variable_top_levels + top_levels
 
     return TacProgram(top_levels)
