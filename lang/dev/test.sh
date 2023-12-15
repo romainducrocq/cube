@@ -19,6 +19,7 @@ TEST_DIRS=(
 "8_loops"
 "9_functions"
 "10_file-scope_variables_and_storage-class_specifiers"
+"11_long_integers"
 )
 
 function file () {
