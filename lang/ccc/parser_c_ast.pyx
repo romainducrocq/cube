@@ -1,4 +1,4 @@
-from ccc.util_ast cimport AST, TIdentifier, TInt
+from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt
 
 
 cdef class CUnaryOp(AST):

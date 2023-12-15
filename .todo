@@ -22,6 +22,8 @@ BACKLOG
 - refactor ast_util in ast_builtin, print_util
 - remove represent_int(), etc..., replace with global copy_int()
 
+- if not needed, preprocess all ast._fields()
+
 - Writing C software without the standard library: https://gist.github.com/tcoppex/443d1dd45f873d96260195d6431b0989
     - example of assembly syscall
     - example of strlen, puts

@@ -1,4 +1,5 @@
-from ccc.util_ast cimport AST, ast_pretty_string
+from ccc.abc_builtin_ast cimport AST
+from ccc.util_pprint cimport ast_pretty_string #
 
 from ccc.lexer_lexer cimport lexing, Token
 from ccc.parser_c_ast cimport CProgram

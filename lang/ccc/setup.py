@@ -13,9 +13,10 @@ file_in.close()
 
 ext_modules = [
     Extension(f"{PACKAGE_NAME}.main_compiler",  ["./main_compiler.pyx"]),
-    Extension(f"{PACKAGE_NAME}.util_ast", ["./util_ast.pyx"]),
+    Extension(f"{PACKAGE_NAME}.abc_builtin_ast", ["./abc_builtin_ast.pyx"]),
     Extension(f"{PACKAGE_NAME}.util_fopen", ["./util_fopen.pyx"]),
     Extension(f"{PACKAGE_NAME}.util_iota_enum",  ["./util_iota_enum.pyx"]),
+    Extension(f"{PACKAGE_NAME}.util_pprint", ["./util_pprint.pyx"]),
     Extension(f"{PACKAGE_NAME}.lexer_lexer", ["./lexer_lexer.pyx"]),
     Extension(f"{PACKAGE_NAME}.parser_c_ast",  ["./parser_c_ast.pyx"]),
     Extension(f"{PACKAGE_NAME}.parser_parser",  ["./parser_parser.pyx"]),
