@@ -506,7 +506,7 @@ cdef void represent_static_variable_top_level(StaticAttr attr, str symbol):
     cdef bint is_global = attr.is_global
     cdef TInt initial_value
     if isinstance(attr.init, Initial):
-        initial_value = TInt(attr.init.value)
+        initial_value = represent_int(attr.init.value)
     elif isinstance(attr.init, Tentative):
         initial_value = TInt(0)
     else:

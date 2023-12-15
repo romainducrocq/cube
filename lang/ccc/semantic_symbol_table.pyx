@@ -1,4 +1,4 @@
-from ccc.util_ast cimport AST
+from ccc.util_ast cimport AST, TInt
 
 
 cdef class Type(AST):
@@ -18,7 +18,7 @@ cdef class FunType(Type):
     def __cinit__(self):
         self._fields = ('param_count',)
 
-    def __init__(self, int param_count):
+    def __init__(self, TInt param_count):
         self.param_count = param_count
 
 
@@ -41,7 +41,7 @@ cdef class Initial(InitialValue):
     def __cinit__(self):
         self._fields = ('value',)
 
-    def __init__(self, int value):
+    def __init__(self, TInt value):
         self.value = value
 
 

@@ -15,10 +15,10 @@ cdef void checktype_function_call_expression(CFunctionCall node):
         raise RuntimeError(
             f"Variable {node.name.str_t} was used as a function")
 
-    if symbol_table[node.name.str_t].type_t.param_count != len(node.args):
+    if symbol_table[node.name.str_t].type_t.param_count.int_t != len(node.args):
 
         raise RuntimeError(
-            f"""Function {node.name.str_t} has {symbol_table[node.name.str_t].type_t.param_count} arguments 
+            f"""Function {node.name.str_t} has {symbol_table[node.name.str_t].type_t.param_count.int_t} arguments 
                 but was called with {len(node.args)}""")
 
     cdef int i
@@ -50,13 +50,13 @@ cdef void checktype_params(CFunctionDeclaration node):
 
 
 cdef void checktype_function_declaration(CFunctionDeclaration node):
-    cdef int param_count = len(node.params)
+    cdef TInt param_count = TInt(len(node.params))
     cdef bint is_defined = node.name.str_t in defined_set
     cdef bint is_global = not isinstance(node.storage_class, CStatic)
 
     if node.name.str_t in symbol_table:
         if not (isinstance(symbol_table[node.name.str_t].type_t, FunType) and
-                symbol_table[node.name.str_t].type_t.param_count == param_count):
+                symbol_table[node.name.str_t].type_t.param_count.int_t == param_count.int_t):
 
             raise RuntimeError(
                 f"Function declaration {node.name.str_t} is incompatible with previous declaration")
@@ -89,7 +89,7 @@ cdef void checktype_file_scope_variable_declaration(CVariableDeclaration node):
     cdef bint is_global = not isinstance(node.storage_class, CStatic)
 
     if isinstance(node.init, CConstant):
-        initial_value = Initial(node.init.value.int_t)
+        initial_value = Initial(TInt(node.init.value.int_t))
     elif not node.init:
         if isinstance(node.storage_class, CExtern):
             initial_value = NoInitializer()
@@ -148,9 +148,9 @@ cdef void checktype_static_block_scope_variable_declaration(node):
     cdef InitialValue initial_value
 
     if isinstance(node.init, CConstant):
-        initial_value = Initial(node.init.value.int_t)
+        initial_value = Initial(TInt(node.init.value.int_t))
     elif not node.init:
-        initial_value = Initial(0)
+        initial_value = Initial(TInt(0))
     else:
 
         raise RuntimeError(

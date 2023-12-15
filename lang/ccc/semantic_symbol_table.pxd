@@ -1,4 +1,4 @@
-from ccc.util_ast cimport AST
+from ccc.util_ast cimport AST, TInt
 
 
 cdef class Type(AST):
@@ -10,7 +10,7 @@ cdef class Int(Type):
 
 
 cdef class FunType(Type):
-    cdef public int param_count
+    cdef public TInt param_count
 
 
 cdef class InitialValue(AST):
@@ -22,7 +22,7 @@ cdef class Tentative(InitialValue):
 
 
 cdef class Initial(InitialValue):
-    cdef public int value
+    cdef public TInt value
 
 
 cdef class NoInitializer(InitialValue):
