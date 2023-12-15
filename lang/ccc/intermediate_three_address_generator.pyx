@@ -408,6 +408,8 @@ cdef void represent_variable_declaration_instructions(CVariableDeclaration node)
 
 
 cdef void represent_declaration_var_decl_instructions(CVarDecl node):
+    if isinstance(symbol_table[node.variable_decl.name.str_t].attrs, StaticAttr):
+        return
     if node.variable_decl.init:
         represent_variable_declaration_instructions(node.variable_decl)
 
