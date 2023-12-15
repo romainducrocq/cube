@@ -39,9 +39,15 @@ cdef void debug_symbol_table(): #
 #
 #
 cdef void debug_ast(str kind, AST ast, bint debug_symbol): #
+    verbose("+") #
+    verbose("+") #
+    verbose("@@ Ast @@") #
     verbose(ast_pretty_string("<" + kind + "_ast>", ast, 0)) #
     if debug_symbol: #
-        debug_symbol_table()  #
+        verbose("+") #
+        verbose("+") #
+        verbose("@@ Symbol Table @@") #
+        debug_symbol_table() #
 #
 #
 cdef void debug_code(list[str] code): #
