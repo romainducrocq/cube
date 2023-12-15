@@ -68,7 +68,7 @@ cdef void _pretty_string_child(str _child_kind, object _child_node): #
     global string #
     global indent #
 #
-    if type(_child_node) in (str, int, type(None)): #
+    if type(_child_node) in (str, int, bool, type(None)): #
         string += str(' ' * indent + _child_kind + type(_child_node).__name__ + ': ' #
                       + str(_child_node) + '\n') #
     else: #

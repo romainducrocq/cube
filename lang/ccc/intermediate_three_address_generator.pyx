@@ -525,6 +525,8 @@ cdef void represent_symbol_top_level(Symbol attr, str symbol):
 
 cdef TacProgram represent_program(CProgram node):
     # program = Program(top_level*)
+    global function_top_levels
+
     cdef list[TacTopLevel] top_levels = []
     function_top_levels = top_levels
     cdef int declaration
