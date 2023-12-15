@@ -11,8 +11,8 @@ from ccc.intermediate_three_address_generator cimport three_address_code_represe
 
 from ccc.assembly_asm_ast cimport AsmProgram
 from ccc.assembly_assembly_generator cimport assembly_generation
-# from ccc.assembly_code_emitter cimport code_emission
-# from ccc.assembly_code_emitter cimport code_emission_print #
+from ccc.assembly_code_emitter cimport code_emission
+from ccc.assembly_code_emitter cimport code_emission_print #
 
 
 cdef bint VERBOSE = False
@@ -77,14 +77,14 @@ cdef void do_compile(str filename, int opt_code, int opt_s_code):
         debug_ast(asm_ast) #
         return
 
-    # verbose("-- Code emission ... ", end="")
-    # if opt_code == 250: #
-    #     debug_code(["OK"] + code_emission_print(asm_ast)) #
-    #     return #
-    #
-    # filename = f"{filename.rsplit('.', 1)[0]}.s"
-    # code_emission(asm_ast, filename)
-    # verbose("OK")
+    verbose("-- Code emission ... ", end="")
+    if opt_code == 250: #
+        debug_code(["OK"] + code_emission_print(asm_ast)) #
+        return #
+
+    filename = f"{filename.rsplit('.', 1)[0]}.s"
+    code_emission(asm_ast, filename)
+    verbose("OK")
 
 
 cdef str shift_args(list[str] argv):

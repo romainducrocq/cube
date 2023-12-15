@@ -140,9 +140,10 @@ cdef str emit_condition_code(AsmCondCode node):
 
 
 cdef str emit_operand(AsmOperand node, int byte):
-    # Imm(int)      -> $ $<int>
-    # Register(reg) -> $ %reg
-    # Stack(int)    -> $ <int>(%rbp)
+    # Imm(int)         -> $ $<int>
+    # Register(reg)    -> $ %reg
+    # Stack(int)       -> $ <int>(%rbp)
+    # Data(identifier) -> $ <identifier>(%rip)
     cdef str operand
     if isinstance(node, AsmImm):
         operand = emit_int(node.value)
@@ -163,6 +164,9 @@ cdef str emit_operand(AsmOperand node, int byte):
     elif isinstance(node, AsmStack):
         operand = emit_int(node.value)
         return operand + "(%rbp)"
+    elif isinstance(node, AsmData):
+        operand = emit_identifier(node.name)
+        return operand + "(%rip)"
     else:
 
         raise RuntimeError(
@@ -368,24 +372,78 @@ cdef void emit_list_instructions(list[AsmInstruction] list_node):
         emit_instructions(list_node[instruction])
 
 
-cdef void emit_function_function_def(AsmFunction node):
+cdef void emit_alignment_directive_top_level():
+    # $ .align 4
+    emit(f".align 4", 1)
+
+
+cdef void emit_global_directive_top_level(bint is_global, str name):
+    # if is_global: -> $ .globl <identifier>
+    if is_global:
+        emit(f".globl {name}", 1)
+
+
+cdef void emit_function_top_level(AsmFunction node):
+    # Function(name, global, instructions) -> $     <global-directive>
+    #                                         $     .text
+    #                                         $ <name>:
+    #                                         $     pushq %rbp
+    #                                         $     movq %rsp, %rbp
+    #                                         $     <instructions>
     cdef str name = emit_identifier(node.name)
-    emit(f".globl {name}", 1)
+    emit_global_directive_top_level(node.is_global, name)
+    emit(".text", 1)
     emit(f"{name}:", 0)
     emit("pushq %rbp", 1)
     emit("movq %rsp, %rbp", 1)
     emit_list_instructions(node.instructions)
 
 
-cdef void emit_function_def(AsmFunctionDef node):
-    # Function(name, instructions) -> $     .globl <name>
-    #                                 $ <name>:
-    #                                 $     pushq %rbp
-    #                                 $     movq %rsp, %rbp
-    #                                 $     <instructions>
-    cdef str name
+cdef void emit_data_static_variable_top_level(AsmStaticVariable node):
+    # StaticVariable(name, global, init) initialized to non-zero value -> $     <global-directive>
+    #                                                                     $     .data
+    #                                                                     $     <alignment-directive>
+    #                                                                     $ <name>:
+    #                                                                     $     .long <init>
+    cdef str name = emit_identifier(node.name)
+    emit_global_directive_top_level(node.is_global, name)
+    emit(".data", 1)
+    emit_alignment_directive_top_level()
+    emit(f"{name}:", 0)
+    cdef initial_value = emit_int(node.initial_value)
+    emit(f".long {initial_value}", 1)
+
+
+cdef void emit_bss_static_variable_top_level(AsmStaticVariable node):
+    # StaticVariable(name, global, init) initialized to zero -> $     <global-directive>
+    #                                                           $     .bss
+    #                                                           $     <alignment-directive>
+    #                                                           $ <name>:
+    #                                                           $     .zero 4
+    cdef str name = emit_identifier(node.name)
+    emit_global_directive_top_level(node.is_global, name)
+    emit(".bss", 1)
+    emit_alignment_directive_top_level()
+    emit(f"{name}:", 0)
+    emit(f".zero 4", 1)
+
+
+cdef void emit_static_variable_top_level(AsmStaticVariable node):
+    # StaticVariable(name, global, init) initialized to non-zero value -> $ <data-static-variable-directives>
+    # StaticVariable(name, global, init) initialized to zero           -> $ <bss-static-variable-directives>
+    if AsmStaticVariable.initial_value:
+        emit_data_static_variable_top_level(node)
+    else:
+        emit_bss_static_variable_top_level(node)
+
+
+cdef void emit_top_level(AsmTopLevel node):
+    # Function(name, global, instructions) -> $ <function-top-level-directives>
+    # StaticVariable(name, global, init)   -> $ <static-variable-top-level-directives>
     if isinstance(node, AsmFunction):
-        emit_function_function_def(node)
+        emit_function_top_level(node)
+    elif isinstance(node, AsmStaticVariable):
+        emit_static_variable_top_level(node)
     else:
 
         raise RuntimeError(
@@ -393,13 +451,12 @@ cdef void emit_function_def(AsmFunctionDef node):
 
 
 cdef void emit_program(AsmProgram node):
-    # Program(function_definition*) -> $ [<function_definition>]
-    #                                 $     .section .note.GNU-stack,"",@progbits
-    cdef int function_def
-    for function_def in range(len(node.function_defs)):
-        emit_function_def(node.function_defs[function_def])
+    # Program(top_level*) -> $ [<top_level>]
+    #                        $     .section .note.GNU-stack,"",@progbits
+    cdef int top_level
+    for top_level in range(len(node.top_levels)):
+        emit_top_level(node.top_levels[top_level])
     emit(".section .note.GNU-stack,\"\",@progbits", 1)
-
 
 #
 cdef list[str] code_emission_print(AsmProgram asm_ast): #
