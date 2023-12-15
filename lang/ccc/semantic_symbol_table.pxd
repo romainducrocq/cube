@@ -45,3 +45,8 @@ cdef class StaticAttr(IdentifierAttr):
 
 cdef class LocalAttr(IdentifierAttr):
     pass
+
+
+cdef class Symbol(AST):
+    cdef public Type type_t
+    cdef public IdentifierAttr attrs

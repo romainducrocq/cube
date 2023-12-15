@@ -1,9 +1,6 @@
-from ccc.parser_c_ast cimport AST, CVariableDeclaration, CFunctionDeclaration, CFunctionCall, CVar
-from ccc.semantic_symbol_table cimport Type, IdentifierAttr
+from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CFunctionCall, CVar
+from ccc.semantic_symbol_table cimport Symbol
 
-cdef class Symbol(AST):
-    cdef public Type type_t
-    cdef public IdentifierAttr attrs
 
 cdef dict[str, Symbol] symbol_table
 

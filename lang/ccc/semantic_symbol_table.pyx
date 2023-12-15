@@ -83,3 +83,13 @@ cdef class LocalAttr(IdentifierAttr):
     # LocalAttr
     def __cinit__(self):
         self._fields = ()
+
+
+cdef class Symbol(AST):
+    # Symbol(type, identifier_attrs)
+    def __cinit__(self):
+        self._fields = ('type_t', 'attrs')
+
+    def __init__(self, Type type_t, IdentifierAttr attrs):
+        self.type_t = type_t
+        self.attrs = attrs

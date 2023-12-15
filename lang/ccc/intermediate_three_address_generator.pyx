@@ -1,7 +1,7 @@
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
-from ccc.semantic_type_checker cimport symbol_table, Symbol
-from ccc.semantic_symbol_table cimport StaticAttr, Initial, Tentative, NoInitializer
+from ccc.semantic_type_checker cimport symbol_table
+from ccc.semantic_symbol_table cimport Symbol, StaticAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
 
 
