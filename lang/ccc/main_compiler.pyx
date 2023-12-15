@@ -1,12 +1,11 @@
 from ccc.abc_builtin_ast cimport AST
-from ccc.util_pprint cimport ast_pretty_string #
+from ccc.util_pprint cimport pretty_print_tokens, pretty_print_ast, pretty_print_symbol_table, pretty_print_asm_code #
 
 from ccc.lexer_lexer cimport lexing, Token
 from ccc.parser_c_ast cimport CProgram
 from ccc.parser_parser cimport parsing
 
 from ccc.semantic_identifier_resolver cimport analyze_semantic
-from ccc.semantic_type_checker cimport symbol_table #
 
 from ccc.intermediate_tac_ast cimport TacProgram
 from ccc.intermediate_three_address_generator cimport three_address_code_representation
@@ -26,35 +25,24 @@ cdef void verbose(str string = "", str end="\n"):
 
 #
 cdef void debug_tokens(list[Token] tokens): #
-    cdef int token #
-    for token in range(len(tokens)): #
-        verbose(str(token) + ': ("' + tokens[token].token + #
-              '", ' + str(tokens[token].token_kind) + ')') #
+    if VERBOSE: #
+        pretty_print_tokens(tokens) #
+#
+#
+cdef void debug_ast(AST ast): #
+    if VERBOSE: #
+        pretty_print_ast(ast) #
 #
 #
 cdef void debug_symbol_table(): #
-    cdef str symbol #
-    verbose("<symbol_table> Dict(" + str(len(symbol_table)) + "):") #
-    for symbol in symbol_table: #
-        verbose(ast_pretty_string("[" + symbol + "]", symbol_table[symbol], 4)) #
+    if VERBOSE: #
+        pretty_print_symbol_table() #
 #
 #
-cdef void debug_ast(str kind, AST ast, bint debug_symbol): #
-    verbose("+") #
-    verbose("+") #
-    verbose("@@ Ast @@") #
-    verbose(ast_pretty_string("<" + kind + "_ast>", ast, 0)) #
-    if debug_symbol: #
-        verbose("+") #
-        verbose("+") #
-        verbose("@@ Symbol Table @@") #
-        debug_symbol_table() #
-#
-#
-cdef void debug_code(list[str] code): #
-    cdef int code_line #
-    for code_line in range(len(code)): #
-        verbose(code[code_line]) #
+cdef void debug_asm_code(list[str] asm_code): #
+    verbose("OK") #
+    if VERBOSE: #
+        pretty_print_asm_code(asm_code) #
 #
 
 cdef void do_compile(str filename, int opt_code, int opt_s_code):
@@ -70,33 +58,36 @@ cdef void do_compile(str filename, int opt_code, int opt_s_code):
     cdef CProgram c_ast = parsing(tokens)
     verbose("OK")
     if opt_code == 254:
-        debug_ast("c", c_ast, False) #
+        debug_ast(c_ast) #
         return
 
     verbose("-- Semantic analysis ... ", end="")
     analyze_semantic(c_ast)
     verbose("OK")
     if opt_code == 253:
-        debug_ast("c", c_ast, True) #
+        debug_ast(c_ast) #
+        debug_symbol_table() #
         return
 
     verbose("-- TAC representation ... ", end="")
     cdef TacProgram tac_ast = three_address_code_representation(c_ast)
     verbose("OK")
     if opt_code == 252:
-        debug_ast("tac", tac_ast, True) #
+        debug_ast(tac_ast) #
+        debug_symbol_table() #
         return
 
     verbose("-- Assembly generation ... ", end="")
     cdef AsmProgram asm_ast = assembly_generation(tac_ast)
     verbose("OK")
     if opt_code == 251:
-        debug_ast("asm", asm_ast, True) #
+        debug_ast(asm_ast) #
+        debug_symbol_table() #
         return
 
     verbose("-- Code emission ... ", end="")
     if opt_code == 250: #
-        debug_code(["OK"] + code_emission_print(asm_ast)) #
+        debug_asm_code(code_emission_print(asm_ast)) #
         return #
 
     filename = f"{filename.rsplit('.', 1)[0]}.s"
