@@ -1,4 +1,7 @@
-cdef class Type:
+from ccc.util_ast cimport AST
+
+
+cdef class Type(AST):
     pass
 
 
@@ -10,7 +13,7 @@ cdef class FunType(Type):
     cdef public int param_count
 
 
-cdef class InitialValue:
+cdef class InitialValue(AST):
     pass
 
 
@@ -26,7 +29,7 @@ cdef class NoInitializer(InitialValue):
     pass
 
 
-cdef class IdentifierAttr:
+cdef class IdentifierAttr(AST):
     pass
 
 

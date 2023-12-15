@@ -102,11 +102,11 @@ cdef void _pretty_string(str kind, object node): #
     indent -= 4 #
 #
 #
-cdef str ast_pretty_string(AST node): #
+cdef str ast_pretty_string(str kind, AST node, int start_indent): #
     global string #
     global indent #
     string = "" #
-    indent = 0 #
+    indent = start_indent #
 #
-    _pretty_string('<AST> ', node) #
+    _pretty_string(kind + ' ', node) #
     return string[:-1] #

@@ -1,10 +1,13 @@
-from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern
+from ccc.parser_c_ast cimport AST, CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CConstant
 
 from ccc.semantic_symbol_table cimport *
 
 
-cdef class Symbol:
+cdef class Symbol(AST):
+    # Symbol(type, identifier_attrs)
+    def __cinit__(self):
+        self._fields = ('type_t', 'attrs')
 
     def __init__(self, Type type_t, IdentifierAttr attrs):
         self.type_t = type_t

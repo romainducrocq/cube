@@ -9,4 +9,4 @@ cdef class TInt(AST):
 
 cdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node)
 cdef void ast_set_child_node(object field, str name, int index, AST set_node)
-cdef str ast_pretty_string(AST node)
+cdef str ast_pretty_string(str kind, AST node, int start_indent)
