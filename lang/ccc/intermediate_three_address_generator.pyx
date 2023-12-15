@@ -1,18 +1,10 @@
 from ccc.parser_c_ast cimport *
 from ccc.intermediate_tac_ast cimport *
+from ccc.abc_builtin_ast cimport copy_identifier, copy_int
 from ccc.semantic_type_checker cimport symbol_table
 from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
 
-
-cdef TIdentifier represent_identifier(TIdentifier node):
-    # <identifier> = Built-in identifier type
-    return TIdentifier(node.str_t)
-
-
-cdef TInt represent_int(TInt node):
-    # <int> = Built-in int type
-    return TInt(node.int_t)
 
 cdef TacBinaryOp represent_binary_op(CBinaryOp node):
     # binary_operator = Add | Subtract | Multiply | Divide | Remainder | BitAnd | BitOr | BitXor
@@ -72,13 +64,13 @@ cdef TacUnaryOp represent_unary_op(CUnaryOp node):
 
 cdef TacVariable represent_variable_value(CVar node):
     cdef TIdentifier name
-    name = represent_identifier(node.name)
+    name = copy_identifier(node.name)
     return TacVariable(name)
 
 
 cdef TacConstant represent_constant_value(CConstant node):
     cdef TInt value
-    value = represent_int(node.value)
+    value = copy_int(node.value)
     return TacConstant(value)
 
 
@@ -116,7 +108,7 @@ cdef TacVariable represent_exp_var_instructions(CVar node):
 
 
 cdef TacValue represent_exp_fun_call_instructions(CFunctionCall node):
-    cdef TIdentifier name = represent_identifier(node.name)
+    cdef TIdentifier name = copy_identifier(node.name)
     cdef int i
     cdef list[TacValue] args = []
     for i in range(len(node.args)):
@@ -460,12 +452,12 @@ cdef void represent_block(CBlock node):
 cdef TacFunction represent_function_top_level(CFunctionDeclaration node):
     global instructions
 
-    cdef TIdentifier name = represent_identifier(node.name)
+    cdef TIdentifier name = copy_identifier(node.name)
     cdef bint is_global = symbol_table[node.name.str_t].attrs.is_global
     cdef int param
     cdef list[TIdentifier] params = []
     for param in range(len(node.params)):
-        params.append(represent_identifier(node.params[param]))
+        params.append(copy_identifier(node.params[param]))
     cdef list[TacInstruction] body = []
     instructions = body
     represent_block(node.body)
@@ -508,7 +500,7 @@ cdef void represent_static_variable_top_level(StaticAttr attr, str symbol):
     cdef bint is_global = attr.is_global
     cdef TInt initial_value
     if isinstance(attr.init, Initial):
-        initial_value = represent_int(attr.init.value)
+        initial_value = copy_int(attr.init.value)
     elif isinstance(attr.init, Tentative):
         initial_value = TInt(0)
     else:

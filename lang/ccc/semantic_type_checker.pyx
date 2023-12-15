@@ -3,6 +3,8 @@ from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CConstant
 
 from ccc.semantic_symbol_table cimport *
 
+from ccc.abc_builtin_ast cimport copy_int
+
 
 symbol_table = {}
 cdef set[str] defined_set = set()
@@ -89,7 +91,7 @@ cdef void checktype_file_scope_variable_declaration(CVariableDeclaration node):
     cdef bint is_global = not isinstance(node.storage_class, CStatic)
 
     if isinstance(node.init, CConstant):
-        initial_value = Initial(TInt(node.init.value.int_t))
+        initial_value = Initial(copy_int(node.init.value))
     elif not node.init:
         if isinstance(node.storage_class, CExtern):
             initial_value = NoInitializer()
@@ -148,7 +150,7 @@ cdef void checktype_static_block_scope_variable_declaration(node):
     cdef InitialValue initial_value
 
     if isinstance(node.init, CConstant):
-        initial_value = Initial(TInt(node.init.value.int_t))
+        initial_value = Initial(copy_int(node.init.value))
     elif not node.init:
         initial_value = Initial(TInt(0))
     else:

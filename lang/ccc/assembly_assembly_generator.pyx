@@ -1,28 +1,19 @@
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
+from ccc.abc_builtin_ast cimport copy_identifier, copy_int
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport correct_stack
 
 
-cdef TIdentifier generate_identifier(TIdentifier node):
-    # <identifier> = Built-in identifier type
-    return TIdentifier(node.str_t)
-
-
-cdef TInt generate_int(TInt node):
-    # <int> = Built-in int type
-    return TInt(node.int_t)
-
-
 cdef AsmImm generate_imm_operand(TacConstant node):
     cdef TInt value
-    value = generate_int(node.value)
+    value = copy_int(node.value)
     return AsmImm(value)
 
 
 cdef AsmPseudo generate_pseudo_operand(TacVariable node):
     cdef TIdentifier identifier
-    identifier = generate_identifier(node.name)
+    identifier = copy_identifier(node.name)
     return AsmPseudo(identifier)
 
 
@@ -129,7 +120,7 @@ cdef void generate_fun_call_instructions(TacFunCall node):
             i = len(node.args) - i + 5
             generate_stack_arg_fun_call_instructions(node.args[i], i)
 
-    cdef TIdentifier name = generate_identifier(node.name)
+    cdef TIdentifier name = copy_identifier(node.name)
     instructions.append(AsmCall(name))
 
     if stack_padding:
@@ -141,12 +132,12 @@ cdef void generate_fun_call_instructions(TacFunCall node):
 
 
 cdef void generate_label_instructions(TacLabel node):
-    cdef TIdentifier name = generate_identifier(node.name)
+    cdef TIdentifier name = copy_identifier(node.name)
     instructions.append(AsmLabel(name))
 
 
 cdef void generate_jump_instructions(TacJump node):
-    cdef TIdentifier target = generate_identifier(node.target)
+    cdef TIdentifier target = copy_identifier(node.target)
     instructions.append(AsmJmp(target))
 
 
@@ -166,7 +157,7 @@ cdef void generate_copy_instructions(TacCopy node):
 cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
     cdef AsmOperand imm_zero = AsmImm(TInt(0))
     cdef AsmCondCode cond_code = generate_condition_code(TacEqual())
-    cdef TIdentifier target = generate_identifier(node.target)
+    cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     instructions.append(AsmCmp(imm_zero, condition))
     instructions.append(AsmJmpCC(cond_code, target))
@@ -175,7 +166,7 @@ cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
 cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
     cdef AsmOperand imm_zero = AsmImm(TInt(0))
     cdef AsmCondCode cond_code = generate_condition_code(TacNotEqual())
-    cdef TIdentifier target = generate_identifier(node.target)
+    cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     instructions.append(AsmCmp(imm_zero, condition))
     instructions.append(AsmJmpCC(cond_code, target))
@@ -302,14 +293,14 @@ cdef void generate_list_instructions(list[TacInstruction] list_node):
 
 cdef void generate_reg_param_function_instructions(TIdentifier node, int param):
     cdef AsmOperand src = generate_register(REGISTER_KIND.get(arg_registers[param]))
-    cdef TIdentifier name = generate_identifier(node)
+    cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
     instructions.append(AsmMov(src, dst))
 
 
 cdef void generate_stack_param_function_instructions(TIdentifier node, int param):
     cdef AsmOperand src = AsmStack(TInt((param - 4) * 8))
-    cdef TIdentifier name = generate_identifier(node)
+    cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
     instructions.append(AsmMov(src, dst))
 
@@ -317,7 +308,7 @@ cdef void generate_stack_param_function_instructions(TIdentifier node, int param
 cdef AsmFunction generate_function_top_level(TacFunction node):
     global instructions
 
-    cdef TIdentifier name = generate_identifier(node.name)
+    cdef TIdentifier name = copy_identifier(node.name)
     cdef bint is_global = node.is_global
 
     cdef list[TacInstruction] body = []
@@ -333,9 +324,9 @@ cdef AsmFunction generate_function_top_level(TacFunction node):
 
 
 cdef AsmStaticVariable generate_static_variable_top_level(TacStaticVariable node):
-    cdef TIdentifier name = generate_identifier(node.name)
+    cdef TIdentifier name = copy_identifier(node.name)
     cdef bint is_global = node.is_global
-    cdef TInt initial_value = generate_int(node.initial_value)
+    cdef TInt initial_value = copy_int(node.initial_value)
     return AsmStaticVariable(name, is_global, initial_value)
 
 

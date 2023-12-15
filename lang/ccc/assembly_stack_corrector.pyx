@@ -8,6 +8,8 @@ from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.semantic_type_checker cimport symbol_table
 from ccc.semantic_symbol_table cimport StaticAttr
 
+from ccc.abc_builtin_ast cimport copy_identifier
+
 
 cdef int OFFSET = -4
 cdef int counter = -1
@@ -15,7 +17,7 @@ cdef dict[str, int] pseudo_map = {}
 
 
 cdef AsmData replace_pseudo_register_data(AsmPseudo node):
-    cdef TIdentifier name = TIdentifier(node.name.str_t)
+    cdef TIdentifier name = copy_identifier(node.name)
     return AsmData(name)
 
 
