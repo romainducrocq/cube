@@ -21,7 +21,7 @@
 - [x] Compound statements  
 - [x] Loops  
 - [x] Functions  
-- [ ] File-scope variables and storage-class specifiers  
+- [x] File-scope variables and storage-class specifiers  
 
 ### Types
 
