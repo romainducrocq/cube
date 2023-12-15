@@ -1,7 +1,7 @@
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-# from ccc.assembly_stack_corrector cimport correct_stack
+from ccc.assembly_stack_corrector cimport correct_stack
 
 
 cdef TIdentifier generate_identifier(TIdentifier node):
@@ -369,6 +369,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
         raise RuntimeError(
             "An error occurred in assembly generation, ASM was not generated")
 
-    # correct_stack(asm_ast)
+    correct_stack(asm_ast)
 
     return asm_ast
