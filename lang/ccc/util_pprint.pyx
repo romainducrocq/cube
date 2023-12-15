@@ -1,5 +1,5 @@
 from ccc.lexer_lexer cimport Token #
-from ccc.abc_builtin_ast cimport AST, ast_iter_fields #
+from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt, ast_iter_fields #
 from ccc.semantic_type_checker cimport symbol_table #
 #
 #
@@ -25,13 +25,27 @@ cdef void pretty_print_tokens(list[Token] tokens): #
 cdef int indent = 0 #
 #
 #
+cdef void _ast_pretty_string_builtin(str _child_kind, object _child_node): #
+    global pretty_string #
+#
+    if _child_node is None: #
+        pretty_string += str(' ' * 4 * indent + _child_kind) + str(_child_node) + '\n' #
+    else: #
+        pretty_string += str(' ' * 4 * indent + _child_kind + type(_child_node).__name__ + ': ') #
+        if isinstance(_child_node, TIdentifier): #
+            pretty_string += str(_child_node.str_t) + '\n' #
+        elif isinstance(_child_node, TInt): #
+            pretty_string += str(_child_node.int_t) + '\n' #
+        else: #
+            pretty_string += str(_child_node) + '\n' #
+#
+#
 cdef void _ast_pretty_string_child(str _child_kind, object _child_node): #
     global pretty_string #
     global indent #
 #
-    if type(_child_node) in (str, int, bool, type(None)): #
-        pretty_string += str(' ' * 4 * indent + _child_kind + type(_child_node).__name__ + ': ' #
-                      + str(_child_node) + '\n') #
+    if type(_child_node) in (TIdentifier, TInt, bool, type(None)): #
+        _ast_pretty_string_builtin(_child_kind, _child_node) #
     else: #
         _ast_pretty_string(_child_kind, _child_node) #
 #
