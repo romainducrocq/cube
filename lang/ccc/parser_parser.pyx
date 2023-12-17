@@ -1,4 +1,4 @@
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 
 from ccc.parser_c_ast cimport *
 from ccc.semantic_symbol_table cimport *
@@ -11,7 +11,7 @@ cdef Token next_token = Token('', TOKEN_KIND.get('error'))
 cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
 
 
-cdef void expect_next_is(Token next_token_is, uint32 expected_token):
+cdef void expect_next_is(Token next_token_is, int32 expected_token):
     if next_token_is.token_kind != expected_token:
         raise RuntimeError(
             f"""Expected token {
@@ -208,19 +208,19 @@ cdef CExp parse_factor():
             f"Expected token type \"factor\" but found token \"{next_token.token}\"")
 
 
-cdef CAssignment parse_assigment_exp(CExp exp_left, uint32 precedence):
+cdef CAssignment parse_assigment_exp(CExp exp_left, int32 precedence):
     _ = pop_next()
     cdef CExp exp_right = parse_exp(precedence)
     return CAssignment(exp_left, exp_right)
 
 
-cdef CAssignmentCompound parse_assigment_compound_exp(CExp exp_left, uint32 precedence):
+cdef CAssignmentCompound parse_assigment_compound_exp(CExp exp_left, int32 precedence):
     cdef CBinaryOp binary_op = parse_binary_op()
     cdef CExp exp_right = parse_exp(precedence)
     return CAssignmentCompound(binary_op, exp_left, exp_right)
 
 
-cdef CConditional parse_ternary_exp(CExp exp_left, uint32 precedence):
+cdef CConditional parse_ternary_exp(CExp exp_left, int32 precedence):
     _ = pop_next()
     cdef CExp exp_middle = parse_exp()
     expect_next_is(pop_next(), TOKEN_KIND.get('ternary_else'))
@@ -228,15 +228,15 @@ cdef CConditional parse_ternary_exp(CExp exp_left, uint32 precedence):
     return CConditional(exp_left, exp_middle, exp_right)
 
 
-cdef CBinary parse_binary_exp(CExp exp_left, uint32 precedence):
+cdef CBinary parse_binary_exp(CExp exp_left, int32 precedence):
     cdef CBinaryOp binary_op = parse_binary_op()
     cdef CExp exp_right = parse_exp(precedence + 1)
     return CBinary(binary_op, exp_left, exp_right)
 
 
-cdef CExp parse_exp(uint32 min_precedence = 0):
+cdef CExp parse_exp(int32 min_precedence = 0):
     # <exp> ::= <factor> | <exp> <binop> <exp> | <exp> "?" <exp> ":" <exp>
-    cdef uint32 precedence
+    cdef int32 precedence
     cdef CExp exp_left = parse_factor()
     while True:
         precedence = parse_token_precedence(peek_next().token_kind)
@@ -491,7 +491,7 @@ cdef CBlock parse_block():
 cdef Type parse_type():
     # <type> ::= "int"
     cdef Py_ssize_t specifier = 0
-    cdef list[uint32] type_token_kinds = []
+    cdef list[int32] type_token_kinds = []
     while True:
         if peek_next_i(specifier).token_kind == TOKEN_KIND.get("identifier"):
             break

@@ -1,3 +1,3 @@
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 
-cdef uint32 parse_token_precedence(uint32 token_kind)
+cdef int32 parse_token_precedence(int32 token_kind)

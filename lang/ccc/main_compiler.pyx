@@ -1,6 +1,6 @@
 from ccc.abc_builtin_ast cimport AST
 
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 from ccc.util_pprint cimport pretty_print_tokens, pretty_print_ast, pretty_print_symbol_table, pretty_print_asm_code #
 
 from ccc.lexer_lexer cimport lexing, Token
@@ -47,7 +47,7 @@ cdef void debug_asm_code(list[str] asm_code): #
         pretty_print_asm_code(asm_code) #
 #
 
-cdef void do_compile(str filename, uint32 opt_code, uint32 opt_s_code):
+cdef void do_compile(str filename, int32 opt_code, int32 opt_s_code):
 
     verbose("-- Lexing ... ", end="")
     cdef list[Token] tokens = lexing(filename)
@@ -103,7 +103,7 @@ cdef str shift_args(list[str] argv):
     return ""
 
 
-cdef tuple[str, uint32, uint32] arg_parse(list[str] argv):
+cdef tuple[str, int32, int32] arg_parse(list[str] argv):
 
     _ = shift_args(argv)
     cdef str arg
@@ -112,7 +112,7 @@ cdef tuple[str, uint32, uint32] arg_parse(list[str] argv):
     if not arg:
         raise RuntimeError(
             f"No option code passed in args[0]")
-    cdef uint32 opt_code = int(arg)
+    cdef int32 opt_code = int(arg)
 
     arg = shift_args(argv)
     if not arg:
@@ -127,8 +127,8 @@ cdef void entry(list[str] args):
     global VERBOSE
 
     cdef str filename
-    cdef uint32 opt_code
-    cdef uint32 opt_s_code
+    cdef int32 opt_code
+    cdef int32 opt_s_code
     filename, opt_code, opt_s_code = arg_parse(args)
     if opt_code > 0:
         VERBOSE = True

@@ -1,8 +1,8 @@
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 from ccc.lexer_lexer cimport TOKEN_KIND
 
 
-cdef dict[uint32, uint32] TOKEN_PRECEDENCE = {
+cdef dict[int32, int32] TOKEN_PRECEDENCE = {
     TOKEN_KIND.get('binop_multiplication'): 50,
     TOKEN_KIND.get('binop_division'): 50,
     TOKEN_KIND.get('binop_remainder'): 50,
@@ -36,7 +36,7 @@ cdef dict[uint32, uint32] TOKEN_PRECEDENCE = {
 }
 
 
-cdef uint32 parse_token_precedence(uint32 token_kind):
+cdef int32 parse_token_precedence(int32 token_kind):
 
     if token_kind in TOKEN_PRECEDENCE:
         return TOKEN_PRECEDENCE[token_kind]

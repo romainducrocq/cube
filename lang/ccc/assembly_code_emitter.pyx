@@ -1,4 +1,4 @@
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 from ccc.util_fopen cimport file_open_write, write_line, file_close_write
 from ccc.assembly_asm_ast cimport *
 
@@ -140,7 +140,7 @@ cdef str emit_condition_code(AsmCondCode node):
             "An error occurred in code emission, not all nodes were visited")
 
 
-cdef str emit_operand(AsmOperand node, uint32 byte):
+cdef str emit_operand(AsmOperand node, int32 byte):
     # Imm(int)         -> $ $<int>
     # Register(reg)    -> $ %reg
     # Stack(int)       -> $ <int>(%rbp)
@@ -222,7 +222,7 @@ cdef bint debug = False #
 cdef list[str] print_code = [] #
 
 
-cdef void emit(str line, uint32 indent):
+cdef void emit(str line, int32 indent):
     line = " " * 4 * indent + line
 
     if debug: #

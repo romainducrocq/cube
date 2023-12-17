@@ -1,4 +1,4 @@
-from ccc.util_ctypes cimport uint32 #
+from ccc.util_ctypes cimport int32 #
 from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt, ast_iter_fields #
 #
 from ccc.lexer_lexer cimport Token #
@@ -24,7 +24,7 @@ cdef void pretty_print_tokens(list[Token] tokens): #
     print(pretty_string, end="") #
 #
 #
-cdef uint32 indent = 0 #
+cdef int32 indent = 0 #
 #
 #
 cdef void _ast_pretty_string_builtin(str _child_kind, object _child_node): #

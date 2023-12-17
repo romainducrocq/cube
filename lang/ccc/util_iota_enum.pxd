@@ -1,8 +1,8 @@
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 
 cdef class IotaEnum:
     cdef int iota_counter
-    cdef dict[str, uint32] iota_enum
+    cdef dict[str, int32] iota_enum
 
-    cdef uint32 get(self, str key)
-    cdef dict[str, uint32] iter(self)
+    cdef int32 get(self, str key)
+    cdef dict[str, int32] iter(self)

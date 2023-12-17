@@ -1,12 +1,12 @@
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 
 from ccc.parser_c_ast cimport TIdentifier, CExp
 from ccc.parser_c_ast cimport CFunctionCall, CVar, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 
 
-cdef uint32 label_counter = 0
-cdef uint32 variable_counter = 0
+cdef int32 label_counter = 0
+cdef int32 variable_counter = 0
 
 
 cdef TIdentifier resolve_label_identifier(TIdentifier label):

@@ -1,14 +1,14 @@
 from re import compile as re_compile
 from re import finditer as re_finditer
 
-from ccc.util_ctypes cimport uint32
+from ccc.util_ctypes cimport int32
 from ccc.util_fopen cimport file_open_read, read_line, file_close_read
 from ccc.util_iota_enum cimport IotaEnum
 
 
 cdef class Token:
 
-    def __init__(self, str token, uint32 token_kind):
+    def __init__(self, str token, int32 token_kind):
         self.token = token
         self.token_kind = token_kind
 
@@ -81,7 +81,7 @@ TOKEN_KIND = IotaEnum((
 ))
 
 
-cdef dict[uint32, str] TOKEN_REGEX = {
+cdef dict[int32, str] TOKEN_REGEX = {
     TOKEN_KIND.get('assignment_bitshiftleft'): r"<<=",
     TOKEN_KIND.get('assignment_bitshiftright'): r">>=",
 
