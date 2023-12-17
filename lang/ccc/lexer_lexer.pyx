@@ -57,6 +57,7 @@ TOKEN_KIND = IotaEnum((
     "separator_comma",
 
     "key_int",
+    "key_long",
     "key_void",
     "key_return",
     "key_if",
@@ -71,6 +72,7 @@ TOKEN_KIND = IotaEnum((
     "key_extern",
 
     "identifier",
+    "long_constant",
     "constant",
 
     "skip",
@@ -123,6 +125,7 @@ cdef dict[int, str] TOKEN_REGEX = {
     TOKEN_KIND.get('separator_comma'): r",",
 
     TOKEN_KIND.get('key_int'): r"int\b",
+    TOKEN_KIND.get('key_long'): r"long\b",
     TOKEN_KIND.get('key_void'): r"void\b",
     TOKEN_KIND.get('key_return'): r"return\b",
     TOKEN_KIND.get('key_if'): r"if\b",
@@ -137,6 +140,7 @@ cdef dict[int, str] TOKEN_REGEX = {
     TOKEN_KIND.get('key_extern'): r"extern\b",
 
     TOKEN_KIND.get('identifier'): r"[a-zA-Z_]\w*\b",
+    TOKEN_KIND.get('long_constant'): r"[0-9]+[lL]\b",
     TOKEN_KIND.get('constant'): r"[0-9]+\b",
 
     TOKEN_KIND.get('skip'): r"[ \n\r\t\f\v]",
