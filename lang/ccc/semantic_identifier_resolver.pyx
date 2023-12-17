@@ -15,14 +15,14 @@ from ccc.semantic_type_checker cimport checktype_file_scope_variable_declaration
 from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
 
 
-cdef dict[str] external_linkage_scope_map = {}
+cdef dict[str, Py_ssize_t] external_linkage_scope_map = {}
 cdef list[dict[str, str]] scoped_identifier_maps = [{}]
 
 cdef dict[str, str] goto_map = {}
 cdef set[str] label_set = set()
 
 
-cdef int current_scope_depth():
+cdef Py_ssize_t current_scope_depth():
     return len(scoped_identifier_maps)
 
 
@@ -53,7 +53,7 @@ cdef void resolve_label():
 
 
 cdef void resolve_function_call_expression(CFunctionCall node):
-    cdef int i, scope
+    cdef Py_ssize_t i, scope
     cdef TIdentifier name
     for scope in range(current_scope_depth()):
         i = - (scope + 1)
@@ -71,7 +71,7 @@ cdef void resolve_function_call_expression(CFunctionCall node):
 
 
 cdef void resolve_var_expression(CVar node):
-    cdef int i, scope
+    cdef Py_ssize_t i, scope
     cdef TIdentifier name
     for scope in range(current_scope_depth()):
         i = - (scope + 1)
@@ -293,7 +293,7 @@ cdef void resolve_statement(CStatement node):
 
 cdef void resolve_block_items(list[CBlockItem] list_node):
 
-    cdef int block_item
+    cdef Py_ssize_t block_item
     for block_item in range(len(list_node)):
         if isinstance(list_node[block_item], CS):
             resolve_statement(list_node[block_item].statement)
@@ -315,7 +315,7 @@ cdef void resolve_block(CBlock node):
 
 
 cdef void resolve_params(CFunctionDeclaration node):
-    cdef int param
+    cdef Py_ssize_t param
     cdef TIdentifier name
     for param in range(len(node.params)):
         if node.params[param].str_t in scoped_identifier_maps[-1]:
@@ -443,7 +443,7 @@ cdef void resolve_identifiers(CProgram node):
     init_resolve_identifiers()
     init_check_types()
 
-    cdef int declaration
+    cdef Py_ssize_t declaration
     for declaration in range(len(node.declarations)):
         resolve_declaration(node.declarations[declaration])
         resolve_label()

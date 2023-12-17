@@ -23,7 +23,7 @@ cdef void checktype_function_call_expression(CFunctionCall node):
             f"""Function {node.name.str_t} has {symbol_table[node.name.str_t].type_t.param_count.int_t} arguments 
                 but was called with {len(node.args)}""")
 
-    cdef int i
+    cdef Py_ssize_t i
     for i in range(len(node.args)):
         checktype_expression(node.args[i])
 
@@ -43,7 +43,7 @@ cdef void checktype_expression(CExp node):
 
 
 cdef void checktype_params(CFunctionDeclaration node):
-    cdef int param
+    cdef Py_ssize_t param
     cdef Type param_type = Int()
     cdef IdentifierAttr param_attrs = LocalAttr()
     if node.body:
