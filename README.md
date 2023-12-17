@@ -127,6 +127,7 @@ FILE:            .c file to compile
 - All global variables must be declared with `cdef` (`cdef object` must be used for python objects).
 - All classes declared in a `.pxd` declaration file must be declared with `cdef class`.
 - All functions declared in a `.pxd` declaration file must be declared with `cdef` or `cpdef`.
+- All global typedefs must be declared in a dedicated `.pxd` declaration file with `ctypedef`.
 - Standard exceptions must be used (`RuntimeError`, ...), custom exceptions are not supported.
 - Python entry point `main.py` in `lang/ccc/<file_main>.{pyx,pxd}` must be declared with `cpdef`.
 - Python entry point `main.py` must be at the end of file, everything from here on is ignored. 

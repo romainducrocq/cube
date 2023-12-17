@@ -24,8 +24,10 @@ cdef object RGX_IS_FUNC_PYX = re_compile(r"^(^cdef |^cpdef |^def ).*\(.*\)\s*:$"
 cdef object RGX_IS_GLOB_VAR = re_compile(r"^cdef .*[^:$]$")
 cdef object RGX_IS_CLASS_VAR = re_compile(r"^\s{4}cdef .*[^:$]$")
 cdef object RGX_IS_PY_MAIN = re_compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
+cdef object RGX_IS_TYPEDEF = re_compile(r"^ctypedef .*[^:$]$")
 
 cdef int pyx_id = 0
+cdef list[str] pxd_typedefs = []
 cdef list[str] pxd_variables = []
 cdef dict[str, list[str]] pxd_classes = {}
 cdef dict[str, object] pxd_public_symbols = {}
@@ -187,6 +189,10 @@ cdef str get_variable_symbol(str line):
            lstrip(" ").split(" ")[-1]
 
 
+cdef str get_typedef_symbol(str line):
+    return line.lstrip(" ").split(" ")[-1]
+
+
 cdef str get_unique_id(str pyx_file, str symbol):
     return f"{pyx_file}{pyx_id}_{symbol}"
 
@@ -194,8 +200,10 @@ cdef str get_unique_id(str pyx_file, str symbol):
 cdef void extract_header(str pxd_file):
     global PYX_FILES
     global pxd_public_symbols
+    global pxd_typedefs
     global pxd_variables
     global pxd_classes
+    pxd_typedefs = []
     pxd_variables = []
     pxd_classes = {}
 
@@ -227,6 +235,10 @@ cdef void extract_header(str pxd_file):
             pxd_variables.append(line)
         elif re_match(RGX_IS_CLASS_VAR, line):
             pxd_classes[clss].append(line)
+        elif re_match(RGX_IS_TYPEDEF, line):
+            symbol = get_typedef_symbol(line)
+            pxd_public_symbols[get_unique_id(pxd_file, symbol)] = re_compile(r"\b{0}\b".format(symbol))
+            pxd_typedefs.append(line)
 
     file_close_read()
 
@@ -248,11 +260,13 @@ cdef void process_source(str pyx_file):
     cdef str filename = f"{DIR_TARGET}{pyx_file}.pyx"
     file_open_read(filename)
 
-    append_file_buffer("")
     cdef str line
-    for line in pxd_variables:
-        append_file_buffer(line)
+
     append_file_buffer("")
+    if pxd_variables:
+        for line in pxd_variables:
+            append_file_buffer(line)
+        append_file_buffer("")
 
     cdef bint eof
     cdef str symbol
@@ -293,6 +307,12 @@ cdef void process_source(str pyx_file):
                 pyx_private_symbols[unique_id] = re_compile(r"\b{0}\b".format(symbol))
 
     file_close_read()
+
+    if pxd_typedefs:
+        append_file_buffer("")
+        for line in pxd_typedefs:
+            append_file_buffer(line)
+    append_file_buffer("")
 
     for unique_id in pxd_public_symbols:
         file_buf = re_sub(pxd_public_symbols[unique_id], unique_id, file_buf)
