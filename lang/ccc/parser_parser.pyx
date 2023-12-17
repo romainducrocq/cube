@@ -6,6 +6,12 @@ from ccc.lexer_lexer cimport TOKEN_KIND, Token
 from ccc.parser_precedence cimport parse_token_precedence
 
 
+from libc.stdint cimport intmax_t, uintmax_t
+cdef extern from "inttypes.h":
+    intmax_t strtoimax(const char *, char **, int)
+    uintmax_t strtoumax(const char *, char**, int)
+
+
 cdef list[Token] tokens = []
 cdef Token next_token = Token('', TOKEN_KIND.get('error'))
 cdef Token peek_token = Token('', TOKEN_KIND.get('error'))
@@ -71,7 +77,9 @@ cdef TIdentifier parse_identifier():
 cdef TInt parse_int():
     # <int> ::= ? A constant token ?
     expect_next_is(pop_next(), TOKEN_KIND.get('constant'))
-    return TInt(int(next_token.token))
+    cdef bytes b_token = next_token.token.encode("UTF-8")
+    cdef char *c_token = b_token
+    return TInt(<int32>strtoimax(b_token, NULL, 10))
 
 
 cdef CBinaryOp parse_binary_op():
