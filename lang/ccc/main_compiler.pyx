@@ -1,9 +1,7 @@
 from ccc.abc_builtin_ast cimport AST
 
-from ccc.util_ctypes cimport int32
-from ccc.util_pprint cimport pretty_print_tokens, pretty_print_ast, pretty_print_symbol_table, pretty_print_asm_code #
-
 from ccc.lexer_lexer cimport lexing, Token
+
 from ccc.parser_c_ast cimport CProgram
 from ccc.parser_parser cimport parsing
 
@@ -16,6 +14,9 @@ from ccc.assembly_asm_ast cimport AsmProgram
 from ccc.assembly_assembly_generator cimport assembly_generation
 from ccc.assembly_code_emitter cimport code_emission
 from ccc.assembly_code_emitter cimport code_emission_print #
+
+from ccc.util_ctypes cimport int32
+from ccc.util_pprint cimport pretty_print_tokens, pretty_print_ast, pretty_print_symbol_table, pretty_print_asm_code #
 
 
 cdef bint VERBOSE = False

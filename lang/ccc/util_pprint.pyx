@@ -1,8 +1,10 @@
-from ccc.util_ctypes cimport int32 #
 from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt, ast_iter_fields #
 #
 from ccc.lexer_lexer cimport Token #
+#
 from ccc.semantic_type_checker cimport symbol_table #
+#
+from ccc.util_ctypes cimport int32 #
 #
 #
 cdef str pretty_string = '' #

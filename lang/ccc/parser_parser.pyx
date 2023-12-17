@@ -1,9 +1,11 @@
-from ccc.util_ctypes cimport int32
+from ccc.lexer_lexer cimport TOKEN_KIND, Token
 
 from ccc.parser_c_ast cimport *
-from ccc.semantic_symbol_table cimport *
-from ccc.lexer_lexer cimport TOKEN_KIND, Token
 from ccc.parser_precedence cimport parse_token_precedence
+
+from ccc.semantic_symbol_table cimport Type, Int
+
+from ccc.util_ctypes cimport int32
 
 
 from libc.stdint cimport intmax_t, uintmax_t

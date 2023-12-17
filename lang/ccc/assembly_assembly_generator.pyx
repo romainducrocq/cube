@@ -1,10 +1,12 @@
-from ccc.util_ctypes cimport int32
 from ccc.abc_builtin_ast cimport copy_identifier, copy_int
 
 from ccc.intermediate_tac_ast cimport *
+
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport correct_stack
+
+from ccc.util_ctypes cimport int32
 
 
 cdef AsmImm generate_imm_operand(TacConstant node):

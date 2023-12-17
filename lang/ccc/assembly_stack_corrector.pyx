@@ -1,5 +1,7 @@
-from ccc.util_ctypes cimport int32
 from ccc.abc_builtin_ast cimport copy_identifier
+
+from ccc.semantic_type_checker cimport symbol_table
+from ccc.semantic_symbol_table cimport StaticAttr
 
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
 from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmPush, AsmCmp, AsmSetCC
@@ -8,8 +10,7 @@ from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData, AsmA
 from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 
-from ccc.semantic_type_checker cimport symbol_table
-from ccc.semantic_symbol_table cimport StaticAttr
+from ccc.util_ctypes cimport int32
 
 
 cdef int32 OFFSET = -4

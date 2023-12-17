@@ -1,9 +1,12 @@
-from ccc.parser_c_ast cimport *
-from ccc.intermediate_tac_ast cimport *
 from ccc.abc_builtin_ast cimport copy_identifier, copy_int
+
+from ccc.parser_c_ast cimport *
+
 from ccc.semantic_type_checker cimport symbol_table
 from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
+
+from ccc.intermediate_tac_ast cimport *
 
 
 cdef TacBinaryOp represent_binary_op(CBinaryOp node):

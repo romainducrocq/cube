@@ -1,5 +1,6 @@
-from ccc.util_ctypes cimport int32
 from ccc.lexer_lexer cimport TOKEN_KIND
+
+from ccc.util_ctypes cimport int32
 
 
 cdef dict[int32, int32] TOKEN_PRECEDENCE = {

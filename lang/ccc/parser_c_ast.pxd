@@ -4,11 +4,14 @@ from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt
 cdef class CUnaryOp(AST):
     pass
 
+
 cdef class CComplement(CUnaryOp):
     pass
 
+
 cdef class CNegate(CUnaryOp):
     pass
+
 
 cdef class CNot(CUnaryOp):
     pass

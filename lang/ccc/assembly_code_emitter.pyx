@@ -1,6 +1,8 @@
+from ccc.assembly_asm_ast cimport *
+
 from ccc.util_ctypes cimport int32
 from ccc.util_fopen cimport file_open_write, write_line, file_close_write
-from ccc.assembly_asm_ast cimport *
+
 
 
 cdef str emit_identifier(TIdentifier node):

@@ -1,6 +1,7 @@
+from ccc.assembly_asm_ast cimport AsmRegister, AsmReg, AsmAx, AsmCx, AsmDx, AsmDi, AsmSi, AsmR8, AsmR9, AsmR10, AsmR11
+
 from ccc.util_ctypes cimport int32
 from ccc.util_iota_enum cimport IotaEnum
-from ccc.assembly_asm_ast cimport AsmRegister, AsmReg, AsmAx, AsmCx, AsmDx, AsmDi, AsmSi, AsmR8, AsmR9, AsmR10, AsmR11
 
 
 REGISTER_KIND = IotaEnum((

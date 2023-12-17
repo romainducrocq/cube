@@ -1,8 +1,8 @@
-from ccc.util_ctypes cimport int32
-
 from ccc.parser_c_ast cimport TIdentifier, CExp
 from ccc.parser_c_ast cimport CFunctionCall, CVar, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
+
+from ccc.util_ctypes cimport int32
 
 
 cdef int32 label_counter = 0

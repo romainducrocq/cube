@@ -14,11 +14,6 @@ cdef class TIdentifier(AST):
         self.str_t = str_t
 
 
-cdef TIdentifier copy_identifier(TIdentifier node):
-    # <identifier> = Built-in identifier type
-    return TIdentifier(node.str_t)
-
-
 cdef class TInt(AST):
     # int int_t
     def __cinit__(self):
@@ -26,6 +21,12 @@ cdef class TInt(AST):
 
     def __init__(self, int32 int_t):
         self.int_t = int_t
+
+
+cdef TIdentifier copy_identifier(TIdentifier node):
+    # <identifier> = Built-in identifier type
+    return TIdentifier(node.str_t)
+
 
 cdef TInt copy_int(TInt node):
     # <int> = Built-in int type
