@@ -1,19 +1,19 @@
+from ccc.util_ctypes cimport int32
+from ccc.abc_builtin_ast cimport copy_identifier, copy_int
+
 from ccc.intermediate_tac_ast cimport *
 from ccc.assembly_asm_ast cimport *
-from ccc.abc_builtin_ast cimport copy_identifier, copy_int
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport correct_stack
 
 
 cdef AsmImm generate_imm_operand(TacConstant node):
-    cdef TInt value
-    value = copy_int(node.value)
+    cdef TInt value = copy_int(node.value)
     return AsmImm(value)
 
 
 cdef AsmPseudo generate_pseudo_operand(TacVariable node):
-    cdef TIdentifier identifier
-    identifier = copy_identifier(node.name)
+    cdef TIdentifier identifier = copy_identifier(node.name)
     return AsmPseudo(identifier)
 
 
@@ -89,13 +89,13 @@ cdef list[AsmInstruction] instructions = []
 cdef list[str] arg_registers = ["Di", "Si", "Dx", "Cx", "R8", "R9"]
 
 
-cdef void generate_reg_arg_fun_call_instructions(TacValue node, int arg):
+cdef void generate_reg_arg_fun_call_instructions(TacValue node, Py_ssize_t arg):
     cdef AsmOperand src = generate_operand(node)
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get(arg_registers[arg]))
     instructions.append(AsmMov(src, dst))
 
 
-cdef void generate_stack_arg_fun_call_instructions(TacValue node, int arg):
+cdef void generate_stack_arg_fun_call_instructions(TacValue node):
     cdef AsmOperand src = generate_operand(node)
     if isinstance(node, (AsmRegister, AsmImm)):
         instructions.append(AsmPush(src))
@@ -106,19 +106,19 @@ cdef void generate_stack_arg_fun_call_instructions(TacValue node, int arg):
 
 
 cdef void generate_fun_call_instructions(TacFunCall node):
-    cdef int stack_padding = 0
+    cdef int32 stack_padding = 0
     if len(node.args) % 2 == 1:
         stack_padding = 8
         instructions.append(AsmAllocStack(TInt(stack_padding)))
 
-    cdef int i
+    cdef Py_ssize_t i
     for i in range(len(node.args)):
         if i < 6:
             generate_reg_arg_fun_call_instructions(node.args[i], i)
         else:
             stack_padding += 8
             i = len(node.args) - i + 5
-            generate_stack_arg_fun_call_instructions(node.args[i], i)
+            generate_stack_arg_fun_call_instructions(node.args[i])
 
     cdef TIdentifier name = copy_identifier(node.name)
     instructions.append(AsmCall(name))
@@ -286,19 +286,19 @@ cdef void generate_list_instructions(list[TacInstruction] list_node):
     #             | Idiv(operand) | Cdq | Jmp(identifier) | JmpCC(cond_code, identifier)
     #             | SetCC(cond_code, operand) | Label(identifier) | AllocateStack(int) | Ret
 
-    cdef int instruction
+    cdef Py_ssize_t instruction
     for instruction in range(len(list_node)):
         generate_instructions(list_node[instruction])
 
 
-cdef void generate_reg_param_function_instructions(TIdentifier node, int param):
+cdef void generate_reg_param_function_instructions(TIdentifier node, Py_ssize_t param):
     cdef AsmOperand src = generate_register(REGISTER_KIND.get(arg_registers[param]))
     cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
     instructions.append(AsmMov(src, dst))
 
 
-cdef void generate_stack_param_function_instructions(TIdentifier node, int param):
+cdef void generate_stack_param_function_instructions(TIdentifier node, int32 param):
     cdef AsmOperand src = AsmStack(TInt((param - 4) * 8))
     cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
@@ -313,7 +313,7 @@ cdef AsmFunction generate_function_top_level(TacFunction node):
 
     cdef list[TacInstruction] body = []
     instructions = body
-    cdef int param
+    cdef Py_ssize_t param
     for param in range(len(node.params)):
         if param < 6:
             generate_reg_param_function_instructions(node.params[param], param)
@@ -345,7 +345,7 @@ cdef AsmTopLevel generate_top_level(TacTopLevel node):
 
 cdef AsmProgram generate_program(TacProgram node):
     # program = Program(function_definition)
-    cdef int top_level
+    cdef Py_ssize_t top_level
     cdef list[AsmTopLevel] top_levels = []
     for top_level in range(len(node.top_levels)):
         top_levels.append(generate_top_level(node.top_levels[top_level]))

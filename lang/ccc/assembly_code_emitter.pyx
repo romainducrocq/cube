@@ -1,3 +1,4 @@
+from ccc.util_ctypes cimport uint32
 from ccc.util_fopen cimport file_open_write, write_line, file_close_write
 from ccc.assembly_asm_ast cimport *
 
@@ -139,7 +140,7 @@ cdef str emit_condition_code(AsmCondCode node):
             "An error occurred in code emission, not all nodes were visited")
 
 
-cdef str emit_operand(AsmOperand node, int byte):
+cdef str emit_operand(AsmOperand node, uint32 byte):
     # Imm(int)         -> $ $<int>
     # Register(reg)    -> $ %reg
     # Stack(int)       -> $ <int>(%rbp)
@@ -221,7 +222,7 @@ cdef bint debug = False #
 cdef list[str] print_code = [] #
 
 
-cdef void emit(str line, int indent):
+cdef void emit(str line, uint32 indent):
     line = " " * 4 * indent + line
 
     if debug: #
@@ -367,7 +368,7 @@ cdef void emit_instructions(AsmInstruction node):
 
 
 cdef void emit_list_instructions(list[AsmInstruction] list_node):
-    cdef int instruction
+    cdef Py_ssize_t instruction
     for instruction in range(len(list_node)):
         emit_instructions(list_node[instruction])
 
@@ -453,7 +454,7 @@ cdef void emit_top_level(AsmTopLevel node):
 cdef void emit_program(AsmProgram node):
     # Program(top_level*) -> $ [<top_level>]
     #                        $     .section .note.GNU-stack,"",@progbits
-    cdef int top_level
+    cdef Py_ssize_t top_level
     for top_level in range(len(node.top_levels)):
         emit_top_level(node.top_levels[top_level])
     emit(".section .note.GNU-stack,\"\",@progbits", 1)

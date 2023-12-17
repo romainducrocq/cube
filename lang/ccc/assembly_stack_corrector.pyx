@@ -1,3 +1,6 @@
+from ccc.util_ctypes cimport int32
+from ccc.abc_builtin_ast cimport copy_identifier
+
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
 from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmPush, AsmCmp, AsmSetCC
 from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmAdd, AsmSub, AsmIdiv, AsmMult
@@ -8,12 +11,10 @@ from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.semantic_type_checker cimport symbol_table
 from ccc.semantic_symbol_table cimport StaticAttr
 
-from ccc.abc_builtin_ast cimport copy_identifier
 
-
-cdef int OFFSET = -4
-cdef int counter = -1
-cdef dict[str, int] pseudo_map = {}
+cdef int32 OFFSET = -4
+cdef int32 counter = -1
+cdef dict[str, int32] pseudo_map = {}
 
 
 cdef AsmData replace_pseudo_register_data(AsmPseudo node):
@@ -104,11 +105,11 @@ cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
 
 
 cdef void correct_function_top_level(AsmFunction node):
-    cdef int i, k
-    cdef int instruction
+    cdef Py_ssize_t i, k
+    cdef Py_ssize_t instruction
+    cdef Py_ssize_t count_insert = 0
+    cdef Py_ssize_t l = len(node.instructions)
     cdef AsmOperand src_src
-    cdef int count_insert = 0
-    cdef int l = len(node.instructions)
     for instruction in range(len(node.instructions)):
         k = l - instruction
         i = - (instruction + 1 + count_insert)
@@ -213,7 +214,7 @@ cdef void init_correct_instructions():
 
 
 cdef void correct_instructions(AsmProgram node):
-    cdef int top_level
+    cdef Py_ssize_t top_level
     for top_level in range(len(node.top_levels)):
         init_correct_instructions()
         correct_top_level(node.top_levels[top_level])

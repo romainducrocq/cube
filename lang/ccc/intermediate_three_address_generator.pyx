@@ -109,7 +109,7 @@ cdef TacVariable represent_exp_var_instructions(CVar node):
 
 cdef TacValue represent_exp_fun_call_instructions(CFunctionCall node):
     cdef TIdentifier name = copy_identifier(node.name)
-    cdef int i
+    cdef Py_ssize_t i
     cdef list[TacValue] args = []
     for i in range(len(node.args)):
         args.append(represent_exp_instructions(node.args[i]))
@@ -427,7 +427,7 @@ cdef void represent_list_instructions(list[CBlockItem] list_node):
     #             | Copy(val src, val dst) | Jump(identifier target) | JumpIfZero(val condition, identifier target)
     #             | JumpIfNotZero(val condition, identifier target) | Label(identifier name)
 
-    cdef int block_item
+    cdef Py_ssize_t block_item
     for block_item in range(len(list_node)):
         if isinstance(list_node[block_item], CS):
             represent_statement_instructions(list_node[block_item].statement)
@@ -454,7 +454,7 @@ cdef TacFunction represent_function_top_level(CFunctionDeclaration node):
 
     cdef TIdentifier name = copy_identifier(node.name)
     cdef bint is_global = symbol_table[node.name.str_t].attrs.is_global
-    cdef int param
+    cdef Py_ssize_t param
     cdef list[TIdentifier] params = []
     for param in range(len(node.params)):
         params.append(copy_identifier(node.params[param]))
@@ -523,7 +523,7 @@ cdef TacProgram represent_program(CProgram node):
 
     cdef list[TacTopLevel] top_levels = []
     function_top_levels = top_levels
-    cdef int declaration
+    cdef Py_ssize_t declaration
     for declaration in range(len(node.declarations)):
         represent_declaration_top_level(node.declarations[declaration])
 

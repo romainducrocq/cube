@@ -1,3 +1,5 @@
+from ccc.util_ctypes cimport int32
+
 cdef class AST:
     # AST node
     pass
@@ -22,7 +24,7 @@ cdef class TInt(AST):
     def __cinit__(self):
         self._fields = ('int_t',)
 
-    def __init__(self, int int_t):
+    def __init__(self, int32 int_t):
         self.int_t = int_t
 
 cdef TInt copy_int(TInt node):
@@ -34,20 +36,20 @@ cdef list[tuple[object, str]] ast_iter_fields(AST node): #
 #
     cdef list[tuple[object, str]] fields = [] #
 #
-    cdef int name #
+    cdef Py_ssize_t name #
     for name in range(len(node._fields)): #
         fields.append((getattr(node, node._fields[name]), node._fields[name])) #
 #
     return fields #
 #
 #
-cdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node): #
+cdef list[tuple[AST, str, Py_ssize_t]] ast_iter_child_nodes(AST node): #
 #
     cdef object field #
-    cdef list[tuple[AST, str, int]] child_nodes = [] #
+    cdef list[tuple[AST, str, Py_ssize_t]] child_nodes = [] #
 #
-    cdef int name #
-    cdef int item #
+    cdef Py_ssize_t name #
+    cdef Py_ssize_t item #
     for name in range(len(node._fields)): #
         field = getattr(node, node._fields[name]) #
         if isinstance(field, AST): #
@@ -60,7 +62,7 @@ cdef list[tuple[AST, str, int]] ast_iter_child_nodes(AST node): #
     return child_nodes #
 #
 #
-cdef void ast_set_child_node(object field, str name, int index, AST set_node): #
+cdef void ast_set_child_node(object field, str name, Py_ssize_t index, AST set_node): #
     if isinstance(field, AST): #
         setattr(field, name, set_node) #
     elif isinstance(getattr(field, name), list): #
