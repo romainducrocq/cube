@@ -1,4 +1,5 @@
 from ccc.util_ctypes cimport uint32
+
 from ccc.parser_c_ast cimport TIdentifier, CExp
 from ccc.parser_c_ast cimport CFunctionCall, CVar, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional

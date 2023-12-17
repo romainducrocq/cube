@@ -1,4 +1,5 @@
 from ccc.util_ctypes cimport uint32
+
 from ccc.parser_c_ast cimport *
 from ccc.semantic_symbol_table cimport *
 from ccc.lexer_lexer cimport TOKEN_KIND, Token

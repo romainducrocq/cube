@@ -1,9 +1,9 @@
+from ccc.abc_builtin_ast cimport copy_int
+
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CConstant
 
 from ccc.semantic_symbol_table cimport *
-
-from ccc.abc_builtin_ast cimport copy_int
 
 
 symbol_table = {}
