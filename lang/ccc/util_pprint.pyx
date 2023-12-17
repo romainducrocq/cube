@@ -1,3 +1,4 @@
+from ccc.util_ctypes cimport uint32 #
 from ccc.lexer_lexer cimport Token #
 from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt, ast_iter_fields #
 from ccc.semantic_type_checker cimport symbol_table #
@@ -16,13 +17,13 @@ cdef void pretty_print_tokens(list[Token] tokens): #
     global pretty_string #
 #
     header_string("Tokens") #
-    cdef int token #
+    cdef Py_ssize_t token #
     for token in range(len(tokens)): #
         pretty_string += str(token) + ': ("' + tokens[token].token + '", ' + str(tokens[token].token_kind) + ')\n' #
     print(pretty_string, end="") #
 #
 #
-cdef int indent = 0 #
+cdef uint32 indent = 0 #
 #
 #
 cdef void _ast_pretty_string_builtin(str _child_kind, object _child_node): #
@@ -55,7 +56,7 @@ cdef void _ast_pretty_string(str kind, object node): #
     global pretty_string #
     global indent #
 #
-    cdef int item #
+    cdef Py_ssize_t item #
     cdef str child_kind #
     cdef object child_node #
 #
@@ -103,7 +104,7 @@ cdef void pretty_print_symbol_table(): #
 cdef void pretty_print_asm_code(list[str] asm_code): #
     header_string("Asm Code")  #
     print(pretty_string, end="")  #
-    cdef int code_line #
+    cdef Py_ssize_t code_line #
     for code_line in range(len(asm_code)): #
         print(asm_code[code_line]) #
 #

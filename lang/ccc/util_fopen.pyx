@@ -59,7 +59,7 @@ cdef void write_chunk(bytes chunk_fp, size_t chunk_l):
     fwrite(c_chunk_fp, sizeof(char), chunk_l, c_file_out)
 
 
-cdef void write_file(str stream, int chunk_size = 4096):
+cdef void write_file(str stream, Py_ssize_t chunk_size = 4096):
     global stream_buf
 
     stream_buf += stream
