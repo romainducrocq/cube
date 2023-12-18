@@ -5,13 +5,7 @@ from ccc.parser_precedence cimport parse_token_precedence
 
 from ccc.semantic_symbol_table cimport Type, Int
 
-from ccc.util_ctypes cimport int32
-
-
-from libc.stdint cimport intmax_t, uintmax_t
-cdef extern from "inttypes.h":
-    intmax_t strtoimax(const char *, char **, int)
-    uintmax_t strtoumax(const char *, char**, int)
+from ccc.util_ctypes cimport int32, str_to_int32
 
 
 cdef list[Token] tokens = []
@@ -79,9 +73,7 @@ cdef TIdentifier parse_identifier():
 cdef TInt parse_int():
     # <int> ::= ? A constant token ?
     expect_next_is(pop_next(), TOKEN_KIND.get('constant'))
-    cdef bytes b_token = next_token.token.encode("UTF-8")
-    cdef char *c_token = b_token
-    return TInt(<int32>strtoimax(b_token, NULL, 10))
+    return TInt(str_to_int32(next_token.token))
 
 
 cdef CBinaryOp parse_binary_op():

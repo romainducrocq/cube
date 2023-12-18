@@ -15,7 +15,7 @@ from ccc.assembly_assembly_generator cimport assembly_generation
 from ccc.assembly_code_emitter cimport code_emission
 from ccc.assembly_code_emitter cimport code_emission_print #
 
-from ccc.util_ctypes cimport int32
+from ccc.util_ctypes cimport int32, str_to_int32
 from ccc.util_pprint cimport pretty_print_tokens, pretty_print_ast, pretty_print_symbol_table, pretty_print_asm_code #
 
 
@@ -111,14 +111,18 @@ cdef tuple[str, int32, int32] arg_parse(list[str] argv):
 
     arg = shift_args(argv)
     if not arg:
+
         raise RuntimeError(
             f"No option code passed in args[0]")
-    cdef int32 opt_code = int(arg)
+
+    cdef int32 opt_code = str_to_int32(arg)
 
     arg = shift_args(argv)
     if not arg:
+
         raise RuntimeError(
             f"No file name passed in args[1]")
+
     cdef str filename = arg
 
     return filename, opt_code, 0
