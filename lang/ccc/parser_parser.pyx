@@ -3,9 +3,9 @@ from ccc.lexer_lexer cimport TOKEN_KIND, Token
 from ccc.parser_c_ast cimport *
 from ccc.parser_precedence cimport parse_token_precedence
 
-from ccc.semantic_symbol_table cimport Type, Int
+from ccc.semantic_symbol_table cimport Type, Int, Long, FunType
 
-from ccc.util_ctypes cimport int32, str_to_int32
+from ccc.util_ctypes cimport int32, str_to_int32, str_to_int64
 
 
 cdef list[Token] tokens = []
@@ -27,6 +27,7 @@ cdef Token pop_next():
 
     if tokens:
         next_token = tokens.pop(0)
+        print(next_token.token)
         return next_token
     else:
 
@@ -72,8 +73,41 @@ cdef TIdentifier parse_identifier():
 
 cdef TInt parse_int():
     # <int> ::= ? A constant token ?
-    expect_next_is(pop_next(), TOKEN_KIND.get('constant'))
     return TInt(str_to_int32(next_token.token))
+
+
+cdef TLong parse_long():
+    # <long> ::= ? A constant token ?
+    return TLong(str_to_int64(next_token.token))
+
+
+cdef CConstInt parse_int_constant():
+    cdef TInt value = parse_int()
+    return CConstInt(value)
+
+
+cdef CConstLong parse_long_constant():
+    cdef TLong value = parse_long()
+    return CConstLong(value)
+
+
+cdef CConst parse_constant():
+    # <const> ::= <int> | <long>
+    if pop_next().token_kind == TOKEN_KIND.get('long_constant'):
+        next_token.token = next_token.token[:-1]
+
+    cdef object value = int(next_token.token)
+
+    if value > 9223372036854775807:
+
+        raise RuntimeError(
+            f"Constant {next_token.token} is too large to be represented as an int or a long")
+
+    if next_token.token_kind == TOKEN_KIND.get('constant') and \
+       value <= 2147483647:
+        return parse_int_constant()
+
+    return parse_long_constant()
 
 
 cdef CBinaryOp parse_binary_op():
@@ -160,9 +194,16 @@ cdef CVar parse_var_factor():
     return CVar(name)
 
 
+cdef CCast parse_cast_factor():
+    cdef Type target_type = parse_type_specifier()
+    expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
+    cdef CExp exp = parse_factor()
+    return CCast(target_type, exp)
+
+
 cdef CConstant parse_constant_factor():
-    cdef TInt value = parse_int()
-    return CConstant(value)
+    cdef CConst constant = parse_constant()
+    return CConstant(constant)
 
 
 cdef CUnary parse_unary_factor():
@@ -190,20 +231,26 @@ cdef CExp parse_function_call_factor():
 
 
 cdef CExp parse_factor():
-    # <factor> ::= <int> | <identifier> | <unop> <factor> | "(" <exp> ")" | <identifier> "(" [ <argument-list> ] ")"
+    # <factor> ::= <const> | <identifier> | | "(" { <type-specifier> }+ ")" <factor> | <unop> <factor> | "(" <exp> ")"
+    #            | <identifier> "(" [ <argument-list> ] ")"
     if peek_next().token_kind == TOKEN_KIND.get('identifier'):
         if peek_next_i(1).token_kind == TOKEN_KIND.get('parenthesis_open'):
             return parse_function_call_factor()
         else:
             return parse_var_factor()
-    elif peek_token.token_kind == TOKEN_KIND.get('constant'):
+    elif peek_token.token_kind in (TOKEN_KIND.get('constant'),
+                                   TOKEN_KIND.get('long_constant')):
         return parse_constant_factor()
     elif peek_token.token_kind in (TOKEN_KIND.get('unop_complement'),
                                    TOKEN_KIND.get('unop_negation'),
                                    TOKEN_KIND.get('unop_not')):
         return parse_unary_factor()
     elif pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
-        return parse_inner_exp_factor()
+        if peek_next().token_kind in (TOKEN_KIND.get('key_int'),
+                                      TOKEN_KIND.get('key_long')):
+            return parse_cast_factor()
+        else:
+            return parse_inner_exp_factor()
     else:
 
         raise RuntimeError(
@@ -428,8 +475,8 @@ cdef CStatement parse_statement():
 
 
 cdef CInitDecl parse_decl_for_init():
-    cdef Type type_specifier = parse_type()
-    cdef CVariableDeclaration init = parse_variable_declaration()
+    cdef Type type_specifier = parse_type_specifier()
+    cdef CVariableDeclaration init = parse_variable_declaration(type_specifier)
     return CInitDecl(init)
 
 
@@ -446,6 +493,7 @@ cdef CInitExp parse_exp_for_init():
 cdef CForInit parse_for_init():
     # <for-init> ::= <variable-declaration> | [<exp>] ";"
     if peek_next().token_kind in (TOKEN_KIND.get('key_int'),
+                                  TOKEN_KIND.get('key_long'),
                                   TOKEN_KIND.get('key_static'),
                                   TOKEN_KIND.get('key_extern')):
         return parse_decl_for_init()
@@ -466,6 +514,7 @@ cdef CS parse_s_block_item():
 cdef CBlockItem parse_block_item():
     # <block-item> ::= <statement> | <declaration>
     if peek_token.token_kind in (TOKEN_KIND.get('key_int'),
+                                 TOKEN_KIND.get('key_long'),
                                  TOKEN_KIND.get('key_static'),
                                  TOKEN_KIND.get('key_extern')):
         return parse_d_block_item()
@@ -490,14 +539,16 @@ cdef CBlock parse_block():
     return block
 
 
-cdef Type parse_type():
-    # <type> ::= "int"
+cdef Type parse_type_specifier():
+    # <type-specifier> ::= "int" | "long"
     cdef Py_ssize_t specifier = 0
     cdef list[int32] type_token_kinds = []
     while True:
-        if peek_next_i(specifier).token_kind == TOKEN_KIND.get("identifier"):
+        if peek_next_i(specifier).token_kind in (TOKEN_KIND.get('identifier'),
+                                                 TOKEN_KIND.get('parenthesis_close')):
             break
-        elif peek_next_i(specifier).token_kind == TOKEN_KIND.get("key_int"):
+        elif peek_next_i(specifier).token_kind in (TOKEN_KIND.get('key_int'),
+                                                   TOKEN_KIND.get('key_long')):
             type_token_kinds.append(pop_next_i(specifier).token_kind)
         elif peek_next_i(specifier).token_kind in (TOKEN_KIND.get('key_static'),
                                                    TOKEN_KIND.get('key_extern')):
@@ -507,19 +558,26 @@ cdef Type parse_type():
             raise RuntimeError(
                 f"Expected token type \"specifier\" but found token \"{peek_next_i(specifier).token}\"")
 
-    if len(type_token_kinds) != 1:
+    if len(type_token_kinds) == 1:
+        if type_token_kinds[0] == TOKEN_KIND.get('key_int'):
+            return Int()
+        elif type_token_kinds[0] == TOKEN_KIND.get('key_long'):
+            return Long()
 
-        raise RuntimeError(
-            f"Expected token type \"type specifier\" but found token \"{pop_next().token}\"")
+    if len(type_token_kinds) == 2:
+        if TOKEN_KIND.get('key_int') in type_token_kinds and \
+           TOKEN_KIND.get('key_long') in type_token_kinds:
+            return Long()
 
-    return Int()
+    raise RuntimeError(
+            f"Expected token type \"type specifier\" but found token \"{str(type_token_kinds)}\"")
 
 
 cdef CStorageClass parse_storage_class():
     # <storage_class> ::= "static" | "extern"
-    if pop_next().token_kind == TOKEN_KIND.get("key_static"):
+    if pop_next().token_kind == TOKEN_KIND.get('key_static'):
         return CStatic()
-    elif next_token.token_kind == TOKEN_KIND.get("key_extern"):
+    elif next_token.token_kind == TOKEN_KIND.get('key_extern'):
         return CExtern()
     else:
 
@@ -527,22 +585,9 @@ cdef CStorageClass parse_storage_class():
             f"Expected token type \"storage class\" but found token \"{next_token.token}\"")
 
 
-cdef list[TIdentifier] parse_param_list():
-    # <param-list> ::= "void" | "int" <identifier> { "," "int" <identifier> }
-    cdef list[TIdentifier] params = []
-    if pop_next().token_kind == TOKEN_KIND.get('key_void'):
-        return params
-    elif next_token.token_kind == TOKEN_KIND.get('key_int'):
-        params.append(parse_identifier())
-        while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):
-            _ = pop_next()
-            expect_next_is(pop_next(), TOKEN_KIND.get('key_int'))
-            params.append(parse_identifier())
-        return params
-
-
-cdef CFunctionDeclaration parse_function_declaration():
+cdef CFunctionDeclaration parse_function_declaration(Type ret_type):
     # <function-declaration> ::= [ <storage-class> ] <identifier> "(" <param-list> ")" ( <block> | ";")
+    # <param-list> ::= "void" | { <type-specifier> }+ <identifier> { "," { <type-specifier> }+ <identifier> }
     cdef storage_class
     if peek_next().token_kind == TOKEN_KIND.get('identifier'):
         storage_class = None
@@ -550,7 +595,18 @@ cdef CFunctionDeclaration parse_function_declaration():
         storage_class = parse_storage_class()
     cdef TIdentifier name = parse_identifier()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_open'))
-    cdef list[TIdentifier] params = parse_param_list()
+    cdef list[Type] param_types = []
+    cdef list[TIdentifier] params = []
+    if peek_next().token_kind == TOKEN_KIND.get('key_void'):
+        _ = pop_next()
+    elif peek_token.token_kind in (TOKEN_KIND.get('key_int'),
+                                   TOKEN_KIND.get('key_long')):
+        param_types.append(parse_type_specifier())
+        params.append(parse_identifier())
+        while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):
+            _ = pop_next()
+            param_types.append(parse_type_specifier())
+            params.append(parse_identifier())
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
     cdef CBlock body
     if peek_next().token_kind == TOKEN_KIND.get('semicolon'):
@@ -558,10 +614,11 @@ cdef CFunctionDeclaration parse_function_declaration():
         body = None
     else:
         body = parse_block()
-    return CFunctionDeclaration(name, params, body, storage_class)
+    cdef Type fun_type = FunType(param_types, ret_type)
+    return CFunctionDeclaration(name, params, body, fun_type, storage_class)
 
 
-cdef CVariableDeclaration parse_variable_declaration():
+cdef CVariableDeclaration parse_variable_declaration(Type var_type):
     # <variable-declaration> ::= [ <storage-class> ] <identifier> [ "=" <exp> ] ";"
     cdef storage_class
     if peek_next().token_kind == TOKEN_KIND.get('identifier'):
@@ -576,29 +633,29 @@ cdef CVariableDeclaration parse_variable_declaration():
     else:
         init = None
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-    return CVariableDeclaration(name, init, storage_class)
+    return CVariableDeclaration(name, init, var_type, storage_class)
 
 
-cdef CFunDecl parse_fun_decl_declaration():
-    cdef CFunctionDeclaration function_decl = parse_function_declaration()
+cdef CFunDecl parse_fun_decl_declaration(Type ret_type):
+    cdef CFunctionDeclaration function_decl = parse_function_declaration(ret_type)
     return CFunDecl(function_decl)
 
 
-cdef CVarDecl parse_var_decl_declaration():
-    cdef CVariableDeclaration variable_decl = parse_variable_declaration()
+cdef CVarDecl parse_var_decl_declaration(Type var_type):
+    cdef CVariableDeclaration variable_decl = parse_variable_declaration(var_type)
     return CVarDecl(variable_decl)
 
 
 cdef CDeclaration parse_declaration():
     # <declaration> ::= { <specifier> }+ (<variable-declaration> | <function-declaration>)
-    cdef Type type_specifier = parse_type()
+    cdef Type type_specifier = parse_type_specifier()
     cdef Py_ssize_t i = 2
     if peek_next().token_kind == TOKEN_KIND.get("identifier"):
         i = 1
     if peek_next_i(i).token_kind == TOKEN_KIND.get('parenthesis_open'):
-        return parse_fun_decl_declaration()
+        return parse_fun_decl_declaration(type_specifier)
     else:
-        return parse_var_decl_declaration()
+        return parse_var_decl_declaration(type_specifier)
 
 
 cdef CProgram parse_program():

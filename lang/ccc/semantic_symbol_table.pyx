@@ -102,3 +102,6 @@ cdef class Symbol(AST):
     def __init__(self, Type type_t, IdentifierAttr attrs):
         self.type_t = type_t
         self.attrs = attrs
+
+
+symbol_table = {}

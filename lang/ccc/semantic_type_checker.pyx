@@ -6,7 +6,6 @@ from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CConstant
 from ccc.semantic_symbol_table cimport *
 
 
-symbol_table = {}
 cdef set[str] defined_set = set()
 
 

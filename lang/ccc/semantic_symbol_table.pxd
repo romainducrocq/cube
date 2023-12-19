@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport AST
+from ccc.abc_builtin_ast cimport AST, TInt
 
 
 cdef class Type(AST):
@@ -55,3 +55,6 @@ cdef class LocalAttr(IdentifierAttr):
 cdef class Symbol(AST):
     cdef public Type type_t
     cdef public IdentifierAttr attrs
+
+
+cdef dict[str, Symbol] symbol_table
