@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport AST, TInt
+from ccc.abc_builtin_ast cimport AST
 
 
 cdef class Type(AST):
@@ -9,8 +9,13 @@ cdef class Int(Type):
     pass
 
 
+cdef class Long(Type):
+    pass
+
+
 cdef class FunType(Type):
-    cdef public TInt param_count
+    cdef public list[Type] params
+    cdef public Type ret
 
 
 cdef class InitialValue(AST):

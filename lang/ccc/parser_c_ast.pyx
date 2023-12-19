@@ -1,4 +1,30 @@
 from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt
+from ccc.semantic_symbol_table cimport Type
+
+
+cdef class CConst(AST):
+    # const = ConstInt(int)
+    #       | ConstLong(long)
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class CConstInt(CConst):
+    # ConstInt(int)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TInt value):
+        self.value = value
+
+
+cdef class CConstLong(CConst):
+    # ConstLong(long)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TLong value):
+        self.value = value
 
 
 cdef class CUnaryOp(AST):
@@ -159,8 +185,9 @@ cdef class CGreaterOrEqual(CBinaryOp):
 
 
 cdef class CExp(AST):
-    # exp = Constant(int value)
+    # exp = Constant(const)
     #     | Var(identifier)
+    #     | Cast(type, exp)
     #     | Unary(unary_operator, exp)
     #     | Binary(binary_operator, exp, exp)
     #     | Assignment(exp, exp)
@@ -172,12 +199,12 @@ cdef class CExp(AST):
 
 
 cdef class CConstant(CExp):
-    # Constant(int value)
+    # Constant(const constant)
     def __cinit__(self):
-        self._fields = ('value',)
+        self._fields = ('constant',)
 
-    def __init__(self, TInt value):
-        self.value = value
+    def __init__(self, CConst constant):
+        self.constant = constant
 
 
 cdef class CVar(CExp):
@@ -187,6 +214,16 @@ cdef class CVar(CExp):
 
     def __init__(self, TIdentifier name):
         self.name = name
+
+
+cdef class CCast(CExp):
+    # Cast(type target_type, exp)
+    def __cinit__(self):
+        self._fields = ('target_type', 'exp')
+
+    def __init__(self, Type target_type, CExp exp):
+        self.target_type = target_type
+        self.exp = exp
 
 
 cdef class CUnary(CExp):
@@ -470,25 +507,27 @@ cdef class CExtern(CStorageClass):
 
 
 cdef class CFunctionDeclaration(AST):
-    # function_declaration = FunctionDeclaration(identifier name, identifier* params, block? body, storage_class?)
+    # function_declaration = FunctionDeclaration(identifier name, identifier* params, block? body, type fun_type, storage_class?)
     def __cinit__(self):
-        self._fields = ('name', 'params', 'body', 'storage_class')
+        self._fields = ('name', 'params', 'body', 'fun_type', 'storage_class')
 
-    def __init__(self, TIdentifier name, list[TIdentifier] params, CBlock body, CStorageClass storage_class):
+    def __init__(self, TIdentifier name, list[TIdentifier] params, CBlock body, Type fun_type, CStorageClass storage_class):
         self.name = name
         self.params = params
         self.body = body
+        self.fun_type = fun_type
         self.storage_class = storage_class
 
 
 cdef class CVariableDeclaration(AST):
-    # variable_declaration = VariableDeclaration(identifier name, exp? init, storage_class?)
+    # variable_declaration = VariableDeclaration(identifier name, exp? init, type var_type, storage_class?)
     def __cinit__(self):
-        self._fields = ('name', 'init', 'storage_class')
+        self._fields = ('name', 'init', 'var_type', 'storage_class')
 
-    def __init__(self, TIdentifier name, CExp init, CStorageClass storage_class):
+    def __init__(self, TIdentifier name, CExp init, Type var_type, CStorageClass storage_class):
         self.name = name
         self.init = init
+        self.var_type = var_type
         self.storage_class = storage_class
 
 

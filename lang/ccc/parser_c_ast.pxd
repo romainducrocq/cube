@@ -1,4 +1,17 @@
-from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt
+from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt, TLong
+from ccc.semantic_symbol_table cimport Type
+
+
+cdef class CConst(AST):
+    pass
+
+
+cdef class CConstInt(CConst):
+    cdef public TInt value
+
+
+cdef class CConstLong(CConst):
+    cdef public TLong value
 
 
 cdef class CUnaryOp(AST):
@@ -98,11 +111,16 @@ cdef class CExp(AST):
 
 
 cdef class CConstant(CExp):
-    cdef public TInt value
+    cdef public CConst constant
 
 
 cdef class CVar(CExp):
     cdef public TIdentifier name
+
+
+cdef class CCast(CExp):
+    cdef public Type target_type
+    cdef public CExp exp
 
 
 cdef class CUnary(CExp):
@@ -254,6 +272,7 @@ cdef class CFunctionDeclaration(AST):
     cdef public list[TIdentifier] params
     # Optional
     cdef public CBlock body
+    cdef public Type fun_type
     # Optional
     cdef public CStorageClass storage_class
 
@@ -262,6 +281,7 @@ cdef class CVariableDeclaration(AST):
     cdef public TIdentifier name
     # Optional
     cdef public CExp init
+    cdef public Type var_type
     # Optional
     cdef public CStorageClass storage_class
 

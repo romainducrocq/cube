@@ -1,4 +1,4 @@
-from ccc.util_ctypes cimport int32
+from ccc.util_ctypes cimport int32, int64
 
 cdef class AST:
     cdef public tuple[str, ...] _fields
@@ -9,7 +9,11 @@ cdef class TIdentifier(AST):
 cdef class TInt(AST):
     cdef public int32 int_t
 
+cdef class TLong(AST):
+    cdef public int64 long_t
+
 cdef TInt copy_int(TInt node)
+cdef TLong copy_long(TLong node)
 cdef TIdentifier copy_identifier(TIdentifier node)
 cdef list[tuple[object, str]] ast_iter_fields(AST node) #
 cdef list[tuple[AST, str, Py_ssize_t]] ast_iter_child_nodes(AST node) #

@@ -23,6 +23,15 @@ cdef class TInt(AST):
         self.int_t = int_t
 
 
+cdef class TLong(AST):
+    # long long_t
+    def __cinit__(self):
+        self._fields = ('long_t',)
+
+    def __init__(self, int64 long_t):
+        self.long_t = long_t
+
+
 cdef TIdentifier copy_identifier(TIdentifier node):
     # <identifier> = Built-in identifier type
     return TIdentifier(node.str_t)
@@ -31,6 +40,11 @@ cdef TIdentifier copy_identifier(TIdentifier node):
 cdef TInt copy_int(TInt node):
     # <int> = Built-in int type
     return TInt(node.int_t)
+
+
+cdef TLong copy_long(TLong node):
+    # <long> = Built-in long type
+    return TLong(node.long_t)
 
 #
 cdef list[tuple[object, str]] ast_iter_fields(AST node): #

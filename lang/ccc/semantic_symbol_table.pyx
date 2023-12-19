@@ -2,7 +2,9 @@ from ccc.abc_builtin_ast cimport AST, TInt
 
 
 cdef class Type(AST):
-    # type = Int | FunType(int)
+    # type = Int
+    #      | Long
+    #      | FunType(type*, type)
     def __cinit__(self):
         self._fields = ()
 
@@ -13,13 +15,20 @@ cdef class Int(Type):
         self._fields = ()
 
 
-cdef class FunType(Type):
-    # FunType(int param_count)
+cdef class Long(Type):
+    # Long
     def __cinit__(self):
-        self._fields = ('param_count',)
+        self._fields = ()
 
-    def __init__(self, TInt param_count):
-        self.param_count = param_count
+
+cdef class FunType(Type):
+    # FunType(type* params, type ret)
+    def __cinit__(self):
+        self._fields = ('params', 'ret')
+
+    def __init__(self, list[Type] params, Type ret):
+        self.params = params
+        self.ret = ret
 
 
 cdef class InitialValue(AST):
