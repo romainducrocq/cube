@@ -185,15 +185,15 @@ cdef class CGreaterOrEqual(CBinaryOp):
 
 
 cdef class CExp(AST):
-    # exp = Constant(const)
-    #     | Var(identifier)
-    #     | Cast(type, exp)
-    #     | Unary(unary_operator, exp)
-    #     | Binary(binary_operator, exp, exp)
-    #     | Assignment(exp, exp)
-    #     | AssignmentCompound(binary_operator, exp, exp)
-    #     | Conditional(exp, exp, exp)
-    #     | FunctionCall(identifier, exp*)
+    # exp = Constant(const, type)
+    #     | Var(identifier, type)
+    #     | Cast(type, exp, type)
+    #     | Unary(unary_operator, exp, type)
+    #     | Binary(binary_operator, exp, exp, type)
+    #     | Assignment(exp, exp, type)
+    #     | AssignmentCompound(binary_operator, exp, exp, type)
+    #     | Conditional(exp, exp, exp, type)
+    #     | FunctionCall(identifier, exp*, type)
     def __cinit__(self):
         self._fields = ()
 
@@ -201,92 +201,101 @@ cdef class CExp(AST):
 cdef class CConstant(CExp):
     # Constant(const constant)
     def __cinit__(self):
-        self._fields = ('constant',)
+        self._fields = ('constant', 'exp_type')
 
     def __init__(self, CConst constant):
         self.constant = constant
+        self.exp_type = None
 
 
 cdef class CVar(CExp):
     # Var(identifier name)
     def __cinit__(self):
-        self._fields = ('name',)
+        self._fields = ('name', 'exp_type')
 
     def __init__(self, TIdentifier name):
         self.name = name
+        self.exp_type = None
 
 
 cdef class CCast(CExp):
     # Cast(type target_type, exp)
     def __cinit__(self):
-        self._fields = ('target_type', 'exp')
+        self._fields = ('target_type', 'exp', 'exp_type')
 
     def __init__(self, Type target_type, CExp exp):
         self.target_type = target_type
         self.exp = exp
+        self.exp_type = None
 
 
 cdef class CUnary(CExp):
     # Unary(unary_operator, exp)
     def __cinit__(self):
-        self._fields = ('unary_op', 'exp')
+        self._fields = ('unary_op', 'exp', 'exp_type')
 
     def __init__(self, CUnaryOp unary_op, CExp exp):
         self.unary_op = unary_op
         self.exp = exp
+        self.exp_type = None
 
 
 cdef class CBinary(CExp):
     # Binary(binary_operator, exp, exp)
     def __cinit__(self):
-        self._fields = ('binary_op', 'exp_left', 'exp_right')
+        self._fields = ('binary_op', 'exp_left', 'exp_right', 'exp_type')
 
     def __init__(self, CBinaryOp binary_op, CExp exp_left, CExp exp_right):
         self.binary_op = binary_op
         self.exp_left = exp_left
         self.exp_right = exp_right
+        self.exp_type = None
 
 
 cdef class CAssignment(CExp):
     # Assignment(exp, exp)
     def __cinit__(self):
-        self._fields = ('exp_left', 'exp_right')
+        self._fields = ('exp_left', 'exp_right', 'exp_type')
 
     def __init__(self, CExp exp_left, CExp exp_right):
         self.exp_left = exp_left
         self.exp_right = exp_right
+        self.exp_type = None
 
 
 cdef class CAssignmentCompound(CExp):
     # AssignmentCompound(binary_operator, exp, exp)
     def __cinit__(self):
-        self._fields = ('binary_op', 'exp_left', 'exp_right')
+        self._fields = ('binary_op', 'exp_left', 'exp_right', 'exp_type')
 
     def __init__(self, CBinaryOp binary_op, CExp exp_left, CExp exp_right):
         self.binary_op = binary_op
         self.exp_left = exp_left
         self.exp_right = exp_right
+        self.exp_type = None
 
 
 cdef class CConditional(CExp):
     # Conditional(exp condition, exp, exp)
     def __cinit__(self):
-        self._fields = ('condition', 'exp_middle', 'exp_right')
+        self._fields = ('condition', 'exp_middle', 'exp_right', 'exp_type')
 
     def __init__(self, CExp condition, CExp exp_middle, CExp exp_right):
         self.condition = condition
         self.exp_middle = exp_middle
         self.exp_right = exp_right
+        self.exp_type = None
 
 
 cdef class CFunctionCall(CExp):
     # FunctionCall(identifier name, exp* args)
     def __cinit__(self):
-        self._fields = ('name', 'args')
+        self._fields = ('name', 'args', 'exp_type')
 
     def __init__(self, TIdentifier name, list[CExp] args):
         self.name = name
         self.args = args
+        self.exp_type = None
 
 
 cdef class CStatement(AST):
@@ -368,10 +377,10 @@ cdef class CWhile(CStatement):
     def __cinit__(self):
         self._fields = ('condition', 'body', 'target')
 
-    def __init__(self, CExp condition, CStatement body, TIdentifier target):
+    def __init__(self, CExp condition, CStatement body):
         self.condition = condition
         self.body = body
-        self.target = target
+        self.target = None
 
 
 cdef class CDoWhile(CStatement):
@@ -379,10 +388,10 @@ cdef class CDoWhile(CStatement):
     def __cinit__(self):
         self._fields = ('condition', 'body', 'target')
 
-    def __init__(self, CExp condition, CStatement body, TIdentifier target):
+    def __init__(self, CExp condition, CStatement body):
         self.condition = condition
         self.body = body
-        self.target = target
+        self.target = None
 
 
 cdef class CFor(CStatement):
@@ -390,12 +399,12 @@ cdef class CFor(CStatement):
     def __cinit__(self):
         self._fields = ('init', 'condition', 'post', 'body', 'target')
 
-    def __init__(self, CForInit init, CExp condition, CExp post, CStatement body, TIdentifier target):
+    def __init__(self, CForInit init, CExp condition, CExp post, CStatement body):
         self.init = init
         self.condition = condition
         self.post = post
         self.body = body
-        self.target = target
+        self.target = None
 
 
 cdef class CBreak(CStatement):
@@ -403,8 +412,8 @@ cdef class CBreak(CStatement):
     def __cinit__(self):
         self._fields = ('target',)
 
-    def __init__(self, TIdentifier target):
-        self.target = target
+    def __init__(self):
+        self.target = None
 
 
 cdef class CContinue(CStatement):
@@ -412,8 +421,8 @@ cdef class CContinue(CStatement):
     def __cinit__(self):
         self._fields = ('target',)
 
-    def __init__(self, TIdentifier target):
-        self.target = target
+    def __init__(self):
+        self.target = None
 
 
 cdef class CNull(CStatement):

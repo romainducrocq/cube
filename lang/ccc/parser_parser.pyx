@@ -389,7 +389,7 @@ cdef CWhile parse_while_statement():
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
     _ = peek_next()
     body = parse_statement()
-    return CWhile(condition, body, None)
+    return CWhile(condition, body)
 
 
 cdef CDoWhile parse_do_while_statement():
@@ -401,7 +401,7 @@ cdef CDoWhile parse_do_while_statement():
     cdef CExp condition = parse_exp()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-    return CDoWhile(condition, body, None)
+    return CDoWhile(condition, body)
 
 
 cdef CFor parse_for_statement():
@@ -422,19 +422,19 @@ cdef CFor parse_for_statement():
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
     _ = peek_next()
     body = parse_statement()
-    return CFor(init, condition, post, body, None)
+    return CFor(init, condition, post, body)
 
 
 cdef CBreak parse_break_statement():
     _ = pop_next()
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-    return CBreak(None)
+    return CBreak()
 
 
 cdef CContinue parse_continue_statement():
     _ = pop_next()
     expect_next_is(pop_next(), TOKEN_KIND.get('semicolon'))
-    return CContinue(None)
+    return CContinue()
 
 
 cdef CExpression parse_expression_statement():

@@ -17,9 +17,9 @@ ln -s ../LANG-CCC/${PACKAGE_NAME}/* .
 if [ ${#} -ne 0 ]; then
     test ${@}
 else
-    # for i in $(seq 1 10); do
-        # test --chapter ${i} --stage validate --latest-only --bitwise --compound --goto
-    # done
+#    for i in $(seq 1 8); do
+#        test --chapter ${i} --stage validate --latest-only --bitwise --compound --goto
+#    done
     test --chapter 11 --stage validate --latest-only --bitwise --compound --goto
 fi
 
