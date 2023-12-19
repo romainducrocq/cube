@@ -2,16 +2,16 @@ from ccc.parser_c_ast cimport TIdentifier, CProgram, CFunctionDeclaration, CVari
 from ccc.parser_c_ast cimport CDeclaration, CFunDecl, CVarDecl, CStatic, CExtern, CBlock, CB, CBlockItem, CD, CS
 from ccc.parser_c_ast cimport CStatement, CReturn, CExpression, CIf, CLabel, CGoto, CCompound
 from ccc.parser_c_ast cimport CWhile, CDoWhile, CFor, CBreak, CContinue, CForInit, CInitDecl, CInitExp, CNull
-from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CConstant, CAssignment, CAssignmentCompound
+from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
 from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_loop, annotate_for_loop
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
 from ccc.semantic_loop_annotater cimport init_annotate_loops
-from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration
-from ccc.semantic_type_checker cimport checktype_file_scope_variable_declaration, checktype_block_scope_variable_declaration
-from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
+# from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration
+# from ccc.semantic_type_checker cimport checktype_file_scope_variable_declaration, checktype_block_scope_variable_declaration
+# from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
 
 
 cdef dict[str, Py_ssize_t] external_linkage_scope_map = {}
@@ -84,6 +84,10 @@ cdef void resolve_var_expression(CVar node):
             f"Variable {node.name.str_t} was not declared in this scope")
 
 
+cdef void resolve_cast_expression(CCast node):
+    resolve_expression(node.exp)
+
+
 cdef void resolve_constant_expression(CConstant node):
     pass
 
@@ -126,10 +130,12 @@ cdef void resolve_conditional_expression(CConditional node):
 cdef void resolve_expression(CExp node):
     if isinstance(node, CFunctionCall):
         resolve_function_call_expression(node)
-        checktype_function_call_expression(node)
+        # checktype_function_call_expression(node)
     elif isinstance(node, CVar):
         resolve_var_expression(node)
-        checktype_var_expression(node)
+        # checktype_var_expression(node)
+    elif isinstance(node, CCast):
+        resolve_cast_expression(node)
     elif isinstance(node, CConstant):
         resolve_constant_expression(node)
     elif isinstance(node, CAssignment):
@@ -326,8 +332,8 @@ cdef void resolve_params(CFunctionDeclaration node):
         scoped_identifier_maps[-1][node.params[param].str_t] = name.str_t
         node.params[param] = name
 
-    if node.body:
-        checktype_params(node)
+    # if node.body:
+    #     checktype_params(node)
 
 
 cdef void resolve_function_declaration(CFunctionDeclaration node):
@@ -353,7 +359,7 @@ cdef void resolve_function_declaration(CFunctionDeclaration node):
         external_linkage_scope_map[node.name.str_t] = current_scope_depth()
 
     scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
-    checktype_function_declaration(node)
+    # checktype_function_declaration(node)
 
     enter_scope()
     if node.params:
@@ -370,10 +376,10 @@ cdef void resolve_file_scope_variable_declaration(CVariableDeclaration node):
         external_linkage_scope_map[node.name.str_t] = current_scope_depth()
 
     scoped_identifier_maps[-1][node.name.str_t] = node.name.str_t
-    if is_file_scope():
-        checktype_file_scope_variable_declaration(node)
-    else:
-        checktype_block_scope_variable_declaration(node)
+    # if is_file_scope():
+    #     checktype_file_scope_variable_declaration(node)
+    # else:
+    #     checktype_block_scope_variable_declaration(node)
 
 
 cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
@@ -393,7 +399,7 @@ cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
     cdef TIdentifier name = resolve_variable_identifier(node.name)
     scoped_identifier_maps[-1][node.name.str_t] = name.str_t
     node.name = name
-    checktype_block_scope_variable_declaration(node)
+    # checktype_block_scope_variable_declaration(node)
 
     if node.init and \
        not node.storage_class:
@@ -440,7 +446,7 @@ cdef void init_resolve_identifiers():
 
 cdef void resolve_identifiers(CProgram node):
     init_resolve_identifiers()
-    init_check_types()
+    # init_check_types()
 
     cdef Py_ssize_t declaration
     for declaration in range(len(node.declarations)):
