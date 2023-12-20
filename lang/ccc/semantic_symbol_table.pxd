@@ -26,7 +26,7 @@ cdef class IntInit(StaticInit):
     cdef public TInt value
 
 
-cdef class IntLong(StaticInit):
+cdef class LongInit(StaticInit):
     cdef public TLong value
 
 

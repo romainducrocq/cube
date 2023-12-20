@@ -47,7 +47,7 @@ cdef class IntInit(StaticInit):
         self.value = value
 
 
-cdef class IntLong(StaticInit):
+cdef class LongInit(StaticInit):
     # LongInit(int)
     def __cinit__(self):
         self._fields = ('value',)

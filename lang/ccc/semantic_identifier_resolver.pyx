@@ -9,9 +9,14 @@ from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identi
 from ccc.semantic_loop_annotater cimport annotate_while_loop, annotate_do_while_loop, annotate_for_loop
 from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_loop, deannotate_loop
 from ccc.semantic_loop_annotater cimport init_annotate_loops
+from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression
+from ccc.semantic_type_checker cimport checktype_cast_expression, checktype_constant_expression
+from ccc.semantic_type_checker cimport checktype_assignment_expression, checktype_assignment_compound_expression
+from ccc.semantic_type_checker cimport checktype_unary_expression, checktype_binary_expression
+from ccc.semantic_type_checker cimport checktype_conditional_expression, checktype_return_statement
 from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration
 from ccc.semantic_type_checker cimport checktype_file_scope_variable_declaration, checktype_block_scope_variable_declaration
-from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression, init_check_types
+from ccc.semantic_type_checker cimport init_check_types
 
 
 cdef dict[str, Py_ssize_t] external_linkage_scope_map = {}

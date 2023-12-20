@@ -1,4 +1,5 @@
-from ccc.util_ctypes cimport int32
+from ccc.util_ctypes cimport int32, int64, int64_to_int32, int32_to_int64
+
 
 cdef class AST:
     # AST node
@@ -45,6 +46,14 @@ cdef TInt copy_int(TInt node):
 cdef TLong copy_long(TLong node):
     # <long> = Built-in long type
     return TLong(node.long_t)
+
+
+cdef TInt copy_long_to_int(TLong node):
+    return TInt(int64_to_int32(node.long_t))
+
+
+cdef TLong copy_int_to_long(TInt node):
+    return TInt(int32_to_int64(node.int_t))
 
 #
 cdef list[tuple[object, str]] ast_iter_fields(AST node): #

@@ -14,6 +14,8 @@ cdef class TLong(AST):
 
 cdef TInt copy_int(TInt node)
 cdef TLong copy_long(TLong node)
+cdef TInt copy_long_to_int(TLong node)
+cdef TLong copy_int_to_long(TInt node)
 cdef TIdentifier copy_identifier(TIdentifier node)
 cdef list[tuple[object, str]] ast_iter_fields(AST node) #
 cdef list[tuple[AST, str, Py_ssize_t]] ast_iter_child_nodes(AST node) #

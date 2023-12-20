@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport copy_int
+from ccc.abc_builtin_ast cimport TIdentifier, copy_int, copy_long, copy_long_to_int, copy_int_to_long
 
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern, CReturn
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
@@ -10,6 +10,7 @@ from ccc.semantic_symbol_table cimport *
 
 
 cdef set[str] defined_set = set()
+cdef str function_declaration_name_str = ""
 
 
 cdef bint is_same_type(Type type1, Type type2):
@@ -18,6 +19,8 @@ cdef bint is_same_type(Type type1, Type type2):
 
 cdef bint is_same_fun_type(FunType fun_type1, FunType fun_type2):
     if len(fun_type1.param_types) != len(fun_type2.param_types):
+        return False
+    if not is_same_type(fun_type1.ret_type, fun_type2.ret_type):
         return False
     cdef Py_ssize_t param_type
     for param_type in range(len(fun_type1.param_types)):
@@ -31,6 +34,10 @@ cdef Type get_joint_type(Type type1, Type type2):
         return type1
     else:
         return Long()
+
+
+cdef void checktype_cast_expression(CCast node):
+    node.exp_type = node.target_type
 
 
 cdef CCast cast_expression(CExp node, Type exp_type):
@@ -69,10 +76,6 @@ cdef void checktype_var_expression(CVar node):
     node.exp_type = symbol_table[node.name.str_t].type_t
 
 
-cdef void checktype_cast_expression(CCast node):
-    node.exp_type = node.target_type
-
-
 cdef void checktype_constant_expression(CConstant node):
     if isinstance(node.constant, CConstInt):
         node.exp_type = Int()
@@ -83,7 +86,6 @@ cdef void checktype_constant_expression(CConstant node):
 cdef void checktype_assignment_expression(CAssignment node):
     if not is_same_type(node.exp_right.exp_type, node.exp_left.exp_type):
         node.exp_right = cast_expression(node.exp_right, node.exp_left.exp_type)
-        checktype_cast_expression(node.exp_right)
     node.exp_type = node.exp_left.exp_type
 
 
@@ -126,8 +128,8 @@ cdef void checktype_conditional_expression(CConditional node):
 
 
 cdef void checktype_return_statement(CReturn node):
-    # TODO
-    pass
+    if not is_same_type(node.exp.exp_type, symbol_table[function_declaration_name_str].type_t.ret_type):
+        cast_expression(node.exp, symbol_table[function_declaration_name_str].type_t.ret_type)
 
 
 cdef Symbol checktype_param(FunType fun_type, Py_ssize_t param):
@@ -144,6 +146,8 @@ cdef void checktype_params(CFunctionDeclaration node):
 
 
 cdef void checktype_function_declaration(CFunctionDeclaration node):
+    global function_declaration_name_str
+
     cdef bint is_defined = node.name.str_t in defined_set
     cdef bint is_global = not isinstance(node.storage_class, CStatic)
 
@@ -177,13 +181,35 @@ cdef void checktype_function_declaration(CFunctionDeclaration node):
     cdef IdentifierAttr fun_attrs = FunAttr(is_defined, is_global)
     symbol_table[node.name.str_t] = Symbol(fun_type, fun_attrs)
 
+    function_declaration_name_str = node.name.str_t
+
+
+cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
+    if isinstance(static_init_type, Int):
+        if isinstance(node.constant, CConstInt):
+            return Initial(IntInit(copy_int(node.constant.value)))
+        elif isinstance(node.constant, CConstLong):
+            return Initial(IntInit(copy_long_to_int(node.constant.value)))
+    elif isinstance(static_init_type, Long):
+        if isinstance(node.constant, CConstInt):
+            return Initial(LongInit(copy_int_to_long(node.constant.value)))
+        elif isinstance(node.constant, CConstLong):
+            return Initial(LongInit(copy_long(node.constant.value)))
+
+
+cdef Initial checktype_no_init_initial(Type static_init_type):
+    if isinstance(static_init_type, Int):
+        return Initial(IntInit(TInt(0)))
+    elif isinstance(static_init_type, Long):
+        return Initial(LongInit(TLong(0)))
+
 
 cdef void checktype_file_scope_variable_declaration(CVariableDeclaration node):
     cdef InitialValue initial_value
     cdef bint is_global = not isinstance(node.storage_class, CStatic)
 
     if isinstance(node.init, CConstant):
-        initial_value = Initial(copy_int(node.init.constant.value))
+        initial_value = checktype_constant_initial(node.init, node.var_type)
     elif not node.init:
         if isinstance(node.storage_class, CExtern):
             initial_value = NoInitializer()
@@ -243,9 +269,9 @@ cdef void checktype_static_block_scope_variable_declaration(CVariableDeclaration
     cdef InitialValue initial_value
 
     if isinstance(node.init, CConstant):
-        initial_value = Initial(copy_int(node.init.constant.value))
+        initial_value = checktype_constant_initial(node.init, node.var_type)
     elif not node.init:
-        initial_value = Initial(TInt(0))
+        initial_value = checktype_no_init_initial(node.var_type)
     else:
 
         raise RuntimeError(
@@ -264,7 +290,6 @@ cdef void checktype_automatic_block_scope_variable_declaration(CVariableDeclarat
     if node.init and \
        not is_same_type(node.var_type, node.init.exp_type):
         node.init = cast_expression(node.init, node.var_type)
-        checktype_cast_expression(node.init)
 
 
 cdef void checktype_block_scope_variable_declaration(CVariableDeclaration node):
@@ -277,4 +302,6 @@ cdef void checktype_block_scope_variable_declaration(CVariableDeclaration node):
 
 
 cdef void init_check_types():
+    global function_declaration_name_str
     defined_set.clear()
+    function_declaration_name_str = ""
