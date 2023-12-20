@@ -16,7 +16,7 @@ from ccc.semantic_type_checker cimport checktype_unary_expression, checktype_bin
 from ccc.semantic_type_checker cimport checktype_conditional_expression, checktype_return_statement
 from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration
 from ccc.semantic_type_checker cimport checktype_file_scope_variable_declaration, checktype_block_scope_variable_declaration
-from ccc.semantic_type_checker cimport init_check_types
+from ccc.semantic_type_checker cimport checktype_init_block_scope_variable_declaration, init_check_types
 
 
 cdef dict[str, Py_ssize_t] external_linkage_scope_map = {}
@@ -417,6 +417,8 @@ cdef void resolve_block_scope_variable_declaration(CVariableDeclaration node):
     if node.init and \
        not node.storage_class:
         resolve_expression(node.init)
+
+    checktype_init_block_scope_variable_declaration(node)
 
 
 cdef void resolve_fun_decl_declaration(CFunDecl node):

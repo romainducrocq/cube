@@ -184,6 +184,8 @@ cdef void checktype_function_declaration(CFunctionDeclaration node):
 
 
 cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
+    # TODO => <exp_type> None (p218 Don’t call typecheck_exp on static initializers) ?
+    # for i in $(find ../../tests/**/valid/ -type f -name "*.c"); do echo ${i}; ccc --validate ${i} | grep "<exp_type> None" -B 5; done >log.txt
     if isinstance(static_init_type, Int):
         if isinstance(node.constant, CConstInt):
             return Initial(IntInit(copy_int(node.constant.value)))
@@ -197,6 +199,8 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
 
 
 cdef Initial checktype_no_init_initial(Type static_init_type):
+    # TODO => <exp_type> None (p218 Don’t call typecheck_exp on static initializers) ?
+    # for i in $(find ../../tests/**/valid/ -type f -name "*.c"); do echo ${i}; ccc --validate ${i} | grep "<exp_type> None" -B 5; done >log.txt
     if isinstance(static_init_type, Int):
         return Initial(IntInit(TInt(0)))
     elif isinstance(static_init_type, Long):
@@ -286,8 +290,12 @@ cdef void checktype_automatic_block_scope_variable_declaration(CVariableDeclarat
     cdef IdentifierAttr local_var_attrs = LocalAttr()
     symbol_table[node.name.str_t] = Symbol(local_var_type, local_var_attrs)
 
+
+cdef void checktype_init_block_scope_variable_declaration(CVariableDeclaration node):
     if node.init and \
+       not node.storage_class and \
        not is_same_type(node.var_type, node.init.exp_type):
+
         node.init = cast_expression(node.init, node.var_type)
 
 
