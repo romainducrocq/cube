@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport AST, TInt
+from ccc.abc_builtin_ast cimport AST, TInt, TLong
 
 
 cdef class Type(AST):
@@ -18,6 +18,18 @@ cdef class FunType(Type):
     cdef public Type ret_type
 
 
+cdef class StaticInit(AST):
+    pass
+
+
+cdef class IntInit(StaticInit):
+    cdef public TInt value
+
+
+cdef class IntLong(StaticInit):
+    cdef public TLong value
+
+
 cdef class InitialValue(AST):
     pass
 
@@ -27,7 +39,7 @@ cdef class Tentative(InitialValue):
 
 
 cdef class Initial(InitialValue):
-    cdef public TInt value
+    cdef public StaticInit static_init
 
 
 cdef class NoInitializer(InitialValue):

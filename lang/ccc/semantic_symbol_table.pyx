@@ -31,9 +31,34 @@ cdef class FunType(Type):
         self.ret_type = ret_type
 
 
+cdef class StaticInit(AST):
+    # static_init = IntInit(int)
+    #             | LongInit(int)
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class IntInit(StaticInit):
+    # IntInit(int)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TInt value):
+        self.value = value
+
+
+cdef class IntLong(StaticInit):
+    # LongInit(int)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TLong value):
+        self.value = value
+
+
 cdef class InitialValue(AST):
     # initial_value = Tentative
-    #               | Initial(int)
+    #               | Initial(static_init)
     #               | NoInitializer
     def __cinit__(self):
         self._fields = ()
@@ -46,12 +71,12 @@ cdef class Tentative(InitialValue):
 
 
 cdef class Initial(InitialValue):
-    # Initial(int)
+    # Initial(static_init)
     def __cinit__(self):
-        self._fields = ('value',)
+        self._fields = ('static_init',)
 
-    def __init__(self, TInt value):
-        self.value = value
+    def __init__(self, StaticInit static_init):
+        self.static_init = static_init
 
 
 cdef class NoInitializer(InitialValue):
