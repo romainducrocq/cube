@@ -53,7 +53,7 @@ cdef TInt copy_long_to_int(TLong node):
 
 
 cdef TLong copy_int_to_long(TInt node):
-    return TInt(int32_to_int64(node.int_t))
+    return TLong(int32_to_int64(node.int_t))
 
 #
 cdef list[tuple[object, str]] ast_iter_fields(AST node): #
