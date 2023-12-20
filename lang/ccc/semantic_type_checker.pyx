@@ -16,6 +16,16 @@ cdef bint is_same_type(Type type1, Type type2):
     return isinstance(type1, type(type2))
 
 
+cdef bint is_same_fun_type(FunType fun_type1, FunType fun_type2):
+    if len(fun_type1.param_types) != len(fun_type2.param_types):
+        return False
+    cdef Py_ssize_t param_type
+    for param_type in range(len(fun_type1.param_types)):
+        if not is_same_type(fun_type1.param_types[param_type], fun_type2.param_types[param_type]):
+            return False
+    return True
+
+
 cdef Type get_joint_type(Type type1, Type type2):
     if is_same_type(type1, type2):
         return type1
@@ -139,10 +149,11 @@ cdef void checktype_function_declaration(CFunctionDeclaration node):
 
     if node.name.str_t in symbol_table:
         if not (isinstance(symbol_table[node.name.str_t].type_t, FunType) and
-                len(symbol_table[node.name.str_t].type_t.param_types) == len(node.params)):
+                len(symbol_table[node.name.str_t].type_t.param_types) == len(node.params) and
+                is_same_fun_type(symbol_table[node.name.str_t].type_t, node.fun_type)):
 
             raise RuntimeError(
-                f"Function declaration {node.name.str_t} is incompatible with previous declaration")
+                f"Function declaration {node.name.str_t} was redeclared with conflicting type")
 
         if is_defined and \
            node.body:
@@ -184,10 +195,10 @@ cdef void checktype_file_scope_variable_declaration(CVariableDeclaration node):
             f"File scope variable {node.name.str_t} was initialized to a non-constant")
 
     if node.name.str_t in symbol_table:
-        if isinstance(symbol_table[node.name.str_t].type_t, FunType):
+        if not is_same_type(symbol_table[node.name.str_t].type_t, node.var_type):
 
             raise RuntimeError(
-                f"Function {node.name.str_t} was redeclared as a variable")
+                f"File scope variable {node.name.str_t} was redeclared with conflicting type")
 
         if isinstance(node.storage_class, CExtern):
             is_global = symbol_table[node.name.str_t].attrs.is_global
@@ -216,9 +227,10 @@ cdef void checktype_extern_block_scope_variable_declaration(CVariableDeclaration
             f"Block scope variable {node.name.str_t} with external linkage was defined")
 
     if node.name.str_t in symbol_table:
-        if isinstance(symbol_table[node.name.str_t].type_t, FunType):
+        if not is_same_type(symbol_table[node.name.str_t].type_t, node.var_type):
+
             raise RuntimeError(
-                f"Function {node.name.str_t} was redeclared as a variable")
+                f"Block scope variable {node.name.str_t} was redeclared with conflicting type")
 
         return
 
