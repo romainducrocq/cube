@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport TIdentifier, copy_int, copy_long, copy_long_to_int, copy_int_to_long
+from ccc.abc_builtin_ast cimport copy_int, copy_long, copy_long_to_int, copy_int_to_long
 
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern, CReturn
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
@@ -118,7 +118,6 @@ cdef void checktype_binary_expression(CBinary node):
 
 
 cdef void checktype_conditional_expression(CConditional node):
-    # TODO see if condition is type checked ?
     cdef Type common_type = get_joint_type(node.exp_middle.exp_type, node.exp_right.exp_type)
     if not is_same_type(node.exp_middle.exp_type, common_type):
         node.exp_middle = cast_expression(node.exp_middle, common_type)

@@ -27,7 +27,6 @@ cdef Token pop_next():
 
     if tokens:
         next_token = tokens.pop(0)
-        print(next_token.token)
         return next_token
     else:
 
