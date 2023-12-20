@@ -1,4 +1,4 @@
-from ccc.parser_c_ast cimport AST, TIdentifier, TInt
+from ccc.parser_c_ast cimport AST, TIdentifier, CConst, Type, StaticInit
 
 
 cdef class TacUnaryOp(AST):
@@ -90,7 +90,7 @@ cdef class TacValue(AST):
 
 
 cdef class TacConstant(TacValue):
-    cdef public TInt value
+    cdef public CConst constant
 
 
 cdef class TacVariable(TacValue):
@@ -103,6 +103,16 @@ cdef class TacInstruction(AST):
 
 cdef class TacReturn(TacInstruction):
     cdef public TacValue val
+
+
+cdef class TacSignExtend(TacInstruction):
+    cdef public TacValue src
+    cdef public TacValue dst
+
+
+cdef class TacTruncate(TacInstruction):
+    cdef public TacValue src
+    cdef public TacValue dst
 
 
 cdef class TacFunCall(TacInstruction):
@@ -161,7 +171,8 @@ cdef class TacFunction(TacTopLevel):
 cdef class TacStaticVariable(TacTopLevel):
     cdef public TIdentifier name
     cdef public bint is_global
-    cdef public TInt initial_value
+    cdef public Type static_init_type
+    cdef public StaticInit initial_value
 
 
 cdef class TacProgram(AST):

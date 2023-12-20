@@ -1,5 +1,5 @@
-from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt
-from ccc.semantic_symbol_table cimport Type
+from ccc.abc_builtin_ast cimport AST, TIdentifier
+from ccc.semantic_symbol_table cimport *
 
 
 cdef class CConst(AST):

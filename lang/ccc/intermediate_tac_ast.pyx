@@ -1,4 +1,4 @@
-from ccc.parser_c_ast cimport AST, TIdentifier, TInt
+from ccc.parser_c_ast cimport AST, TIdentifier, CConst, Type, StaticInit
 
 
 cdef class TacUnaryOp(AST):
@@ -154,10 +154,10 @@ cdef class TacValue(AST):
 cdef class TacConstant(TacValue):
     # Constant(int)
     def __cinit__(self):
-        self._fields = ('value',)
+        self._fields = ('constant',)
 
-    def __init__(self, TInt value):
-        self.value = value
+    def __init__(self, CConst constant):
+        self.constant = constant
 
 
 cdef class TacVariable(TacValue):
@@ -171,6 +171,8 @@ cdef class TacVariable(TacValue):
 
 cdef class TacInstruction(AST):
     # instruction = Return(val)
+    #             | SignExtend(val src, val dst)
+    #             | Truncate(val src, val dst)
     #             | FunCall(identifier fun_name, val* args, val dst)
     #             | Unary(unary_operator, val src, val dst)
     #             | Binary(binary_operator, val src1, val src2, val dst)
@@ -190,6 +192,26 @@ cdef class TacReturn(TacInstruction):
 
     def __init__(self, TacValue val):
         self.val = val
+
+
+cdef class TacSignExtend(TacInstruction):
+    # SignExtend(val src, val dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, TacValue src, TacValue dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class TacTruncate(TacInstruction):
+    # Truncate(val src, val dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, TacValue src, TacValue dst):
+        self.src = src
+        self.dst = dst
 
 
 cdef class TacFunCall(TacInstruction):
@@ -277,7 +299,7 @@ cdef class TacLabel(TacInstruction):
 cdef class TacTopLevel(AST):
     #
     # top_level = Function(identifier, bool global, identifier* params, instruction* body)
-    #           | StaticVariable(identifier, bool global, int init)
+    #           | StaticVariable(identifier, bool global, type t, static_init init)
     #
     def __cinit__(self):
         self._fields = ()
@@ -296,13 +318,14 @@ cdef class TacFunction(TacTopLevel):
 
 
 cdef class TacStaticVariable(TacTopLevel):
-    # StaticVariable(identifier, bool global, int init)
+    # StaticVariable(identifier, bool global, type t, static_init init)
     def __cinit__(self):
-        self._fields = ('name', 'is_global', 'initial_value')
+        self._fields = ('name', 'is_global', 'static_init_type', 'initial_value')
 
-    def __init__(self, TIdentifier name, bint is_global, TInt initial_value):
+    def __init__(self, TIdentifier name, bint is_global, Type static_init_type, StaticInit initial_value):
         self.name = name
         self.is_global = is_global
+        self.static_init_type = static_init_type
         self.initial_value = initial_value
 
 
