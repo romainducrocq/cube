@@ -141,18 +141,25 @@ cdef void resolve_expression(CExp node):
         checktype_var_expression(node)
     elif isinstance(node, CCast):
         resolve_cast_expression(node)
+        checktype_cast_expression(node)
     elif isinstance(node, CConstant):
         resolve_constant_expression(node)
+        checktype_constant_expression(node)
     elif isinstance(node, CAssignment):
         resolve_assignment_expression(node)
+        checktype_assignment_expression(node)
     elif isinstance(node, CAssignmentCompound):
         resolve_assignment_compound_expression(node)
+        checktype_assignment_compound_expression(node)
     elif isinstance(node, CUnary):
         resolve_unary_expression(node)
+        checktype_unary_expression(node)
     elif isinstance(node, CBinary):
         resolve_binary_expression(node)
+        checktype_binary_expression(node)
     elif isinstance(node, CConditional):
         resolve_conditional_expression(node)
+        checktype_conditional_expression(node)
     else:
 
         raise RuntimeError(
@@ -275,6 +282,7 @@ cdef void resolve_statement(CStatement node):
         resolve_null_statement(node)
     elif isinstance(node, CReturn):
         resolve_return_statement(node)
+        checktype_return_statement(node)
     elif isinstance(node, CExpression):
         resolve_expression_statement(node)
     elif isinstance(node, CCompound):

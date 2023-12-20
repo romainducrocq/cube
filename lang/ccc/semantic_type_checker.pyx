@@ -119,7 +119,7 @@ cdef void checktype_binary_expression(CBinary node):
 
 cdef void checktype_conditional_expression(CConditional node):
     # TODO see if condition is type checked ?
-    cdef Type common_type = get_joint_type(node.exp_middle, node.exp_right)
+    cdef Type common_type = get_joint_type(node.exp_middle.exp_type, node.exp_right.exp_type)
     if not is_same_type(node.exp_middle.exp_type, common_type):
         node.exp_middle = cast_expression(node.exp_middle, common_type)
     if not is_same_type(node.exp_right.exp_type, common_type):
