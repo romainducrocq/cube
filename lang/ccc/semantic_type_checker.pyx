@@ -261,6 +261,11 @@ cdef void checktype_automatic_block_scope_variable_declaration(CVariableDeclarat
     cdef IdentifierAttr local_var_attrs = LocalAttr()
     symbol_table[node.name.str_t] = Symbol(local_var_type, local_var_attrs)
 
+    if node.init and \
+       not is_same_type(node.var_type, node.init.exp_type):
+        node.init = cast_expression(node.init, node.var_type)
+        checktype_cast_expression(node.init)
+
 
 cdef void checktype_block_scope_variable_declaration(CVariableDeclaration node):
     if isinstance(node.storage_class, CExtern):
