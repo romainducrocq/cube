@@ -9,57 +9,71 @@ cdef extern from "inttypes.h":
     uintmax_t strtoumax(const char *, char**, int)
 
 
-cdef intmax_t str_to_int(str s_str):
-    cdef bytes b_str = s_str.encode("UTF-8")
-    cdef char *c_str = b_str
+cdef intmax_t str_to_int(str str_int):
+    cdef bytes b_str_int = str_int.encode("UTF-8")
+    cdef char *c_str_int = b_str_int
     cdef char *end_ptr = NULL
     errno = 0
-    cdef intmax_t val = strtoimax(c_str, &end_ptr, 10)
-    if end_ptr == c_str:
+    cdef intmax_t val_int = strtoimax(c_str_int, &end_ptr, 10)
+    if end_ptr == c_str_int:
 
         raise RuntimeError(
-            f"String \"{s_str}\" is not an integer")
+            f"String \"{str_int}\" is not an integer")
 
     if (errno == ERANGE) \
-       or (errno != 0 and val == 0):
+       or (errno != 0 and val_int == 0):
 
         raise RuntimeError(
-            f"String \"{s_str}\" is out of range")
+            f"String \"{str_int}\" is out of range")
 
-    return val
+    return val_int
 
 
-cdef uintmax_t str_to_uint(str s_str):
-    cdef bytes b_str = s_str.encode("UTF-8")
-    cdef char *c_str = b_str
+cdef uintmax_t str_to_uint(str str_uint):
+    cdef bytes b_str_uint = str_uint.encode("UTF-8")
+    cdef char *c_str_uint = b_str_uint
     cdef char *end_ptr = NULL
     errno = 0
-    cdef uintmax_t val = strtoumax(c_str, &end_ptr, 10)
-    if end_ptr == c_str:
+    cdef uintmax_t val_uint = strtoumax(c_str_uint, &end_ptr, 10)
+    if end_ptr == c_str_uint:
 
         raise RuntimeError(
-            f"String \"{s_str}\" is not an integer")
+            f"String \"{str_uint}\" is not an integer")
 
     if (errno == ERANGE) \
-       or (errno != 0 and val == 0):
+       or (errno != 0 and val_uint == 0):
 
         raise RuntimeError(
-            f"String \"{s_str}\" is out of range")
+            f"String \"{str_uint}\" is out of range")
 
-    return val
-
-
-cdef int32_t str_to_int32(str s_str):
-    return <int32_t>str_to_int(s_str)
+    return val_uint
 
 
-cdef int64_t str_to_int64(str s_str):
-    return <int64_t>str_to_int(s_str)
+cdef int32_t str_to_int32(str str_int32):
+    return <int32_t>str_to_int(str_int32)
 
 
-cdef uint32_t str_to_uint32(str s_str):
-    return <uint32_t>str_to_uint(s_str)
+cdef int64_t str_to_int64(str str_int64):
+    return <int64_t>str_to_int(str_int64)
 
 
-cdef uint64_t str_to_uint64(str s_str):
-    return <uint64_t>str_to_uint(s_str)
+cdef uint32_t str_to_uint32(str str_uint32):
+    return <uint32_t>str_to_uint(str_uint32)
+
+
+cdef uint64_t str_to_uint64(str str_uint64):
+    return <uint64_t>str_to_uint(str_uint64)
+
+
+cdef int64_t MAX_INT32 = 2147483647
+cdef int64_t POW_2_32 = 4294967296
+
+
+cdef int32_t int64_to_int32(int64_t val_int64):
+    if val_int64 > MAX_INT32:
+        val_int64 -= POW_2_32
+    return <int32_t>val_int64
+
+
+cdef int64_t int32_to_int64(int32_t val_int32):
+    return <int64_t>val_int32
