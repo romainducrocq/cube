@@ -198,7 +198,7 @@ cdef CCast parse_cast_factor():
     cdef Type target_type = parse_type_specifier()
     expect_next_is(pop_next(), TOKEN_KIND.get('parenthesis_close'))
     cdef CExp exp = parse_factor()
-    return CCast(target_type, exp)
+    return CCast(exp, target_type)
 
 
 cdef CConstant parse_constant_factor():

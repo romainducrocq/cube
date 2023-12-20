@@ -196,6 +196,7 @@ cdef class CExp(AST):
     #     | FunctionCall(identifier, exp*, type)
     def __cinit__(self):
         self._fields = ()
+        self.exp_type = None
 
 
 cdef class CConstant(CExp):
@@ -205,7 +206,6 @@ cdef class CConstant(CExp):
 
     def __init__(self, CConst constant):
         self.constant = constant
-        self.exp_type = None
 
 
 cdef class CVar(CExp):
@@ -215,7 +215,6 @@ cdef class CVar(CExp):
 
     def __init__(self, TIdentifier name):
         self.name = name
-        self.exp_type = None
 
 
 cdef class CCast(CExp):
@@ -223,10 +222,9 @@ cdef class CCast(CExp):
     def __cinit__(self):
         self._fields = ('target_type', 'exp', 'exp_type')
 
-    def __init__(self, Type target_type, CExp exp):
-        self.target_type = target_type
+    def __init__(self, CExp exp, Type target_type):
         self.exp = exp
-        self.exp_type = None
+        self.target_type = target_type
 
 
 cdef class CUnary(CExp):
@@ -237,7 +235,6 @@ cdef class CUnary(CExp):
     def __init__(self, CUnaryOp unary_op, CExp exp):
         self.unary_op = unary_op
         self.exp = exp
-        self.exp_type = None
 
 
 cdef class CBinary(CExp):
@@ -249,7 +246,6 @@ cdef class CBinary(CExp):
         self.binary_op = binary_op
         self.exp_left = exp_left
         self.exp_right = exp_right
-        self.exp_type = None
 
 
 cdef class CAssignment(CExp):
@@ -260,7 +256,6 @@ cdef class CAssignment(CExp):
     def __init__(self, CExp exp_left, CExp exp_right):
         self.exp_left = exp_left
         self.exp_right = exp_right
-        self.exp_type = None
 
 
 cdef class CAssignmentCompound(CExp):
@@ -272,7 +267,6 @@ cdef class CAssignmentCompound(CExp):
         self.binary_op = binary_op
         self.exp_left = exp_left
         self.exp_right = exp_right
-        self.exp_type = None
 
 
 cdef class CConditional(CExp):
@@ -284,7 +278,6 @@ cdef class CConditional(CExp):
         self.condition = condition
         self.exp_middle = exp_middle
         self.exp_right = exp_right
-        self.exp_type = None
 
 
 cdef class CFunctionCall(CExp):
@@ -295,7 +288,6 @@ cdef class CFunctionCall(CExp):
     def __init__(self, TIdentifier name, list[CExp] args):
         self.name = name
         self.args = args
-        self.exp_type = None
 
 
 cdef class CStatement(AST):

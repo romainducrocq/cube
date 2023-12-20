@@ -107,62 +107,53 @@ cdef class CGreaterOrEqual(CBinaryOp):
 
 
 cdef class CExp(AST):
-    pass
+    cdef public Type exp_type
 
 
 cdef class CConstant(CExp):
     cdef public CConst constant
-    cdef public Type exp_type
 
 
 cdef class CVar(CExp):
     cdef public TIdentifier name
-    cdef public Type exp_type
 
 
 cdef class CCast(CExp):
-    cdef public Type target_type
     cdef public CExp exp
-    cdef public Type exp_type
+    cdef public Type target_type
 
 
 cdef class CUnary(CExp):
     cdef public CUnaryOp unary_op
     cdef public CExp exp
-    cdef public Type exp_type
 
 
 cdef class CBinary(CExp):
     cdef public CBinaryOp binary_op
     cdef public CExp exp_left
     cdef public CExp exp_right
-    cdef public Type exp_type
 
 
 cdef class CAssignment(CExp):
     cdef public CExp exp_left
     cdef public CExp exp_right
-    cdef public Type exp_type
 
 
 cdef class CConditional(CExp):
     cdef public CExp condition
     cdef public CExp exp_middle
     cdef public CExp exp_right
-    cdef public Type exp_type
 
 
 cdef class CAssignmentCompound(CExp):
     cdef public CBinaryOp binary_op
     cdef public CExp exp_left
     cdef public CExp exp_right
-    cdef public Type exp_type
 
 
 cdef class CFunctionCall(CExp):
     cdef public TIdentifier name
     cdef public list[CExp] args
-    cdef public Type exp_type
 
 
 cdef class CStatement(AST):

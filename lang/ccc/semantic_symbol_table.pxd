@@ -14,8 +14,8 @@ cdef class Long(Type):
 
 
 cdef class FunType(Type):
-    cdef public list[Type] params
-    cdef public Type ret
+    cdef public list[Type] param_types
+    cdef public Type ret_type
 
 
 cdef class InitialValue(AST):

@@ -22,13 +22,13 @@ cdef class Long(Type):
 
 
 cdef class FunType(Type):
-    # FunType(type* params, type ret)
+    # FunType(type* param_types, type ret_type)
     def __cinit__(self):
-        self._fields = ('params', 'ret')
+        self._fields = ('param_types', 'ret_type')
 
-    def __init__(self, list[Type] params, Type ret):
-        self.params = params
-        self.ret = ret
+    def __init__(self, list[Type] param_types, Type ret_type):
+        self.param_types = param_types
+        self.ret_type = ret_type
 
 
 cdef class InitialValue(AST):
