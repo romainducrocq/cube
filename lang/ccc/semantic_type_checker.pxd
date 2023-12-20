@@ -1,9 +1,10 @@
-from ccc.abc_builtin_ast cimport TIdentifier
-
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CReturn
 from ccc.parser_c_ast cimport CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 
+from ccc.semantic_symbol_table cimport Type
+
+cdef bint is_same_type(Type type1, Type type2)
 cdef void checktype_cast_expression(CCast node)
 cdef void checktype_function_call_expression(CFunctionCall node)
 cdef void checktype_var_expression(CVar node)

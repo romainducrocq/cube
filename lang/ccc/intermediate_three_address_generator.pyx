@@ -2,9 +2,10 @@ from ccc.abc_builtin_ast cimport copy_identifier, copy_int
 
 from ccc.parser_c_ast cimport *
 
-from ccc.semantic_type_checker cimport symbol_table
-from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
+from ccc.semantic_symbol_table cimport symbol_table
+from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, Initial, Tentative, NoInitializer
+from ccc.semantic_type_checker cimport is_same_type
 
 from ccc.intermediate_tac_ast cimport *
 
@@ -72,9 +73,8 @@ cdef TacVariable represent_variable_value(CVar node):
 
 
 cdef TacConstant represent_constant_value(CConstant node):
-    cdef TInt value
-    value = copy_int(node.value)
-    return TacConstant(value)
+    cdef CConst constant = node.constant
+    return TacConstant(constant)
 
 
 cdef TacVariable represent_inner_exp_value(CExp node):
@@ -116,8 +116,21 @@ cdef TacValue represent_exp_fun_call_instructions(CFunctionCall node):
     cdef list[TacValue] args = []
     for i in range(len(node.args)):
         args.append(represent_exp_instructions(node.args[i]))
-    cdef dst = represent_inner_value(node)
+    cdef TacValue dst = represent_inner_value(node)
     instructions.append(TacFunCall(name, args, dst))
+    return dst
+
+
+cdef TacValue represent_exp_cast_instructions(CCast node):
+    cdef TacValue src = represent_exp_instructions(node.exp)
+    if is_same_type(node.target_type, node.exp.exp_type):
+        return src
+    cdef TacValue dst = represent_inner_value(node)
+    # TODO symbols.add(dst_name, t, attrs=LocalAttr)
+    if isinstance(node.target_type, Long):
+        instructions.append(TacSignExtend(src, dst))
+    else:
+        instructions.append(TacTruncate(src, dst))
     return dst
 
 
@@ -169,8 +182,8 @@ cdef TacValue represent_exp_binary_and_instructions(CBinary node):
     instructions.append(TacJumpIfZero(condition_left, target_false))
     cdef TacValue condition_right = represent_exp_instructions(node.exp_right)
     instructions.append(TacJumpIfZero(condition_right, target_false))
-    cdef TacValue src_true = TacConstant(TInt(1))
-    cdef TacValue src_false = TacConstant(TInt(0))
+    cdef TacValue src_true = TacConstant(CConstInt(TInt(1)))
+    cdef TacValue src_false = TacConstant(CConstInt(TInt(0)))
     cdef TIdentifier target_true = represent_label_identifier("and_true")
     cdef TacValue dst = represent_inner_value(node.exp_left)
     instructions.append(TacCopy(src_true, dst))
@@ -187,8 +200,8 @@ cdef TacValue represent_exp_binary_or_instructions(CBinary node):
     instructions.append(TacJumpIfNotZero(condition_left, target_true))
     cdef TacValue condition_right = represent_exp_instructions(node.exp_right)
     instructions.append(TacJumpIfNotZero(condition_right, target_true))
-    cdef TacValue src_true = TacConstant(TInt(1))
-    cdef TacValue src_false = TacConstant(TInt(0))
+    cdef TacValue src_true = TacConstant(CConstInt(TInt(1)))
+    cdef TacValue src_false = TacConstant(CConstInt(TInt(0)))
     cdef TIdentifier target_false = represent_label_identifier("or_false")
     cdef TacValue dst = represent_inner_value(node.exp_left)
     instructions.append(TacCopy(src_false, dst))
@@ -215,6 +228,8 @@ cdef TacValue represent_exp_instructions(CExp node):
         return represent_exp_var_instructions(node)
     elif isinstance(node, CConstant):
         return represent_exp_constant_instructions(node)
+    elif isinstance(node, CCast):
+        return represent_exp_cast_instructions(node)
     elif isinstance(node, CAssignment):
         return represent_exp_assignment_instructions(node)
     elif isinstance(node, CAssignmentCompound):
@@ -464,7 +479,7 @@ cdef TacFunction represent_function_top_level(CFunctionDeclaration node):
     cdef list[TacInstruction] body = []
     instructions = body
     represent_block(node.body)
-    instructions.append(TacReturn(TacConstant(TInt(0))))
+    instructions.append(TacReturn(TacConstant(CConstInt(TInt(0)))))
     return TacFunction(name, is_global, params, body)
 
 

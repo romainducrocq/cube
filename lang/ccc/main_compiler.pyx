@@ -7,9 +7,9 @@ from ccc.parser_parser cimport parsing
 
 from ccc.semantic_identifier_resolver cimport analyze_semantic
 
-# from ccc.intermediate_tac_ast cimport TacProgram
-# from ccc.intermediate_three_address_generator cimport three_address_code_representation
-#
+from ccc.intermediate_tac_ast cimport TacProgram
+from ccc.intermediate_three_address_generator cimport three_address_code_representation
+
 # from ccc.assembly_asm_ast cimport AsmProgram
 # from ccc.assembly_assembly_generator cimport assembly_generation
 # from ccc.assembly_code_emitter cimport code_emission
@@ -72,14 +72,14 @@ cdef void do_compile(str filename, int32 opt_code, int32 opt_s_code):
         debug_symbol_table() #
         return
 
-    # verbose("-- TAC representation ... ", end="")
-    # cdef TacProgram tac_ast = three_address_code_representation(c_ast)
-    # verbose("OK")
-    # if opt_code == 252:
-    #     debug_ast(tac_ast) #
-    #     debug_symbol_table() #
-    #     return
-    #
+    verbose("-- TAC representation ... ", end="")
+    cdef TacProgram tac_ast = three_address_code_representation(c_ast)
+    verbose("OK")
+    if opt_code == 252:
+        debug_ast(tac_ast) #
+        debug_symbol_table() #
+        return
+
     # verbose("-- Assembly generation ... ", end="")
     # cdef AsmProgram asm_ast = assembly_generation(tac_ast)
     # verbose("OK")
