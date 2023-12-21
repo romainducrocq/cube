@@ -5,7 +5,7 @@ from ccc.intermediate_tac_ast cimport *
 
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-from ccc.assembly_stack_corrector cimport correct_stack
+# from ccc.assembly_stack_corrector cimport correct_stack
 
 from ccc.util_ctypes cimport int32
 
@@ -479,6 +479,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
         raise RuntimeError(
             "An error occurred in assembly generation, ASM was not generated")
 
-    correct_stack(asm_ast)
+    # correct_stack(asm_ast)
 
     return asm_ast
