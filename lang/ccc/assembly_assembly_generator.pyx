@@ -1,5 +1,6 @@
-from ccc.abc_builtin_ast cimport copy_identifier, copy_int
+from ccc.abc_builtin_ast cimport copy_identifier, copy_int, copy_long
 
+from ccc.parser_c_ast cimport symbol_table, Int, Long, CConstInt, CConstLong
 from ccc.intermediate_tac_ast cimport *
 
 from ccc.assembly_asm_ast cimport *
@@ -9,9 +10,25 @@ from ccc.assembly_stack_corrector cimport correct_stack
 from ccc.util_ctypes cimport int32
 
 
-cdef AsmImm generate_imm_operand(TacConstant node):
+cdef AsmImmInt generate_int_imm_operand(CConstInt node):
     cdef TInt value = copy_int(node.value)
-    return AsmImm(value)
+    return AsmImmInt(value)
+
+
+cdef AsmImmLong generate_long_imm_operand(CConstInt node):
+    cdef TLong value = copy_long(node.value)
+    return AsmImmLong(value)
+
+
+cdef AsmOperand generate_imm_operand(TacConstant node):
+    if isinstance(node.constant, CConstInt):
+        return generate_int_imm_operand(node)
+    elif isinstance(node.constant, CConstLong):
+        return generate_long_imm_operand(node)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
 
 
 cdef AsmPseudo generate_pseudo_operand(TacVariable node):
@@ -20,7 +37,7 @@ cdef AsmPseudo generate_pseudo_operand(TacVariable node):
 
 
 cdef AsmOperand generate_operand(TacValue node):
-    # operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int)
+    # operand = ImmInt(int) | ImmLong(long) | Reg(reg) | Pseudo(identifier) | Stack(int) | Data(identifier)
     if isinstance(node, TacConstant):
         return generate_imm_operand(node)
     elif isinstance(node, TacVariable):
@@ -81,6 +98,39 @@ cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
         return AsmNot()
     elif isinstance(node, TacNegate):
         return AsmNeg()
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmAssemblyType generate_constant_assembly_type(TacConstant node):
+    if isinstance(node.constant, CConstInt):
+        return AsmLongWord()
+    elif isinstance(node.constant, CConstLong):
+        return AsmQuadWord()
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmAssemblyType generate_variable_assembly_type(TacVariable node):
+    if isinstance(symbol_table[node.name.str_t].type_t, Int):
+        return AsmLongWord()
+    elif isinstance(symbol_table[node.name.str_t].type_t, Long):
+        return AsmQuadWord()
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmAssemblyType generate_assembly_type(TacValue node):
+    if isinstance(node, TacConstant):
+        return generate_constant_assembly_type(node)
+    elif isinstance(node, TacVariable):
+        return generate_variable_assembly_type(node)
     else:
 
         raise RuntimeError(
@@ -159,7 +209,7 @@ cdef void generate_copy_instructions(TacCopy node):
 
 
 cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
-    cdef AsmOperand imm_zero = AsmImm(TInt(0))
+    cdef AsmOperand imm_zero = AsmImmInt(TInt(0))
     cdef AsmCondCode cond_code = generate_condition_code(TacEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
@@ -168,7 +218,7 @@ cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
 
 
 cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
-    cdef AsmOperand imm_zero = AsmImm(TInt(0))
+    cdef AsmOperand imm_zero = AsmImmInt(TInt(0))
     cdef AsmCondCode cond_code = generate_condition_code(TacNotEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
@@ -177,7 +227,7 @@ cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
 
 
 cdef void generate_unary_operator_conditional_instructions(TacUnary node):
-    cdef imm_zero = AsmImm(TInt(0))
+    cdef imm_zero = AsmImmInt(TInt(0))
     cdef cond_code = generate_condition_code(TacEqual())
     cdef src = generate_operand(node.src)
     cdef cmp_dst = generate_operand(node.dst)
@@ -195,7 +245,7 @@ cdef void generate_unary_operator_arithmetic_instructions(TacUnary node):
 
 
 cdef void generate_binary_operator_conditional_instructions(TacBinary node):
-    cdef imm_zero = AsmImm(TInt(0))
+    cdef imm_zero = AsmImmInt(TInt(0))
     cdef cond_code = generate_condition_code(node.binary_op)
     cdef src1 = generate_operand(node.src1)
     cdef src2 = generate_operand(node.src2)
