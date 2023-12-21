@@ -1,4 +1,5 @@
-from ccc.assembly_asm_ast cimport AsmRegister, AsmReg, AsmAx, AsmCx, AsmDx, AsmDi, AsmSi, AsmR8, AsmR9, AsmR10, AsmR11
+from ccc.assembly_asm_ast cimport AsmRegister, AsmReg
+from ccc.assembly_asm_ast cimport AsmAx, AsmCx, AsmDx, AsmDi, AsmSi, AsmR8, AsmR9, AsmR10, AsmR11, AsmSp
 
 from ccc.util_ctypes cimport int32
 from ccc.util_iota_enum cimport IotaEnum
@@ -13,12 +14,13 @@ REGISTER_KIND = IotaEnum((
     "R8",
     "R9",
     "R10",
-    "R11"
+    "R11",
+    "Sp"
 ))
 
 
 cdef AsmRegister generate_register(int32 register_kind):
-    # reg = AX | CX | DX | DI | SI | R8 | R9 | R10 | R11
+    # reg = AX | CX | DX | DI | SI | R8 | R9 | R10 | R11 | SP
 
     cdef AsmReg reg
     if register_kind == REGISTER_KIND.get('Ax'):
@@ -39,6 +41,8 @@ cdef AsmRegister generate_register(int32 register_kind):
         reg = AsmR10()
     elif register_kind == REGISTER_KIND.get('R11'):
         reg = AsmR11()
+    elif register_kind == REGISTER_KIND.get('Sp'):
+        reg = AsmSp()
 
     else:
 

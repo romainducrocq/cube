@@ -41,7 +41,7 @@ cdef class AsmR11(AsmReg):
     pass
 
 
-cdef class AsmSP(AsmReg):
+cdef class AsmSp(AsmReg):
     pass
 
 

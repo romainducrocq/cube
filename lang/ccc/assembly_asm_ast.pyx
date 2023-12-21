@@ -71,7 +71,7 @@ cdef class AsmR11(AsmReg):
         self._fields = ()
 
 
-cdef class AsmSP(AsmReg):
+cdef class AsmSp(AsmReg):
     # SP
     def __cinit__(self):
         self._fields = ()
