@@ -1,10 +1,10 @@
-from ccc.abc_builtin_ast cimport copy_identifier, copy_int
+from ccc.abc_builtin_ast cimport copy_identifier
 
 from ccc.parser_c_ast cimport *
 
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
 from ccc.semantic_symbol_table cimport symbol_table
-from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, Initial, Tentative, NoInitializer
+from ccc.semantic_symbol_table cimport Int, Long, StaticAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_type_checker cimport is_same_type
 
 from ccc.intermediate_tac_ast cimport *
@@ -510,29 +510,36 @@ cdef void represent_declaration_top_level(CDeclaration node):
 cdef list[TacTopLevel] static_variable_top_levels = []
 
 
-cdef void represent_static_variable_top_level(StaticAttr attr, str symbol):
-    if isinstance(attr.init, NoInitializer):
+cdef StaticInit represent_tentative_static_init(Type static_init_type):
+    if isinstance(static_init_type, Int):
+        return IntInit(TInt(0))
+    elif isinstance(static_init_type, Long):
+        return LongInit(TLong(0))
+
+
+cdef void represent_static_variable_top_level(StaticAttr node, Type static_init_type, str symbol):
+    if isinstance(node.init, NoInitializer):
         return
 
     cdef TIdentifier name = TIdentifier(symbol)
-    cdef bint is_global = attr.is_global
-    cdef TInt initial_value
-    if isinstance(attr.init, Initial):
-        initial_value = copy_int(attr.init.value)
-    elif isinstance(attr.init, Tentative):
-        initial_value = TInt(0)
+    cdef bint is_global = node.is_global
+    cdef StaticInit initial_value
+    if isinstance(node.init, Initial):
+        initial_value = node.init.static_init
+    elif isinstance(node.init, Tentative):
+        initial_value = represent_tentative_static_init(static_init_type)
     else:
 
         raise RuntimeError(
             "An error occurred in three address code representation, top level variable has invalid initializer")
 
-    static_variable_top_levels.append(TacStaticVariable(name, is_global, initial_value))
+    static_variable_top_levels.append(TacStaticVariable(name, is_global, static_init_type, initial_value))
 
 
-cdef void represent_symbol_top_level(IdentifierAttr attrs, symbol):
+cdef void represent_symbol_top_level(Symbol node, str symbol):
     # top_level = StaticVariable(identifier, bool global, int init)
-    if isinstance(attrs, StaticAttr):
-        represent_static_variable_top_level(attrs, symbol)
+    if isinstance(node.attrs, StaticAttr):
+        represent_static_variable_top_level(node.attrs, node.type_t, symbol)
 
 
 cdef TacProgram represent_program(CProgram node):
@@ -548,7 +555,7 @@ cdef TacProgram represent_program(CProgram node):
     static_variable_top_levels.clear()
     cdef str symbol
     for symbol in symbol_table:
-        represent_symbol_top_level(symbol_table[symbol].attrs, symbol)
+        represent_symbol_top_level(symbol_table[symbol], symbol)
     top_levels = static_variable_top_levels + top_levels
 
     return TacProgram(top_levels)

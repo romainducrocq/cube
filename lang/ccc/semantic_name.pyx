@@ -1,5 +1,5 @@
 from ccc.parser_c_ast cimport TIdentifier, CExp
-from ccc.parser_c_ast cimport CFunctionCall, CVar, CConstant, CAssignment, CAssignmentCompound
+from ccc.parser_c_ast cimport CFunctionCall, CVar, CConstant, CCast, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 
 from ccc.util_ctypes cimport int32
@@ -42,6 +42,8 @@ cdef TIdentifier represent_variable_identifier(CExp node):
         variable = "var"
     elif isinstance(node, CConstant):
         variable = "constant"
+    elif isinstance(node, CCast):
+        variable = "cast"
     elif isinstance(node, CAssignment):
         variable = "assignment"
     elif isinstance(node, CAssignmentCompound):

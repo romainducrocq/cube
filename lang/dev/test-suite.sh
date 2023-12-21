@@ -20,7 +20,7 @@ else
     for i in $(seq 1 10); do
         test --chapter ${i} --stage tacky --latest-only --bitwise --compound --goto
     done
-#    test --chapter 11 --stage validate --latest-only --bitwise --compound --goto
+    test --chapter 11 --stage tacky --latest-only --bitwise --compound --goto
 fi
 
 exit 0
