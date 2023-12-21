@@ -3,8 +3,8 @@ from ccc.abc_builtin_ast cimport copy_identifier
 from ccc.parser_c_ast cimport *
 
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
-from ccc.semantic_symbol_table cimport symbol_table
-from ccc.semantic_symbol_table cimport Int, Long, StaticAttr, Initial, Tentative, NoInitializer
+from ccc.semantic_symbol_table cimport symbol_table, Symbol, Int, Long
+from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, LocalAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_type_checker cimport is_same_type
 
 from ccc.intermediate_tac_ast cimport *
@@ -78,9 +78,11 @@ cdef TacConstant represent_constant_value(CConstant node):
 
 
 cdef TacVariable represent_inner_exp_value(CExp node):
-    cdef TIdentifier name
-    name = represent_variable_identifier(node)
-    return TacVariable(name)
+    cdef TIdentifier inner_name = represent_variable_identifier(node)
+    cdef Type inner_type = node.exp_type
+    cdef IdentifierAttr inner_attrs = LocalAttr()
+    symbol_table[inner_name.str_t] = Symbol(inner_type, inner_attrs)
+    return TacVariable(inner_name)
 
 
 cdef TacValue represent_inner_value(CExp node):
@@ -126,7 +128,6 @@ cdef TacValue represent_exp_cast_instructions(CCast node):
     if is_same_type(node.target_type, node.exp.exp_type):
         return src
     cdef TacValue dst = represent_inner_value(node)
-    # TODO symbols.add(dst_name, t, attrs=LocalAttr)
     if isinstance(node.target_type, Long):
         instructions.append(TacSignExtend(src, dst))
     else:
