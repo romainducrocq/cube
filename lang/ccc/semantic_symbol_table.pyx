@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport AST, TInt
+from ccc.abc_builtin_ast cimport AST, TInt, TLong
 
 
 cdef class Type(AST):

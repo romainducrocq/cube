@@ -3,8 +3,6 @@ from ccc.abc_builtin_ast cimport copy_identifier
 from ccc.parser_c_ast cimport *
 
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
-from ccc.semantic_symbol_table cimport symbol_table, Symbol, Int, Long
-from ccc.semantic_symbol_table cimport IdentifierAttr, StaticAttr, LocalAttr, Initial, Tentative, NoInitializer
 from ccc.semantic_type_checker cimport is_same_type
 
 from ccc.intermediate_tac_ast cimport *
