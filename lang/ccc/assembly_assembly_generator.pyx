@@ -99,11 +99,13 @@ cdef void generate_reg_arg_fun_call_instructions(TacValue node, Py_ssize_t arg):
 
 cdef void generate_stack_arg_fun_call_instructions(TacValue node):
     cdef AsmOperand src = generate_operand(node)
-    if isinstance(node, (AsmRegister, AsmImm)):
+    if isinstance(src, (AsmRegister, AsmImmInt, AsmImmLong)) or \
+       False: # TODO
         instructions.append(AsmPush(src))
         return
+    cdef AsmAssemblyType assembly_type = AsmLongWord()
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Ax'))
-    instructions.append(AsmMov(src, dst))
+    instructions.append(AsmMov(assembly_type, src, dst))
     instructions.append(AsmPush(dst))
 
 
