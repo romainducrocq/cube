@@ -1,4 +1,4 @@
-from ccc.intermediate_tac_ast cimport AST, TIdentifier, TInt
+from ccc.parser_c_ast cimport AST, TIdentifier, TInt, TLong, StaticInit
 
 
 cdef class AsmReg(AST):
@@ -41,6 +41,10 @@ cdef class AsmR11(AsmReg):
     pass
 
 
+cdef class AsmSP(AsmReg):
+    pass
+
+
 cdef class AsmCondCode(AST):
     pass
 
@@ -73,8 +77,12 @@ cdef class AsmOperand(AST):
     pass
 
 
-cdef class AsmImm(AsmOperand):
+cdef class AsmImmInt(AsmOperand):
     cdef public TInt value
+
+
+cdef class AsmImmLong(AsmOperand):
+    cdef public TLong value
 
 
 cdef class AsmRegister(AsmOperand):
@@ -141,37 +149,59 @@ cdef class AsmNeg(AsmUnaryOp):
     pass
 
 
+cdef class AsmAssemblyType(AST):
+    pass
+
+
+cdef class AsmLongWord(AsmAssemblyType):
+    pass
+
+
+cdef class AsmQuadWord(AsmAssemblyType):
+    pass
+
+
 cdef class AsmInstruction(AST):
     pass
 
 
 cdef class AsmMov(AsmInstruction):
+    cdef public AsmAssemblyType assembly_type
+    cdef public AsmOperand src
+    cdef public AsmOperand dst
+
+
+cdef class AsmMovSx(AsmInstruction):
     cdef public AsmOperand src
     cdef public AsmOperand dst
 
 
 cdef class AsmUnary(AsmInstruction):
     cdef public AsmUnaryOp unary_op
+    cdef public AsmAssemblyType assembly_type
     cdef public AsmOperand dst
 
 
 cdef class AsmBinary(AsmInstruction):
     cdef public AsmBinaryOp binary_op
+    cdef public AsmAssemblyType assembly_type
     cdef public AsmOperand src
     cdef public AsmOperand dst
 
 
 cdef class AsmCmp(AsmInstruction):
+    cdef public AsmAssemblyType assembly_type
     cdef public AsmOperand src
     cdef public AsmOperand dst
 
 
 cdef class AsmIdiv(AsmInstruction):
+    cdef public AsmAssemblyType assembly_type
     cdef public AsmOperand src
 
 
 cdef class AsmCdq(AsmInstruction):
-    pass
+    cdef public AsmAssemblyType assembly_type
 
 
 cdef class AsmJmp(AsmInstruction):
@@ -190,14 +220,6 @@ cdef class AsmSetCC(AsmInstruction):
 
 cdef class AsmLabel(AsmInstruction):
     cdef public TIdentifier name
-
-
-cdef class AsmAllocStack(AsmInstruction):
-    cdef public TInt value
-
-
-cdef class AsmDeallocateStack(AsmInstruction):
-    cdef public TInt value
 
 
 cdef class AsmPush(AsmInstruction):
@@ -225,7 +247,8 @@ cdef class AsmFunction(AsmTopLevel):
 cdef class AsmStaticVariable(AsmTopLevel):
     cdef public TIdentifier name
     cdef public bint is_global
-    cdef public TInt initial_value
+    cdef public TInt alignment
+    cdef public StaticInit initial_value
 
 
 cdef class AsmProgram(AST):
