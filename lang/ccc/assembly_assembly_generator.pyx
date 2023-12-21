@@ -10,6 +10,17 @@ from ccc.assembly_stack_corrector cimport correct_stack
 from ccc.util_ctypes cimport int32
 
 
+cdef TInt generate_alignment(Type node):
+    if isinstance(node, Int):
+        return TInt(4)
+    elif isinstance(node, Long):
+        return TInt(8)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
 cdef AsmImmInt generate_int_imm_operand(CConstInt node):
     cdef TInt value = copy_int(node.value)
     return AsmImmInt(value)
@@ -433,8 +444,9 @@ cdef AsmFunction generate_function_top_level(TacFunction node):
 cdef AsmStaticVariable generate_static_variable_top_level(TacStaticVariable node):
     cdef TIdentifier name = copy_identifier(node.name)
     cdef bint is_global = node.is_global
-    cdef TInt initial_value = copy_int(node.initial_value)
-    return AsmStaticVariable(name, is_global, initial_value)
+    cdef TInt alignment = generate_alignment(node.static_init_type)
+    cdef StaticInit initial_value = node.initial_value
+    return AsmStaticVariable(name, is_global, alignment, initial_value)
 
 
 cdef AsmTopLevel generate_top_level(TacTopLevel node):
