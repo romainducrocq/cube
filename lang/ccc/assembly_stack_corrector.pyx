@@ -169,6 +169,31 @@ cdef void correct_any_from_addr_to_addr_instruction(Py_ssize_t i, Py_ssize_t k):
                                       src_src, instructions[i].src))
 
 
+cdef void correct_mov_sx_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k):
+    # movsx (imm, _)
+    # $ movslq imm, _ ->
+    #     $ movl   imm, reg
+    #     $ movslq reg, _
+    global instructions
+
+    cdef AsmOperand src_src = instructions[i].src
+    instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
+    instructions.insert(k - 1, AsmMov(LongWord(),
+                                      src_src, instructions[i].src))
+
+
+cdef void correct_mov_sx_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
+    # movsx (_, addr)
+    # $ movslq _, addr ->
+    #     $ movslq _  , reg
+    #     $ movl   reg, addr
+    global instructions
+
+    cdef AsmOperand src_dst = instructions[i].dst
+    instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
+    instructions.insert(k + 1, AsmMov(QuadWord(),
+                                      instructions[i].dst, src_dst))
+
 cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
     # cmp (_, imm)
     # $ cmpl reg1, imm ->
@@ -290,10 +315,10 @@ cdef void correct_function_top_level(AsmFunction node):
 
         elif isinstance(instructions[i], AsmMovSx):
             if is_from_imm_instruction(i):
-                pass
+                correct_mov_sx_from_imm_to_any_instructions(i, k)
 
             if is_to_addr_instruction(i):
-                pass
+                correct_mov_sx_from_any_to_addr_instructions(i, k)
 
         elif isinstance(instructions[i], AsmCmp):
             if is_from_long_imm_instruction(i):
