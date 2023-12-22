@@ -157,7 +157,20 @@ cdef str emit_condition_code(AsmCondCode node):
             "An error occurred in code emission, not all nodes were visited")
 
 
-cdef str emit_instruction_suffix(AssemblyType node):
+cdef int32 emit_type_alignment_bytes(AssemblyType node):
+    # LongWord -> $ 4
+    # QuadWord -> $ 8
+    if isinstance(node, LongWord):
+        return 4
+    elif isinstance(node, QuadWord):
+        return 8
+    else:
+
+        raise RuntimeError(
+            "An error occurred in code emission, not all nodes were visited")
+
+
+cdef str emit_type_instruction_suffix(AssemblyType node):
     # LongWord -> $ l
     # QuadWord -> $ q
     if isinstance(node, LongWord):
@@ -208,30 +221,30 @@ cdef str emit_operand(AsmOperand node, int32 byte):
 
 
 cdef str emit_binary_op(AsmBinaryOp node):
-    # Add           -> $ addl
-    # Sub           -> $ subl
-    # Mult          -> $ imull
-    # BitAnd        -> $ andl
-    # BitOr         -> $ orl
-    # BitXor        -> $ xorl
-    # BitShiftLeft  -> $ shll
-    # BitShiftRight -> $ shrl
+    # Add           -> $ add
+    # Sub           -> $ sub
+    # Mult          -> $ imul
+    # BitAnd        -> $ and
+    # BitOr         -> $ or
+    # BitXor        -> $ xor
+    # BitShiftLeft  -> $ shl
+    # BitShiftRight -> $ shr
     if isinstance(node, AsmAdd):
-        return "addl"
+        return "add"
     elif isinstance(node, AsmSub):
-        return "subl"
+        return "sub"
     elif isinstance(node, AsmMult):
-        return "imull"
+        return "imul"
     elif isinstance(node, AsmBitAnd):
-        return "andl"
+        return "and"
     elif isinstance(node, AsmBitOr):
-        return "orl"
+        return "or"
     elif isinstance(node, AsmBitXor):
-        return "xorl"
+        return "xor"
     elif isinstance(node, AsmBitShiftLeft):
-        return "shll"
+        return "shl"
     elif isinstance(node, AsmBitShiftRight):
-        return "shrl"
+        return "shr"
     else:
 
         raise RuntimeError(
@@ -239,12 +252,12 @@ cdef str emit_binary_op(AsmBinaryOp node):
 
 
 cdef str emit_unary_op(AsmUnaryOp node):
-    # Neg -> $ negl
-    # Not -> $ notl
+    # Neg -> $ neg
+    # Not -> $ not
     if isinstance(node, AsmNeg):
-        return "negl"
+        return "neg"
     elif isinstance(node, AsmNot):
-        return "notl"
+        return "not"
     else:
 
         raise RuntimeError(
@@ -271,14 +284,16 @@ cdef void emit_ret_instructions(AsmRet node):
 
 
 cdef void emit_mov_instructions(AsmMov node):
-    cdef str src = emit_operand(node.src, 4)
-    cdef str dst = emit_operand(node.dst, 4)
-    emit(f"movl {src}, {dst}", 1)
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str src = emit_operand(node.src, byte)
+    cdef str dst = emit_operand(node.dst, byte)
+    emit(f"mov{t} {src}, {dst}", 1)
 
 
 cdef void emit_mov_sx_instructions(AsmMovSx node):
     cdef str src = emit_operand(node.src, 4)
-    cdef str dst = emit_operand(node.dst, 4)
+    cdef str dst = emit_operand(node.dst, 8)
     emit(f"movslq {src}, {dst}", 1)
 
 
@@ -298,9 +313,11 @@ cdef void emit_label_instructions(AsmLabel node):
 
 
 cdef void emit_cmp_instructions(AsmCmp node):
-    cdef str src = emit_operand(node.src, 4)
-    cdef str dst = emit_operand(node.dst, 4)
-    emit(f"cmpl {src}, {dst}", 1)
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str src = emit_operand(node.src, byte)
+    cdef str dst = emit_operand(node.dst, byte)
+    emit(f"cmp{t} {src}, {dst}", 1)
 
 
 cdef void emit_jmp_instructions(AsmJmp node):
@@ -321,21 +338,27 @@ cdef void emit_set_cc_instructions(AsmSetCC node):
 
 
 cdef void emit_unary_instructions(AsmUnary node):
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
     cdef str unary_op = emit_unary_op(node.unary_op)
-    cdef str dst = emit_operand(node.dst, 4)
-    emit(f"{unary_op} {dst}", 1)
+    cdef str dst = emit_operand(node.dst, byte)
+    emit(f"{unary_op}{t} {dst}", 1)
 
 
 cdef void emit_binary_instructions(AsmBinary node):
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
     cdef str binary_op = emit_binary_op(node.binary_op)
-    cdef str src = emit_operand(node.src, 4)
-    cdef str dst = emit_operand(node.dst, 4)
-    emit(f"{binary_op} {src}, {dst}", 1)
+    cdef str src = emit_operand(node.src, byte)
+    cdef str dst = emit_operand(node.dst, byte)
+    emit(f"{binary_op}{t} {src}, {dst}", 1)
 
 
 cdef void emit_idiv_instructions(AsmIdiv node):
-    cdef str src = emit_operand(node.src, 4)
-    emit(f"idivl {src}", 1)
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str src = emit_operand(node.src, byte)
+    emit(f"idiv{t} {src}", 1)
 
 
 cdef void emit_cdq_instructions(AsmCdq node):
@@ -350,23 +373,23 @@ cdef void emit_cdq_instructions(AsmCdq node):
 
 
 cdef void emit_instructions(AsmInstruction node):
-    # Ret                               -> $ movq %rbp, %rsp
-    #                                      $ popq %rbp
-    #                                      $ ret
-    # Mov(src, dst)                     -> $ movl <src>, <dst>
-    # MovSx(src, dst)                   -> $ movslq <src>, <dst>
-    # Push(operand)                     -> $ pushq <operand>
-    # Call(label)                       -> $ call <label>@PLT
-    # Label(label)                      -> $ .L<label>:
-    # Cmp(operand, operand)             -> $ cmpl <operand>, <operand>
-    # Jmp(label)                        -> $ jmp .L<label>
-    # JmpCC(cond_code, label)           -> $ j<cond_code> .L<label>
-    # SetCC(cond_code, operand)         -> $ set<cond_code> <operand>
-    # Unary(unary_operator, operand)    -> $ <unary_operator> <operand>
-    # Binary(binary_operator, src, dst) -> $ <binary_operator> <src>, <dst>
-    # Idiv(operand)                     -> $ idivl <operand>
-    # Cdq<l>                            -> $ cdq
-    # Cdq<q>                            -> $ cdo
+    # Ret                                  -> $ movq %rbp, %rsp
+    #                                         $ popq %rbp
+    #                                         $ ret
+    # Mov(t, src, dst)                     -> $ mov<t> <src>, <dst>
+    # MovSx(src, dst)                      -> $ movslq <src>, <dst>
+    # Push(operand)                        -> $ pushq <operand>
+    # Call(label)                          -> $ call <label>@PLT
+    # Label(label)                         -> $ .L<label>:
+    # Cmp(t, operand, operand)             -> $ cmp<t> <operand>, <operand>
+    # Jmp(label)                           -> $ jmp .L<label>
+    # JmpCC(cond_code, label)              -> $ j<cond_code> .L<label>
+    # SetCC(cond_code, operand)            -> $ set<cond_code> <operand>
+    # Unary(unary_operator, t, operand)    -> $ <unary_operator><t> <operand>
+    # Binary(binary_operator, t, src, dst) -> $ <binary_operator><t> <src>, <dst>
+    # Idiv(t, operand)                     -> $ idiv<t> <operand>
+    # Cdq<l>                               -> $ cdq
+    # Cdq<q>                               -> $ cdo
     if isinstance(node, AsmRet):
         emit_ret_instructions(node)
     elif isinstance(node, AsmMov):
