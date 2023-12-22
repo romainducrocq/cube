@@ -1,20 +1,18 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
-from ccc.semantic_symbol_table cimport Type, Int, Long
-
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
 from ccc.assembly_asm_ast cimport AsmInstruction, AsmImmInt, AsmImmLong, AsmMov, AsmMovSx, AsmPush, AsmCmp, AsmSetCC
 from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmAdd, AsmSub, AsmIdiv, AsmMult
 from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData
 from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-from ccc.assembly_backend_symbol_table cimport backend_symbol_table
+from ccc.assembly_backend_symbol_table cimport backend_symbol_table, AssemblyType, LongWord, QuadWord
 
 from ccc.util_ctypes cimport int32
 
 
-cdef int32 OFFSET_INT = -4
-cdef int32 OFFSET_LONG = -8
+cdef int32 OFFSET_LONG_WORD = -4
+cdef int32 OFFSET_QUAD_WORD = -8
 cdef int32 counter = -1
 cdef dict[str, int32] pseudo_map = {}
 
@@ -29,13 +27,22 @@ cdef AsmStack replace_pseudo_register_stack(AsmPseudo node):
     return AsmStack(value)
 
 
-cdef void allocate_offset_pseudo_register(Type assembly_type):
+cdef void allocate_offset_pseudo_register(AssemblyType assembly_type):
     global counter
 
-    if isinstance(assembly_type, Int):
-        counter += OFFSET_INT
-    elif isinstance(assembly_type, Long):
-        counter += OFFSET_LONG
+    if isinstance(assembly_type, LongWord):
+        counter += OFFSET_LONG_WORD
+    elif isinstance(assembly_type, QuadWord):
+        counter += OFFSET_QUAD_WORD
+
+
+
+cdef void align_offset_pseudo_register(AssemblyType assembly_type):
+    global counter
+
+    if isinstance(assembly_type, LongWord):
+        counter += OFFSET_LONG_WORD
+
 
 
 cdef AsmOperand replace_operand_pseudo_register(AsmPseudo node):
@@ -48,6 +55,7 @@ cdef AsmOperand replace_operand_pseudo_register(AsmPseudo node):
         else:
             allocate_offset_pseudo_register(backend_symbol_table[node.name.str_t].assembly_type)
             pseudo_map[node.name.str_t] = counter
+            align_offset_pseudo_register(backend_symbol_table[node.name.str_t].assembly_type)
     return replace_pseudo_register_stack(node)
 
 
