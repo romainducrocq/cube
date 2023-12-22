@@ -7,7 +7,7 @@ from ccc.assembly_asm_ast cimport *
 from ccc.assembly_backend_symbol_table cimport AssemblyType, LongWord, QuadWord
 from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, convert_symbol_table
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-# from ccc.assembly_stack_corrector cimport correct_stack
+from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes #, correct_stack
 
 from ccc.util_ctypes cimport int32
 
@@ -144,19 +144,12 @@ cdef AssemblyType generate_assembly_type(TacValue node):
 
 
 cdef void generate_allocate_stack_instructions(int32 byte):
-    cdef AsmBinaryOp binary_op = AsmSub()
-    cdef AssemblyType assembly_type = QuadWord()
-    cdef AsmOperand src = AsmImmInt(TInt(byte))
-    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
-    instructions.append(AsmBinary(binary_op, assembly_type, src, dst))
+    instructions.append(allocate_stack_bytes(byte))
 
 
 cdef void generate_deallocate_stack_instructions(int32 byte):
-    cdef AsmBinaryOp binary_op = AsmAdd()
-    cdef AssemblyType assembly_type = QuadWord()
-    cdef AsmOperand src = AsmImmInt(TInt(byte))
-    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
-    instructions.append(AsmBinary(binary_op, assembly_type, src, dst))
+    instructions.append(deallocate_stack_bytes(byte))
+
 
 
 cdef list[AsmInstruction] instructions = []
@@ -186,7 +179,7 @@ cdef void generate_fun_call_instructions(TacFunCall node):
     cdef int32 stack_padding = 0
     if len(node.args) % 2 == 1:
         stack_padding = 8
-        instructions.append(generate_allocate_stack_instructions(stack_padding))
+        generate_allocate_stack_instructions(stack_padding)
 
     cdef Py_ssize_t i
     for i in range(len(node.args)):
@@ -201,7 +194,7 @@ cdef void generate_fun_call_instructions(TacFunCall node):
     instructions.append(AsmCall(name))
 
     if stack_padding:
-        instructions.append(generate_deallocate_stack_instructions(stack_padding))
+        generate_deallocate_stack_instructions(stack_padding)
 
     cdef AsmOperand src = generate_register(REGISTER_KIND.get('Ax'))
     cdef AsmOperand dst = generate_operand(node.dst)

@@ -2,7 +2,7 @@ from ccc.abc_builtin_ast cimport copy_identifier
 
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
 from ccc.assembly_asm_ast cimport AsmInstruction, AsmImmInt, AsmImmLong, AsmMov, AsmMovSx, AsmPush, AsmCmp, AsmSetCC
-from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmAdd, AsmSub, AsmIdiv, AsmMult
+from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmMult
 from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData
 from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
@@ -126,9 +126,31 @@ cdef void replace_pseudo_registers(AsmInstruction node):
         replace_idiv_pseudo_registers(node)
 
 
+cdef AsmBinary allocate_stack_bytes(int32 byte):
+    cdef AsmBinaryOp binary_op = AsmSub()
+    cdef AssemblyType assembly_type = QuadWord()
+    cdef AsmOperand src = AsmImmInt(TInt(byte))
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
+    return AsmBinary(binary_op, assembly_type, src, dst)
+
+
+cdef AsmBinary deallocate_stack_bytes(int32 byte):
+    cdef AsmBinaryOp binary_op = AsmAdd()
+    cdef AssemblyType assembly_type = QuadWord()
+    cdef AsmOperand src = AsmImmInt(TInt(byte))
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
+    return AsmBinary(binary_op, assembly_type, src, dst)
+
+
 cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
-    cdef TInt value = TInt(-1 * counter)
-    instructions.insert(0, AsmAllocStack(value))
+    cdef int32 byte = -1 * counter
+
+    if byte % 8 != 0:
+
+        raise RuntimeError(
+            f"An error occurred in function stack allocation, stack alignment {byte} is not a multiple of 8")
+
+    instructions.insert(0, allocate_stack_bytes(byte))
 
 
 cdef void correct_function_top_level(AsmFunction node):
