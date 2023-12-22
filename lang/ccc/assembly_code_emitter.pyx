@@ -1,4 +1,5 @@
 from ccc.assembly_asm_ast cimport *
+from ccc.assembly_backend_symbol_table cimport LongWord, QuadWord
 
 from ccc.util_ctypes cimport int32
 from ccc.util_fopen cimport file_open_write, write_line, file_close_write
@@ -15,6 +16,11 @@ cdef str emit_int(TInt node):
     return str(node.int_t)
 
 
+cdef str emit_long(TLong node):
+    # long -> $ long
+    return str(node.long_t)
+
+
 cdef str emit_register_1byte(AsmReg node):
     # Reg(AX)  -> $ %al
     # Reg(DX)  -> $ %dl
@@ -25,6 +31,7 @@ cdef str emit_register_1byte(AsmReg node):
     # Reg(R9)  -> $ %r9b
     # Reg(R10) -> $ %r10b
     # Reg(R11) -> $ %r11b
+    # Reg(SP)  -> $ %rsp
     if isinstance(node, AsmAx):
         return "al"
     elif isinstance(node, AsmDx):
@@ -43,6 +50,8 @@ cdef str emit_register_1byte(AsmReg node):
         return "r10b"
     elif isinstance(node, AsmR11):
         return "r11b"
+    elif isinstance(node, AsmSp):
+        return "rsp"
     else:
 
         raise RuntimeError(
@@ -59,6 +68,7 @@ cdef str emit_register_4byte(AsmReg node):
     # Reg(R9)  -> $ %r9d
     # Reg(R10) -> $ %r10d
     # Reg(R11) -> $ %r11d
+    # Reg(SP)  -> $ %rsp
     if isinstance(node, AsmAx):
         return "eax"
     elif isinstance(node, AsmDx):
@@ -77,6 +87,8 @@ cdef str emit_register_4byte(AsmReg node):
         return "r10d"
     elif isinstance(node, AsmR11):
         return "r11d"
+    elif isinstance(node, AsmSp):
+        return "rsp"
     else:
 
         raise RuntimeError(
@@ -93,6 +105,7 @@ cdef str emit_register_8byte(AsmReg node):
     # Reg(R9)  -> $ %r9
     # Reg(R10) -> $ %r10
     # Reg(R11) -> $ %r11
+    # Reg(SP)  -> $ %rsp
     if isinstance(node, AsmAx):
         return "rax"
     elif isinstance(node, AsmDx):
@@ -111,6 +124,8 @@ cdef str emit_register_8byte(AsmReg node):
         return "r10"
     elif isinstance(node, AsmR11):
         return "r11"
+    elif isinstance(node, AsmSp):
+        return "rsp"
     else:
 
         raise RuntimeError(
@@ -142,14 +157,30 @@ cdef str emit_condition_code(AsmCondCode node):
             "An error occurred in code emission, not all nodes were visited")
 
 
+cdef str emit_instruction_suffix(AssemblyType node):
+    # LongWord -> $ l
+    # QuadWord -> $ q
+    if isinstance(node, LongWord):
+        return "l"
+    elif isinstance(node, QuadWord):
+        return "q"
+    else:
+
+        raise RuntimeError(
+            "An error occurred in code emission, not all nodes were visited")
+
+
 cdef str emit_operand(AsmOperand node, int32 byte):
     # Imm(int)         -> $ $<int>
     # Register(reg)    -> $ %reg
     # Stack(int)       -> $ <int>(%rbp)
     # Data(identifier) -> $ <identifier>(%rip)
     cdef str operand
-    if isinstance(node, AsmImm):
+    if isinstance(node, AsmImmInt):
         operand = emit_int(node.value)
+        return "$" + operand
+    elif isinstance(node, AsmImmLong):
+        operand = emit_long(node.value)
         return "$" + operand
     elif isinstance(node, AsmRegister):
         if byte == 1:
@@ -245,14 +276,10 @@ cdef void emit_mov_instructions(AsmMov node):
     emit(f"movl {src}, {dst}", 1)
 
 
-cdef void emit_alloc_stack_instructions(AsmAllocStack node):
-    cdef str value = emit_int(node.value)
-    emit(f"subq ${value}, %rsp", 1)
-
-
-cdef void emit_dealloc_stack_instructions(AsmDeallocateStack node):
-    cdef str value = emit_int(node.value)
-    emit(f"addq ${value}, %rsp", 1)
+cdef void emit_mov_sx_instructions(AsmMovSx node):
+    cdef str src = emit_operand(node.src, 4)
+    cdef str dst = emit_operand(node.dst, 4)
+    emit(f"movslq {src}, {dst}", 1)
 
 
 cdef void emit_push_instructions(AsmPush node):
@@ -312,7 +339,14 @@ cdef void emit_idiv_instructions(AsmIdiv node):
 
 
 cdef void emit_cdq_instructions(AsmCdq node):
-    emit("cdq", 1)
+    if isinstance(node.assembly_type, LongWord):
+        emit("cdq", 1)
+    elif isinstance(node.assembly_type, QuadWord):
+        emit("cdo", 1)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in code emission, not all nodes were visited")
 
 
 cdef void emit_instructions(AsmInstruction node):
@@ -320,8 +354,7 @@ cdef void emit_instructions(AsmInstruction node):
     #                                      $ popq %rbp
     #                                      $ ret
     # Mov(src, dst)                     -> $ movl <src>, <dst>
-    # AllocateStack(int)                -> $ subq $<int>, %rsp
-    # DeallocateStack(int)              -> $ addq $<int>, %rsp
+    # MovSx(src, dst)                   -> $ movslq <src>, <dst>
     # Push(operand)                     -> $ pushq <operand>
     # Call(label)                       -> $ call <label>@PLT
     # Label(label)                      -> $ .L<label>:
@@ -332,15 +365,14 @@ cdef void emit_instructions(AsmInstruction node):
     # Unary(unary_operator, operand)    -> $ <unary_operator> <operand>
     # Binary(binary_operator, src, dst) -> $ <binary_operator> <src>, <dst>
     # Idiv(operand)                     -> $ idivl <operand>
-    # Cdq                               -> $ cdq
+    # Cdq<l>                            -> $ cdq
+    # Cdq<q>                            -> $ cdo
     if isinstance(node, AsmRet):
         emit_ret_instructions(node)
     elif isinstance(node, AsmMov):
         emit_mov_instructions(node)
-    elif isinstance(node, AsmAllocStack):
-        emit_alloc_stack_instructions(node)
-    elif isinstance(node, AsmDeallocateStack):
-        emit_dealloc_stack_instructions(node)
+    elif isinstance(node, AsmMovSx):
+        emit_mov_sx_instructions(node)
     elif isinstance(node, AsmPush):
         emit_push_instructions(node)
     elif isinstance(node, AsmCall):
