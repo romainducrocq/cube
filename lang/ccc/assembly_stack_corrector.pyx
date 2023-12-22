@@ -173,7 +173,8 @@ cdef void correct_function_top_level(AsmFunction node):
             #     $ movl reg  , addr2
             src_src = node.instructions[i].src
             node.instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-            node.instructions.insert(k - 1, AsmMov(src_src, node.instructions[i].src))
+            node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
+                                                   src_src, node.instructions[i].src))
             count_insert += 1
 
         elif isinstance(node.instructions[i], AsmCmp) and \
@@ -183,7 +184,8 @@ cdef void correct_function_top_level(AsmFunction node):
             #     $ cmpl reg1, reg2
             src_src = node.instructions[i].dst
             node.instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-            node.instructions.insert(k - 1, AsmMov(src_src, node.instructions[i].dst))
+            node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
+                                                   src_src, node.instructions[i].dst))
             count_insert += 1
 
         elif isinstance(node.instructions[i], AsmBinary):
@@ -198,7 +200,8 @@ cdef void correct_function_top_level(AsmFunction node):
                 #     $ addl reg  , addr2
                 src_src = node.instructions[i].src
                 node.instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-                node.instructions.insert(k - 1, AsmMov(src_src, node.instructions[i].src))
+                node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
+                                                       src_src, node.instructions[i].src))
                 count_insert += 1
 
             elif isinstance(node.instructions[i].binary_op,
@@ -211,7 +214,8 @@ cdef void correct_function_top_level(AsmFunction node):
                 #     $ addl reg  , addr2
                 src_src = node.instructions[i].src
                 node.instructions[i].src = generate_register(REGISTER_KIND.get('Cx'))
-                node.instructions.insert(k - 1, AsmMov(src_src, node.instructions[i].src))
+                node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
+                                                       src_src, node.instructions[i].src))
                 count_insert += 1
 
             elif isinstance(node.instructions[i].binary_op, AsmMult) and \
@@ -223,8 +227,10 @@ cdef void correct_function_top_level(AsmFunction node):
                 #     $ movl  reg , addr
                 src_src = node.instructions[i].dst
                 node.instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-                node.instructions.insert(k - 1, AsmMov(src_src, node.instructions[i].dst))
-                node.instructions.insert(k + 1, AsmMov(node.instructions[i].dst, src_src))
+                node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
+                                                       src_src, node.instructions[i].dst))
+                node.instructions.insert(k + 1, AsmMov(node.instructions[i].assembly_type,
+                                                       node.instructions[i].dst, src_src))
                 count_insert += 2
 
         elif isinstance(node.instructions[i], AsmIdiv) and \
@@ -235,7 +241,8 @@ cdef void correct_function_top_level(AsmFunction node):
             #     $ idivl reg
             src_src = node.instructions[i].src
             node.instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-            node.instructions.insert(k - 1, AsmMov(src_src, node.instructions[i].src))
+            node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
+                                                   src_src, node.instructions[i].src))
             count_insert += 1
 
     prepend_alloc_stack(node.instructions)
