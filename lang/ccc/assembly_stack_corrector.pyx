@@ -8,7 +8,7 @@ from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLef
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_backend_symbol_table cimport backend_symbol_table, AssemblyType, LongWord, QuadWord
 
-from ccc.util_ctypes cimport int32
+from ccc.util_ctypes cimport int32, is_int32_overflow
 
 
 cdef int32 OFFSET_LONG_WORD = -4
@@ -142,7 +142,10 @@ cdef AsmBinary deallocate_stack_bytes(int32 byte):
     return AsmBinary(binary_op, assembly_type, src, dst)
 
 
-cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
+cdef list[AsmInstruction] instructions = []
+
+
+cdef void prepend_alloc_stack():
     cdef int32 byte = -1 * counter
 
     if byte % 8 != 0:
@@ -153,99 +156,141 @@ cdef void prepend_alloc_stack(list[AsmInstruction] instructions):
     instructions.insert(0, allocate_stack_bytes(byte))
 
 
+cdef void correct_mov_cmp_from_addr_to_addr_instruction(Py_ssize_t i, Py_ssize_t k):
+    # mov | cmp (addr, addr)
+    # $ movl addr1, addr2 ->
+    #     $ movl addr1, reg
+    #     $ movl reg  , addr2
+    global instructions
+
+    cdef AsmOperand src_src = instructions[i].src
+    instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
+    instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
+                                      src_src, instructions[i].src))
+
+
+cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
+    # cmp (_, imm)
+    # $ cmpl reg1, imm ->
+    #     $ movl imm , reg2
+    #     $ cmpl reg1, reg2
+    global instructions
+
+    cdef AsmOperand src_dst = instructions[i].dst
+    instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
+    instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
+                                      src_dst, instructions[i].dst))
+
+
+cdef void correct_add_sub_and_or_xor_from_addr_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
+    # add | sub | and | or | xor (addr, addr)
+    # $ addl addr1, addr2 ->
+    #     $ movl addr1, reg
+    #     $ addl reg  , addr2
+    global instructions
+
+    cdef AsmOperand src_src = instructions[i].src
+    instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
+    instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
+                                      src_src, instructions[i].src))
+
+
+cdef void correct_shl_shr_from_addr_to_addr(Py_ssize_t i, Py_ssize_t k):
+    # shl | shr (addr, addr)
+    # $ addl addr1, addr2 ->
+    #     $ movl addr1, reg
+    #     $ addl reg  , addr2
+    global instructions
+
+    cdef AsmOperand src_src = instructions[i].src
+    instructions[i].src = generate_register(REGISTER_KIND.get('Cx'))
+    instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
+                                      src_src, instructions[i].src))
+
+
+cdef void correct_mul_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
+    # mul (_, addr)
+    # $ imull imm, addr ->
+    #     $ movl  addr, reg
+    #     $ imull imm , reg
+    #     $ movl  reg , addr
+    global instructions
+
+    cdef AsmOperand src_src = instructions[i].dst
+    cdef AsmOperand dst_dst = instructions[i].dst
+    instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
+    instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
+                                      src_src, instructions[i].dst))
+    instructions.insert(k + 1, AsmMov(instructions[i].assembly_type,
+                                      instructions[i].dst, dst_dst))
+
+
+cdef void correct_div_from_imm(Py_ssize_t i, Py_ssize_t k):
+    # idiv (imm)
+    # $ idivl imm ->
+    #     $ movl  imm, reg
+    #     $ idivl reg
+    global instructions
+
+    cdef AsmOperand src_src = instructions[i].src
+    instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
+    instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
+                                      src_src, instructions[i].src))
+
+
 cdef void correct_function_top_level(AsmFunction node):
+    global instructions
+    instructions = node.instructions
+
     cdef Py_ssize_t i, k
     cdef Py_ssize_t instruction
     cdef Py_ssize_t count_insert = 0
-    cdef Py_ssize_t l = len(node.instructions)
+    cdef Py_ssize_t l = len(instructions)
     cdef AsmOperand src_src
-    for instruction in range(len(node.instructions)):
+    for instruction in range(l):
         k = l - instruction
         i = - (instruction + 1 + count_insert)
-        replace_pseudo_registers(node.instructions[i])
 
-        if isinstance(node.instructions[i], (AsmMov, AsmCmp)) and \
-                isinstance(node.instructions[i].src, (AsmStack, AsmData)) and \
-                isinstance(node.instructions[i].dst, (AsmStack, AsmData)):
-            # mov | cmp (addr, addr)
-            # $ movl addr1, addr2 ->
-            #     $ movl addr1, reg
-            #     $ movl reg  , addr2
-            src_src = node.instructions[i].src
-            node.instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-            node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
-                                                   src_src, node.instructions[i].src))
+        replace_pseudo_registers(instructions[i])
+
+        if isinstance(instructions[i], (AsmMov, AsmCmp)) and \
+                isinstance(instructions[i].src, (AsmStack, AsmData)) and \
+                isinstance(instructions[i].dst, (AsmStack, AsmData)):
+            correct_mov_cmp_from_addr_to_addr_instruction(i, k)
             count_insert += 1
 
-        elif isinstance(node.instructions[i], AsmCmp) and \
-                isinstance(node.instructions[i].dst, (AsmImmInt, AsmImmLong)):
-            # $ cmpl reg1, imm ->
-            #     $ movl imm , reg2
-            #     $ cmpl reg1, reg2
-            src_src = node.instructions[i].dst
-            node.instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-            node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
-                                                   src_src, node.instructions[i].dst))
+        elif isinstance(instructions[i], AsmCmp) and \
+                isinstance(instructions[i].dst, (AsmImmInt, AsmImmLong)):
+            correct_cmp_from_any_to_imm_instructions(i, k)
             count_insert += 1
 
-        elif isinstance(node.instructions[i], AsmBinary):
+        elif isinstance(instructions[i], AsmBinary):
 
-            if (isinstance(node.instructions[i].binary_op,
+            if (isinstance(instructions[i].binary_op,
                            (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)) and \
-                    isinstance(node.instructions[i].src, (AsmStack, AsmData)) and \
-                    isinstance(node.instructions[i].dst, (AsmStack, AsmData))):
-                # add | sub | and | or | xor (addr, addr)
-                # $ addl addr1, addr2 ->
-                #     $ movl addr1, reg
-                #     $ addl reg  , addr2
-                src_src = node.instructions[i].src
-                node.instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-                node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
-                                                       src_src, node.instructions[i].src))
+                    isinstance(instructions[i].src, (AsmStack, AsmData)) and \
+                    isinstance(instructions[i].dst, (AsmStack, AsmData))):
+                correct_add_sub_and_or_xor_from_addr_to_addr_instructions(i, k)
                 count_insert += 1
 
-            elif isinstance(node.instructions[i].binary_op,
+            elif isinstance(instructions[i].binary_op,
                             (AsmBitShiftLeft, AsmBitShiftRight)) and \
-                    isinstance(node.instructions[i].src, (AsmStack, AsmData)) and \
-                    isinstance(node.instructions[i].dst, (AsmStack, AsmData)):
-                # shl | shr (addr, addr)
-                # $ addl addr1, addr2 ->
-                #     $ movl addr1, reg
-                #     $ addl reg  , addr2
-                src_src = node.instructions[i].src
-                node.instructions[i].src = generate_register(REGISTER_KIND.get('Cx'))
-                node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
-                                                       src_src, node.instructions[i].src))
+                    isinstance(instructions[i].src, (AsmStack, AsmData)) and \
+                    isinstance(instructions[i].dst, (AsmStack, AsmData)):
+                correct_shl_shr_from_addr_to_addr(i, k)
                 count_insert += 1
 
-            elif isinstance(node.instructions[i].binary_op, AsmMult) and \
-                    isinstance(node.instructions[i].dst, (AsmStack, AsmData)):
-                # mul (_, addr)
-                # $ imull imm, addr ->
-                #     $ movl  addr, reg
-                #     $ imull imm , reg
-                #     $ movl  reg , addr
-                src_src = node.instructions[i].dst
-                node.instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-                node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
-                                                       src_src, node.instructions[i].dst))
-                node.instructions.insert(k + 1, AsmMov(node.instructions[i].assembly_type,
-                                                       node.instructions[i].dst, src_src))
+            elif isinstance(instructions[i].binary_op, AsmMult) and \
+                    isinstance(instructions[i].dst, (AsmStack, AsmData)):
+                correct_mul_from_any_to_addr(i, k)
                 count_insert += 2
 
-        elif isinstance(node.instructions[i], AsmIdiv) and \
-                isinstance(node.instructions[i].src, (AsmImmInt, AsmImmLong)):
-            # idiv (imm)
-            # $ idivl imm ->
-            #     $ movl  imm, reg
-            #     $ idivl reg
-            src_src = node.instructions[i].src
-            node.instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-            node.instructions.insert(k - 1, AsmMov(node.instructions[i].assembly_type,
-                                                   src_src, node.instructions[i].src))
+        elif isinstance(instructions[i], AsmIdiv) and \
+                isinstance(instructions[i].src, (AsmImmInt, AsmImmLong)):
+            correct_div_from_imm(i, k)
             count_insert += 1
 
-    prepend_alloc_stack(node.instructions)
+    prepend_alloc_stack()
 
 
 cdef void correct_variable_stack_top_level(AsmStaticVariable node):
