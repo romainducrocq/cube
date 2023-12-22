@@ -225,14 +225,43 @@ cdef void correct_div_from_imm(Py_ssize_t i, Py_ssize_t k):
                                       src_src, instructions[i].src))
 
 
-
-cdef void correct_mov_cmp_push_add_sub_mul_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
+cdef void correct_any_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
+    # mov | cmp | push | add | sub | mul (quad_word imm, _)
+    # $ movl quad_word imm, _ ->
+    #     $ movl quad_word imm, reg
+    #     $ movl reg          , _
     global instructions
 
     cdef AsmOperand src_src = instructions[i].src
     instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
     instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
                                       src_src, instructions[i].src))
+
+
+cdef bint is_from_long_imm_instruction(Py_ssize_t i):
+    return isinstance(instructions[i].src, AsmImmLong) and \
+           is_int32_overflow(instructions[i].src.value.long_t)
+
+
+cdef bint is_from_imm_instruction(Py_ssize_t i):
+    return isinstance(instructions[i].src, (AsmImmInt, AsmImmLong))
+
+
+cdef bint is_to_imm_instruction(Py_ssize_t i):
+    return isinstance(instructions[i].dst, (AsmImmInt, AsmImmLong))
+
+
+cdef bint is_from_addr_instruction(Py_ssize_t i):
+    return isinstance(instructions[i].src, (AsmStack, AsmData))
+
+
+cdef bint is_to_addr_instruction(Py_ssize_t i):
+    return isinstance(instructions[i].dst, (AsmStack, AsmData))
+
+
+cdef bint is_from_addr_to_addr_instruction(Py_ssize_t i):
+    return is_from_addr_instruction(i) and \
+           is_to_addr_instruction(i)
 
 
 cdef void correct_function_top_level(AsmFunction node):
@@ -251,44 +280,67 @@ cdef void correct_function_top_level(AsmFunction node):
         replace_pseudo_registers(instructions[i])
 
         if isinstance(instructions[i], AsmMov):
-            if isinstance(instructions[i].src, (AsmStack, AsmData)) and \
-               isinstance(instructions[i].dst, (AsmStack, AsmData)):
+            if is_from_long_imm_instruction(i):
+                correct_any_from_quad_word_imm_to_any(i, k)
+                count_insert += 1
+
+            if is_from_addr_to_addr_instruction(i):
                 correct_any_from_addr_to_addr_instruction(i, k)
                 count_insert += 1
 
         elif isinstance(instructions[i], AsmCmp):
-            if isinstance(instructions[i].src, (AsmStack, AsmData)) and \
-               isinstance(instructions[i].dst, (AsmStack, AsmData)):
+            if is_from_long_imm_instruction(i):
+                correct_any_from_quad_word_imm_to_any(i, k)
+                count_insert += 1
+
+            if is_from_addr_to_addr_instruction(i):
                 correct_any_from_addr_to_addr_instruction(i, k)
                 count_insert += 1
 
-            elif isinstance(instructions[i].dst, (AsmImmInt, AsmImmLong)):
+            elif is_to_imm_instruction(i):
                 correct_cmp_from_any_to_imm_instructions(i, k)
+                count_insert += 1
+
+        elif isinstance(instructions[i], AsmPush):
+            if is_from_long_imm_instruction(i):
+                correct_any_from_quad_word_imm_to_any(i, k)
                 count_insert += 1
 
         elif isinstance(instructions[i], AsmBinary):
 
             if isinstance(instructions[i].binary_op,
-                          (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)):
-                if isinstance(instructions[i].src, (AsmStack, AsmData)) and \
-                   isinstance(instructions[i].dst, (AsmStack, AsmData)):
+                          (AsmAdd, AsmSub)):
+                if is_from_long_imm_instruction(i):
+                    correct_any_from_quad_word_imm_to_any(i, k)
+                    count_insert += 1
+
+                if is_from_addr_to_addr_instruction(i):
+                    correct_any_from_addr_to_addr_instruction(i, k)
+                    count_insert += 1
+
+            elif isinstance(instructions[i].binary_op,
+                            (AsmBitAnd, AsmBitOr, AsmBitXor)):
+                if is_from_addr_to_addr_instruction(i):
                     correct_any_from_addr_to_addr_instruction(i, k)
                     count_insert += 1
 
             elif isinstance(instructions[i].binary_op,
                             (AsmBitShiftLeft, AsmBitShiftRight)):
-                if isinstance(instructions[i].src, (AsmStack, AsmData)) and \
-                   isinstance(instructions[i].dst, (AsmStack, AsmData)):
+                if is_from_addr_to_addr_instruction(i):
                     correct_shl_shr_from_addr_to_addr(i, k)
                     count_insert += 1
 
             elif isinstance(instructions[i].binary_op, AsmMult):
-                if isinstance(instructions[i].dst, (AsmStack, AsmData)):
+                if is_from_long_imm_instruction(i):
+                    correct_any_from_quad_word_imm_to_any(i, k)
+                    count_insert += 1
+
+                if is_to_addr_instruction(i):
                     correct_mul_from_any_to_addr(i, k)
                     count_insert += 2
 
         elif isinstance(instructions[i], AsmIdiv):
-            if isinstance(instructions[i].src, (AsmImmInt, AsmImmLong)):
+            if is_from_imm_instruction(i):
                 correct_div_from_imm(i, k)
                 count_insert += 1
 
