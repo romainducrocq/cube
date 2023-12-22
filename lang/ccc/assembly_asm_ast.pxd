@@ -1,5 +1,7 @@
 from ccc.parser_c_ast cimport AST, TIdentifier, TInt, TLong, StaticInit
 
+from ccc.assembly_backend_symbol_table cimport AssemblyType
+
 
 cdef class AsmReg(AST):
     pass
@@ -149,24 +151,12 @@ cdef class AsmNeg(AsmUnaryOp):
     pass
 
 
-cdef class AsmAssemblyType(AST):
-    pass
-
-
-cdef class AsmLongWord(AsmAssemblyType):
-    pass
-
-
-cdef class AsmQuadWord(AsmAssemblyType):
-    pass
-
-
 cdef class AsmInstruction(AST):
     pass
 
 
 cdef class AsmMov(AsmInstruction):
-    cdef public AsmAssemblyType assembly_type
+    cdef public AssemblyType assembly_type
     cdef public AsmOperand src
     cdef public AsmOperand dst
 
@@ -178,30 +168,30 @@ cdef class AsmMovSx(AsmInstruction):
 
 cdef class AsmUnary(AsmInstruction):
     cdef public AsmUnaryOp unary_op
-    cdef public AsmAssemblyType assembly_type
+    cdef public AssemblyType assembly_type
     cdef public AsmOperand dst
 
 
 cdef class AsmBinary(AsmInstruction):
     cdef public AsmBinaryOp binary_op
-    cdef public AsmAssemblyType assembly_type
+    cdef public AssemblyType assembly_type
     cdef public AsmOperand src
     cdef public AsmOperand dst
 
 
 cdef class AsmCmp(AsmInstruction):
-    cdef public AsmAssemblyType assembly_type
+    cdef public AssemblyType assembly_type
     cdef public AsmOperand src
     cdef public AsmOperand dst
 
 
 cdef class AsmIdiv(AsmInstruction):
-    cdef public AsmAssemblyType assembly_type
+    cdef public AssemblyType assembly_type
     cdef public AsmOperand src
 
 
 cdef class AsmCdq(AsmInstruction):
-    cdef public AsmAssemblyType assembly_type
+    cdef public AssemblyType assembly_type
 
 
 cdef class AsmJmp(AsmInstruction):

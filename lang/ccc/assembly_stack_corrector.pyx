@@ -1,19 +1,20 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
-from ccc.semantic_type_checker cimport symbol_table
-from ccc.semantic_symbol_table cimport StaticAttr
+from ccc.semantic_symbol_table cimport Type, Int, Long
 
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
-from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmPush, AsmCmp, AsmSetCC
+from ccc.assembly_asm_ast cimport AsmInstruction, AsmImmInt, AsmImmLong, AsmMov, AsmMovSx, AsmPush, AsmCmp, AsmSetCC
 from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmAdd, AsmSub, AsmIdiv, AsmMult
-from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData, AsmAllocStack
+from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData
 from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
+from ccc.assembly_backend_symbol_table cimport backend_symbol_table
 
 from ccc.util_ctypes cimport int32
 
 
-cdef int32 OFFSET = -4
+cdef int32 OFFSET_INT = -4
+cdef int32 OFFSET_LONG = -8
 cdef int32 counter = -1
 cdef dict[str, int32] pseudo_map = {}
 
@@ -28,21 +29,36 @@ cdef AsmStack replace_pseudo_register_stack(AsmPseudo node):
     return AsmStack(value)
 
 
-cdef AsmOperand replace_operand_pseudo_register(AsmPseudo node):
+cdef void allocate_offset_pseudo_register(Type assembly_type):
     global counter
+
+    if isinstance(assembly_type, Int):
+        counter += OFFSET_INT
+    elif isinstance(assembly_type, Long):
+        counter += OFFSET_LONG
+
+
+cdef AsmOperand replace_operand_pseudo_register(AsmPseudo node):
     global pseudo_map
 
     if node.name.str_t not in pseudo_map:
-        if node.name.str_t in symbol_table and \
-           isinstance(symbol_table[node.name.str_t].attrs, StaticAttr):
+        if node.name.str_t in backend_symbol_table and \
+           backend_symbol_table[node.name.str_t].is_static:
             return replace_pseudo_register_data(node)
         else:
-            counter += OFFSET
+            allocate_offset_pseudo_register(backend_symbol_table[node.name.str_t].assembly_type)
             pseudo_map[node.name.str_t] = counter
     return replace_pseudo_register_stack(node)
 
 
 cdef void replace_mov_pseudo_registers(AsmMov node):
+    if isinstance(node.src, AsmPseudo):
+        node.src = replace_operand_pseudo_register(node.src)
+    if isinstance(node.dst, AsmPseudo):
+        node.dst = replace_operand_pseudo_register(node.dst)
+
+
+cdef void replace_mov_sx_pseudo_registers(AsmMovSx node):
     if isinstance(node.src, AsmPseudo):
         node.src = replace_operand_pseudo_register(node.src)
     if isinstance(node.dst, AsmPseudo):
@@ -86,6 +102,8 @@ cdef void replace_idiv_pseudo_registers(AsmIdiv node):
 cdef void replace_pseudo_registers(AsmInstruction node):
     if isinstance(node, AsmMov):
         replace_mov_pseudo_registers(node)
+    elif isinstance(node, AsmMovSx):
+        replace_mov_sx_pseudo_registers(node)
     elif isinstance(node, AsmPush):
         replace_push_pseudo_registers(node)
     elif isinstance(node, AsmCmp):
@@ -129,7 +147,7 @@ cdef void correct_function_top_level(AsmFunction node):
             count_insert += 1
 
         elif isinstance(node.instructions[i], AsmCmp) and \
-                isinstance(node.instructions[i].dst, AsmImm):
+                isinstance(node.instructions[i].dst, (AsmImmInt, AsmImmLong)):
             # $ cmpl reg1, imm ->
             #     $ movl imm , reg2
             #     $ cmpl reg1, reg2
@@ -180,7 +198,7 @@ cdef void correct_function_top_level(AsmFunction node):
                 count_insert += 2
 
         elif isinstance(node.instructions[i], AsmIdiv) and \
-                isinstance(node.instructions[i].src, AsmImm):
+                isinstance(node.instructions[i].src, (AsmImmInt, AsmImmLong)):
             # idiv (imm)
             # $ idivl imm ->
             #     $ movl  imm, reg

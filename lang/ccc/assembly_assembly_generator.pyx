@@ -1,11 +1,12 @@
 from ccc.abc_builtin_ast cimport copy_identifier, copy_int, copy_long
 
-from ccc.parser_c_ast cimport symbol_table, Int, Long, CConstInt, CConstLong
+from ccc.parser_c_ast cimport Int, Long, CConstInt, CConstLong
 from ccc.intermediate_tac_ast cimport *
 
 from ccc.assembly_asm_ast cimport *
+from ccc.assembly_backend_symbol_table cimport AssemblyType, LongWord, QuadWord
+from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, convert_symbol_table
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-from ccc.assembly_convert_symbol_table cimport convert_symbol_table
 # from ccc.assembly_stack_corrector cimport correct_stack
 
 from ccc.util_ctypes cimport int32
@@ -116,33 +117,22 @@ cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
             "An error occurred in assembly generation, not all nodes were visited")
 
 
-cdef AsmAssemblyType generate_constant_assembly_type(TacConstant node):
+cdef AssemblyType generate_constant_assembly_type(TacConstant node):
     if isinstance(node.constant, CConstInt):
-        return AsmLongWord()
+        return LongWord()
     elif isinstance(node.constant, CConstLong):
-        return AsmQuadWord()
+        return QuadWord()
     else:
 
         raise RuntimeError(
             "An error occurred in assembly generation, not all nodes were visited")
 
 
-cdef AsmAssemblyType generate_identifier_assembly_type(TIdentifier name):
-    if isinstance(symbol_table[name.str_t].type_t, Int):
-        return AsmLongWord()
-    elif isinstance(symbol_table[name.str_t].type_t, Long):
-        return AsmQuadWord()
-    else:
-
-        raise RuntimeError(
-            "An error occurred in assembly generation, not all nodes were visited")
+cdef AssemblyType generate_variable_assembly_type(TacVariable node):
+    return convert_backend_assembly_type(node.name.str_t)
 
 
-cdef AsmAssemblyType generate_variable_assembly_type(TacVariable node):
-    return generate_identifier_assembly_type(node.name)
-
-
-cdef AsmAssemblyType generate_assembly_type(TacValue node):
+cdef AssemblyType generate_assembly_type(TacValue node):
     if isinstance(node, TacConstant):
         return generate_constant_assembly_type(node)
     elif isinstance(node, TacVariable):
@@ -155,7 +145,7 @@ cdef AsmAssemblyType generate_assembly_type(TacValue node):
 
 cdef void generate_allocate_stack_instructions(int32 byte):
     cdef AsmBinaryOp binary_op = AsmSub()
-    cdef AsmAssemblyType assembly_type = AsmQuadWord()
+    cdef AssemblyType assembly_type = QuadWord()
     cdef AsmOperand src = AsmImmInt(TInt(byte))
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
     instructions.append(AsmBinary(binary_op, assembly_type, src, dst))
@@ -163,7 +153,7 @@ cdef void generate_allocate_stack_instructions(int32 byte):
 
 cdef void generate_deallocate_stack_instructions(int32 byte):
     cdef AsmBinaryOp binary_op = AsmAdd()
-    cdef AsmAssemblyType assembly_type = AsmQuadWord()
+    cdef AssemblyType assembly_type = QuadWord()
     cdef AsmOperand src = AsmImmInt(TInt(byte))
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
     instructions.append(AsmBinary(binary_op, assembly_type, src, dst))
@@ -176,15 +166,15 @@ cdef list[str] arg_registers = ["Di", "Si", "Dx", "Cx", "R8", "R9"]
 cdef void generate_reg_arg_fun_call_instructions(TacValue node, Py_ssize_t arg):
     cdef AsmOperand src = generate_operand(node)
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get(arg_registers[arg]))
-    cdef AsmAssemblyType assembly_type = generate_assembly_type(node)
+    cdef AssemblyType assembly_type = generate_assembly_type(node)
     instructions.append(AsmMov(assembly_type, src, dst))
 
 
 cdef void generate_stack_arg_fun_call_instructions(TacValue node):
     cdef AsmOperand src = generate_operand(node)
-    cdef AsmAssemblyType assembly_type = generate_assembly_type(node)
+    cdef AssemblyType assembly_type = generate_assembly_type(node)
     if isinstance(src, (AsmRegister, AsmImmInt, AsmImmLong)) or \
-       isinstance(assembly_type, AsmQuadWord):
+       isinstance(assembly_type, QuadWord):
         instructions.append(AsmPush(src))
         return
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Ax'))
@@ -215,7 +205,7 @@ cdef void generate_fun_call_instructions(TacFunCall node):
 
     cdef AsmOperand src = generate_register(REGISTER_KIND.get('Ax'))
     cdef AsmOperand dst = generate_operand(node.dst)
-    cdef AsmAssemblyType assembly_type_dst = generate_assembly_type(node.dst)
+    cdef AssemblyType assembly_type_dst = generate_assembly_type(node.dst)
     instructions.append(AsmMov(assembly_type_dst, src, dst))
 
 
@@ -228,7 +218,7 @@ cdef void generate_sign_extend_instructions(TacSignExtend node):
 cdef void generate_truncate_instructions(TacTruncate node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
-    cdef AsmAssemblyType assembly_type_src = AsmLongWord()
+    cdef AssemblyType assembly_type_src = LongWord()
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 
@@ -245,7 +235,7 @@ cdef void generate_jump_instructions(TacJump node):
 cdef void generate_return_instructions(TacReturn node):
     cdef AsmOperand src = generate_operand(node.val)
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Ax'))
-    cdef AsmAssemblyType assembly_type_val = generate_assembly_type(node.val)
+    cdef AssemblyType assembly_type_val = generate_assembly_type(node.val)
     instructions.append(AsmMov(assembly_type_val, src, dst))
     instructions.append(AsmRet())
 
@@ -253,7 +243,7 @@ cdef void generate_return_instructions(TacReturn node):
 cdef void generate_copy_instructions(TacCopy node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
-    cdef AsmAssemblyType assembly_type_src = generate_assembly_type(node.src)
+    cdef AssemblyType assembly_type_src = generate_assembly_type(node.src)
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 
@@ -262,7 +252,7 @@ cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
     cdef AsmCondCode cond_code = generate_condition_code(TacEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
-    cdef AsmAssemblyType assembly_type_cond = generate_assembly_type(node.condition)
+    cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
     instructions.append(AsmCmp(assembly_type_cond, imm_zero, condition))
     instructions.append(AsmJmpCC(cond_code, target))
 
@@ -272,7 +262,7 @@ cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
     cdef AsmCondCode cond_code = generate_condition_code(TacNotEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
-    cdef AsmAssemblyType assembly_type_cond = generate_assembly_type(node.condition)
+    cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
     instructions.append(AsmCmp(assembly_type_cond, imm_zero, condition))
     instructions.append(AsmJmpCC(cond_code, target))
 
@@ -282,8 +272,8 @@ cdef void generate_unary_operator_conditional_instructions(TacUnary node):
     cdef cond_code = generate_condition_code(TacEqual())
     cdef src = generate_operand(node.src)
     cdef cmp_dst = generate_operand(node.dst)
-    cdef AsmAssemblyType assembly_type_src = generate_assembly_type(node.src)
-    cdef AsmAssemblyType assembly_type_dst = generate_assembly_type(node.dst)
+    cdef AssemblyType assembly_type_src = generate_assembly_type(node.src)
+    cdef AssemblyType assembly_type_dst = generate_assembly_type(node.dst)
     instructions.append(AsmCmp(assembly_type_src, imm_zero, src))
     instructions.append(AsmMov(assembly_type_dst, imm_zero, cmp_dst))
     instructions.append(AsmSetCC(cond_code, cmp_dst))
@@ -293,7 +283,7 @@ cdef void generate_unary_operator_arithmetic_instructions(TacUnary node):
     cdef AsmUnaryOp unary_op = generate_unary_op(node.unary_op)
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand src_dst = generate_operand(node.dst)
-    cdef AsmAssemblyType assembly_type_src = generate_assembly_type(node.src)
+    cdef AssemblyType assembly_type_src = generate_assembly_type(node.src)
     instructions.append(AsmMov(assembly_type_src, src, src_dst))
     instructions.append(AsmUnary(unary_op, assembly_type_src, src_dst))
 
@@ -304,8 +294,8 @@ cdef void generate_binary_operator_conditional_instructions(TacBinary node):
     cdef src1 = generate_operand(node.src1)
     cdef src2 = generate_operand(node.src2)
     cdef cmp_dst = generate_operand(node.dst)
-    cdef AsmAssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
-    cdef AsmAssemblyType assembly_type_dst = generate_assembly_type(node.dst)
+    cdef AssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
+    cdef AssemblyType assembly_type_dst = generate_assembly_type(node.dst)
     instructions.append(AsmCmp(assembly_type_src1, src2, src1))
     instructions.append(AsmMov(assembly_type_dst, imm_zero, cmp_dst))
     instructions.append(AsmSetCC(cond_code, cmp_dst))
@@ -316,7 +306,7 @@ cdef void generate_binary_operator_arithmetic_instructions(TacBinary node):
     cdef AsmOperand src1 = generate_operand(node.src1)
     cdef AsmOperand src2 = generate_operand(node.src2)
     cdef AsmOperand src1_dst = generate_operand(node.dst)
-    cdef AsmAssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
+    cdef AssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
     instructions.append(AsmMov(assembly_type_src1, src1, src1_dst))
     instructions.append(AsmBinary(binary_op, assembly_type_src1, src2, src1_dst))
 
@@ -327,7 +317,7 @@ cdef void generate_binary_operator_arithmetic_divide_instructions(TacBinary node
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AsmOperand src1_dst = generate_register(REGISTER_KIND.get('Ax'))
     cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Ax'))
-    cdef AsmAssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
+    cdef AssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
     instructions.append(AsmMov(assembly_type_src1, src1, src1_dst))
     instructions.append(AsmCdq(assembly_type_src1))
     instructions.append(AsmIdiv(assembly_type_src1, src2))
@@ -340,7 +330,7 @@ cdef void generate_binary_operator_arithmetic_remainder_instructions(TacBinary n
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AsmOperand src1_dst = generate_register(REGISTER_KIND.get('Ax'))
     cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Dx'))
-    cdef AsmAssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
+    cdef AssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
     instructions.append(AsmMov(assembly_type_src1, src1, src1_dst))
     instructions.append(AsmCdq(assembly_type_src1))
     instructions.append(AsmIdiv(assembly_type_src1, src2))
@@ -412,7 +402,7 @@ cdef void generate_reg_param_function_instructions(TIdentifier node, Py_ssize_t 
     cdef AsmOperand src = generate_register(REGISTER_KIND.get(arg_registers[param]))
     cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
-    cdef AsmAssemblyType assembly_type_param = generate_identifier_assembly_type(node)
+    cdef AssemblyType assembly_type_param = convert_backend_assembly_type(node.str_t)
     instructions.append(AsmMov(assembly_type_param, src, dst))
 
 
@@ -420,7 +410,7 @@ cdef void generate_stack_param_function_instructions(TIdentifier node, int32 par
     cdef AsmOperand src = AsmStack(TInt((param - 4) * 8))
     cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
-    cdef AsmAssemblyType assembly_type_param = generate_identifier_assembly_type(node)
+    cdef AssemblyType assembly_type_param = convert_backend_assembly_type(node.str_t)
     instructions.append(AsmMov(assembly_type_param, src, dst))
 
 

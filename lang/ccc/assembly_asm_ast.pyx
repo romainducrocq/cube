@@ -1,5 +1,6 @@
 from ccc.parser_c_ast cimport AST, TIdentifier, TInt, TLong, StaticInit
 
+from ccc.assembly_backend_symbol_table cimport AssemblyType
 
 
 cdef class AsmReg(AST):
@@ -191,7 +192,6 @@ cdef class AsmData(AsmOperand):
         self.name = name
 
 
-
 cdef class AsmBinaryOp(AST):
     # binary_operator = Add
     #                 | Sub
@@ -272,25 +272,6 @@ cdef class AsmNeg(AsmUnaryOp):
         self._fields = ()
 
 
-cdef class AsmAssemblyType(AST):
-    # assembly_type = LongWord
-    #               | QuadWord
-    def __cinit__(self):
-        self._fields = ()
-
-
-cdef class AsmLongWord(AsmAssemblyType):
-    # LongWord
-    def __cinit__(self):
-        self._fields = ()
-
-
-cdef class AsmQuadWord(AsmAssemblyType):
-    # QuadWord
-    def __cinit__(self):
-        self._fields = ()
-
-
 cdef class AsmInstruction(AST):
     # instruction = Mov(assembly_type, operand src, operand dst)
     #             | MovSx(operand src, operand dst)
@@ -317,7 +298,7 @@ cdef class AsmMov(AsmInstruction):
     def __cinit__(self):
         self._fields = ('assembly_type', 'src', 'dst')
 
-    def __init__(self, AsmAssemblyType assembly_type, AsmOperand src, AsmOperand dst):
+    def __init__(self, AssemblyType assembly_type, AsmOperand src, AsmOperand dst):
         self.assembly_type = assembly_type
         self.src = src
         self.dst = dst
@@ -338,7 +319,7 @@ cdef class AsmUnary(AsmInstruction):
     def __cinit__(self):
         self._fields = ('unary_op', 'assembly_type', 'dst')
 
-    def __init__(self, AsmUnaryOp unary_op, AsmAssemblyType assembly_type, AsmOperand dst):
+    def __init__(self, AsmUnaryOp unary_op, AssemblyType assembly_type, AsmOperand dst):
         self.unary_op = unary_op
         self.assembly_type = assembly_type
         self.dst = dst
@@ -349,7 +330,7 @@ cdef class AsmBinary(AsmInstruction):
     def __cinit__(self):
         self._fields = ('binary_op', 'assembly_type', 'src', 'dst')
 
-    def __init__(self, AsmBinaryOp binary_op, AsmAssemblyType assembly_type, AsmOperand src, AsmOperand dst):
+    def __init__(self, AsmBinaryOp binary_op, AssemblyType assembly_type, AsmOperand src, AsmOperand dst):
         self.binary_op = binary_op
         self.assembly_type = assembly_type
         self.src = src
@@ -361,7 +342,7 @@ cdef class AsmCmp(AsmInstruction):
     def __cinit__(self):
         self._fields = ('assembly_type', 'src', 'dst')
 
-    def __init__(self, AsmAssemblyType assembly_type, AsmOperand src, AsmOperand dst):
+    def __init__(self, AssemblyType assembly_type, AsmOperand src, AsmOperand dst):
         self.assembly_type = assembly_type
         self.src = src
         self.dst = dst
@@ -372,7 +353,7 @@ cdef class AsmIdiv(AsmInstruction):
     def __cinit__(self):
         self._fields = ('assembly_type', 'src')
 
-    def __init__(self, AsmAssemblyType assembly_type, AsmOperand src):
+    def __init__(self, AssemblyType assembly_type, AsmOperand src):
         self.assembly_type = assembly_type
         self.src = src
 
@@ -382,7 +363,7 @@ cdef class AsmCdq(AsmInstruction):
     def __cinit__(self):
         self._fields = ('assembly_type',)
 
-    def __init__(self, AsmAssemblyType assembly_type):
+    def __init__(self, AssemblyType assembly_type):
         self.assembly_type = assembly_type
 
 
