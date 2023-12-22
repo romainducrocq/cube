@@ -186,11 +186,13 @@ cdef str emit_type_instruction_suffix(AssemblyType node):
 
 
 cdef str emit_operand(AsmOperand node, int32 byte):
-    # Imm(int)         -> $ $<int>
+    # ImmInt(int)      -> $ $<int>
+    # ImmLong(long)    -> $ $<long>
     # Register(reg)    -> $ %reg
     # Stack(int)       -> $ <int>(%rbp)
     # Data(identifier) -> $ <identifier>(%rip)
     cdef str operand
+
     if isinstance(node, AsmImmInt):
         operand = emit_int(node.value)
         return "$" + operand
@@ -367,7 +369,7 @@ cdef void emit_cdq_instructions(AsmCdq node):
     if isinstance(node.assembly_type, LongWord):
         emit("cdq", 1)
     elif isinstance(node.assembly_type, QuadWord):
-        emit("cdo", 1)
+        emit("cqo", 1)
     else:
 
         raise RuntimeError(
@@ -391,7 +393,7 @@ cdef void emit_instructions(AsmInstruction node):
     # Binary(binary_operator, t, src, dst) -> $ <binary_operator><t> <src>, <dst>
     # Idiv(t, operand)                     -> $ idiv<t> <operand>
     # Cdq<l>                               -> $ cdq
-    # Cdq<q>                               -> $ cdo
+    # Cdq<q>                               -> $ cqo
     if isinstance(node, AsmRet):
         emit_ret_instructions(node)
     elif isinstance(node, AsmMov):

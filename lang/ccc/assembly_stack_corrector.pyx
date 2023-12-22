@@ -36,13 +36,11 @@ cdef void allocate_offset_pseudo_register(AssemblyType assembly_type):
         counter += OFFSET_QUAD_WORD
 
 
-
 cdef void align_offset_pseudo_register(AssemblyType assembly_type):
     global counter
 
     if isinstance(assembly_type, LongWord):
         counter += OFFSET_LONG_WORD
-
 
 
 cdef AsmOperand replace_operand_pseudo_register(AsmPseudo node):
