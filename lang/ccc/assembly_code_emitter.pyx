@@ -494,17 +494,17 @@ cdef void emit_static_variable_top_level(AsmStaticVariable node):
     # StaticVariable(name, global, init) initialized to non-zero value -> $ <data-static-variable-directives>
     # StaticVariable(name, global, init) initialized to zero           -> $ <bss-static-variable-directives>
     cdef str static_init = ""
-    if isinstance(AsmStaticVariable.initial_value, IntInit):
-        if AsmStaticVariable.initial_value.value.int_t:
-            static_init = emit_int(AsmStaticVariable.initial_value.value)
+    if isinstance(node.initial_value, IntInit):
+        if node.initial_value.value.int_t:
+            static_init = emit_int(node.initial_value.value)
             static_init = f".long {static_init}"
             emit_data_static_variable_top_level(node, static_init)
         else:
             static_init = f".zero 4"
             emit_bss_static_variable_top_level(node, static_init)
-    elif isinstance(AsmStaticVariable.initial_value, LongInit):
-        if AsmStaticVariable.initial_value.value.long_t:
-            static_init = emit_long(AsmStaticVariable.initial_value.value)
+    elif isinstance(node.initial_value, LongInit):
+        if node.initial_value.value.long_t:
+            static_init = emit_long(node.initial_value.value)
             static_init = f".quad {static_init}"
             emit_data_static_variable_top_level(node, static_init)
         else:
