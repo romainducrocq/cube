@@ -9,7 +9,7 @@ from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, co
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes, correct_stack
 
-from ccc.util_ctypes cimport int32
+from ccc.util_ctypes cimport int32, int64_to_int32, int32_to_int64
 
 
 cdef TInt generate_alignment(Type node):
@@ -205,6 +205,8 @@ cdef void generate_fun_call_instructions(TacFunCall node):
 cdef void generate_sign_extend_instructions(TacSignExtend node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
+    if isinstance(src, AsmImmInt):
+        src = AsmImmLong(int32_to_int64(src.value.int_t))
     instructions.append(AsmMovSx(src, dst))
 
 
@@ -212,6 +214,8 @@ cdef void generate_truncate_instructions(TacTruncate node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = LongWord()
+    if isinstance(src, AsmImmLong):
+        src = AsmImmInt(int64_to_int32(src.value.long_t))
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 

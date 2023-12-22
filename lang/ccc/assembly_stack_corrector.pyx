@@ -288,6 +288,13 @@ cdef void correct_function_top_level(AsmFunction node):
                 correct_any_from_addr_to_addr_instruction(i, k)
                 count_insert += 1
 
+        elif isinstance(instructions[i], AsmMovSx):
+            if is_from_imm_instruction(i):
+                pass
+
+            if is_to_addr_instruction(i):
+                pass
+
         elif isinstance(instructions[i], AsmCmp):
             if is_from_long_imm_instruction(i):
                 correct_any_from_quad_word_imm_to_any(i, k)
