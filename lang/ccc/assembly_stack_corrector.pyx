@@ -161,8 +161,6 @@ cdef void correct_any_from_addr_to_addr_instruction(Py_ssize_t i, Py_ssize_t k):
     # $ movl addr1, addr2 ->
     #     $ movl addr1, reg
     #     $ movl reg  , addr2
-    global instructions
-
     cdef AsmOperand src_src = instructions[i].src
     instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
     instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
@@ -174,8 +172,6 @@ cdef void correct_mov_sx_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k
     # $ movslq imm, _ ->
     #     $ movl   imm, reg
     #     $ movslq reg, _
-    global instructions
-
     cdef AsmOperand src_src = instructions[i].src
     instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
     instructions.insert(k - 1, AsmMov(LongWord(),
@@ -187,8 +183,6 @@ cdef void correct_mov_sx_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t 
     # $ movslq _, addr ->
     #     $ movslq _  , reg
     #     $ movl   reg, addr
-    global instructions
-
     cdef AsmOperand src_dst = instructions[i].dst
     instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
     instructions.insert(k + 1, AsmMov(QuadWord(),
@@ -199,8 +193,6 @@ cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
     # $ cmpl reg1, imm ->
     #     $ movl imm , reg2
     #     $ cmpl reg1, reg2
-    global instructions
-
     cdef AsmOperand src_dst = instructions[i].dst
     instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
     instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
@@ -212,8 +204,6 @@ cdef void correct_shl_shr_from_addr_to_addr(Py_ssize_t i, Py_ssize_t k):
     # $ addl addr1, addr2 ->
     #     $ movl addr1, reg
     #     $ addl reg  , addr2
-    global instructions
-
     cdef AsmOperand src_src = instructions[i].src
     instructions[i].src = generate_register(REGISTER_KIND.get('Cx'))
     instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
@@ -226,8 +216,6 @@ cdef void correct_mul_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
     #     $ movl  addr, reg
     #     $ imull imm , reg
     #     $ movl  reg , addr
-    global instructions
-
     cdef AsmOperand src_src = instructions[i].dst
     cdef AsmOperand dst_dst = instructions[i].dst
     instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
@@ -242,8 +230,6 @@ cdef void correct_div_from_imm(Py_ssize_t i, Py_ssize_t k):
     # $ idivl imm ->
     #     $ movl  imm, reg
     #     $ idivl reg
-    global instructions
-
     cdef AsmOperand src_src = instructions[i].src
     instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
     instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
@@ -255,11 +241,9 @@ cdef void correct_any_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
     # $ movl quad_word imm, _ ->
     #     $ movl quad_word imm, reg
     #     $ movl reg          , _
-    global instructions
-
     cdef AsmOperand src_src = instructions[i].src
     instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-    instructions.insert(k - 1, AsmMov(instructions[i].assembly_type,
+    instructions.insert(k - 1, AsmMov(QuadWord(),
                                       src_src, instructions[i].src))
 
 

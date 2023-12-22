@@ -206,7 +206,7 @@ cdef void generate_sign_extend_instructions(TacSignExtend node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     if isinstance(src, AsmImmInt):
-        src = AsmImmLong(int32_to_int64(src.value.int_t))
+        src = AsmImmLong(TLong(int32_to_int64(src.value.int_t)))
     instructions.append(AsmMovSx(src, dst))
 
 
@@ -215,7 +215,7 @@ cdef void generate_truncate_instructions(TacTruncate node):
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = LongWord()
     if isinstance(src, AsmImmLong):
-        src = AsmImmInt(int64_to_int32(src.value.long_t))
+        src = AsmImmInt(TInt(int64_to_int32(src.value.long_t)))
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 
