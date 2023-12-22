@@ -279,7 +279,6 @@ cdef void correct_function_top_level(AsmFunction node):
     cdef Py_ssize_t instruction
     cdef Py_ssize_t count_insert = 0
     cdef Py_ssize_t l = len(instructions)
-    cdef AsmOperand src_src
     for instruction in range(l):
         k = l - instruction
         i = - (instruction + 1 + count_insert)
@@ -298,9 +297,11 @@ cdef void correct_function_top_level(AsmFunction node):
         elif isinstance(instructions[i], AsmMovSx):
             if is_from_imm_instruction(i):
                 correct_mov_sx_from_imm_to_any_instructions(i, k)
+                count_insert += 1
 
             if is_to_addr_instruction(i):
                 correct_mov_sx_from_any_to_addr_instructions(i, k)
+                count_insert += 1
 
         elif isinstance(instructions[i], AsmCmp):
             if is_from_long_imm_instruction(i):
