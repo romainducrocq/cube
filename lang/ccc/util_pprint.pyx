@@ -4,6 +4,8 @@ from ccc.lexer_lexer cimport Token #
 #
 from ccc.semantic_symbol_table cimport symbol_table #
 #
+from ccc.assembly_backend_symbol_table cimport backend_symbol_table #
+#
 from ccc.util_ctypes cimport int32 #
 #
 #
@@ -103,6 +105,19 @@ cdef void pretty_print_symbol_table(): #
     pretty_string += "<symbol_table> Dict(" + str(len(symbol_table)) + "):\n" #
     for symbol in symbol_table: #
         _ast_pretty_string("[" + symbol + "] ", symbol_table[symbol]) #
+    print(pretty_string, end="") #
+#
+#
+cdef void pretty_print_backend_symbol_table(): #
+    global pretty_string #
+    global indent #
+    indent = 1 #
+    #
+    header_string("Backend Symbol Table")  #
+    cdef str symbol #
+    pretty_string += "<beckend_symbol_table> Dict(" + str(len(backend_symbol_table)) + "):\n" #
+    for symbol in backend_symbol_table: #
+        _ast_pretty_string("[" + symbol + "] ", backend_symbol_table[symbol]) #
     print(pretty_string, end="") #
 #
 #

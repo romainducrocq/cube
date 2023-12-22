@@ -16,7 +16,8 @@ from ccc.assembly_assembly_generator cimport assembly_generation
 # from ccc.assembly_code_emitter cimport code_emission_print #
 
 from ccc.util_ctypes cimport int32, str_to_int32
-from ccc.util_pprint cimport pretty_print_tokens, pretty_print_ast, pretty_print_symbol_table, pretty_print_asm_code #
+from ccc.util_pprint cimport pretty_print_tokens, pretty_print_ast #
+from ccc.util_pprint cimport pretty_print_backend_symbol_table, pretty_print_symbol_table, pretty_print_asm_code #
 
 
 cdef bint VERBOSE = False
@@ -40,6 +41,11 @@ cdef void debug_ast(AST ast): #
 cdef void debug_symbol_table(): #
     if VERBOSE: #
         pretty_print_symbol_table() #
+#
+#
+cdef void debug_backend_symbol_table(): #
+    if VERBOSE: #
+        pretty_print_backend_symbol_table() #
 #
 #
 cdef void debug_asm_code(list[str] asm_code): #
@@ -86,6 +92,7 @@ cdef void do_compile(str filename, int32 opt_code, int32 opt_s_code):
     if opt_code == 251:
         debug_ast(asm_ast) #
         debug_symbol_table() #
+        debug_backend_symbol_table() #
         return
 
     # verbose("-- Code emission ... ", end="")
