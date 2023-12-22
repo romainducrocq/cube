@@ -33,7 +33,7 @@ ext_modules = [
     Extension(f"{PACKAGE_NAME}.assembly_backend_symbol_table", ["./assembly_backend_symbol_table.pyx"]),
     Extension(f"{PACKAGE_NAME}.assembly_convert_symbol_table", ["./assembly_convert_symbol_table.pyx"]),
     Extension(f"{PACKAGE_NAME}.assembly_assembly_generator", ["./assembly_assembly_generator.pyx"]),
-    # Extension(f"{PACKAGE_NAME}.assembly_code_emitter", ["./assembly_code_emitter.pyx"]),
+    Extension(f"{PACKAGE_NAME}.assembly_code_emitter", ["./assembly_code_emitter.pyx"]),
     Extension(f"{PACKAGE_NAME}.assembly_register", ["./assembly_register.pyx"]),
     Extension(f"{PACKAGE_NAME}.assembly_stack_corrector", ["./assembly_stack_corrector.pyx"]),
 ]

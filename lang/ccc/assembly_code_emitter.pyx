@@ -498,18 +498,18 @@ cdef void emit_static_variable_top_level(AsmStaticVariable node):
         if AsmStaticVariable.initial_value.value.int_t:
             static_init = emit_int(AsmStaticVariable.initial_value.value)
             static_init = f".long {static_init}"
-            emit_data_static_variable_top_level(node)
+            emit_data_static_variable_top_level(node, static_init)
         else:
             static_init = f".zero 4"
-            emit_bss_static_variable_top_level(node)
+            emit_bss_static_variable_top_level(node, static_init)
     elif isinstance(AsmStaticVariable.initial_value, LongInit):
         if AsmStaticVariable.initial_value.value.long_t:
             static_init = emit_long(AsmStaticVariable.initial_value.value)
             static_init = f".quad {static_init}"
-            emit_data_static_variable_top_level(node)
+            emit_data_static_variable_top_level(node, static_init)
         else:
             static_init = f".zero 8"
-            emit_bss_static_variable_top_level(node)
+            emit_bss_static_variable_top_level(node, static_init)
     else:
 
         raise RuntimeError(
