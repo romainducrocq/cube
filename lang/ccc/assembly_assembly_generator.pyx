@@ -33,9 +33,9 @@ cdef AsmImmLong generate_long_imm_operand(CConstLong node):
 
 cdef AsmOperand generate_imm_operand(TacConstant node):
     if isinstance(node.constant, CConstInt):
-        return generate_int_imm_operand(node)
+        return generate_int_imm_operand(node.constant)
     elif isinstance(node.constant, CConstLong):
-        return generate_long_imm_operand(node)
+        return generate_long_imm_operand(node.constant)
     else:
 
         raise RuntimeError(
