@@ -325,7 +325,7 @@ cdef void correct_function_top_level(AsmFunction node):
         elif isinstance(instructions[i], AsmBinary):
 
             if isinstance(instructions[i].binary_op,
-                          (AsmAdd, AsmSub)):
+                          (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)):
                 if is_from_long_imm_instruction(i):
                     correct_any_from_quad_word_imm_to_any(i, k)
                     count_insert += 1
@@ -335,13 +335,11 @@ cdef void correct_function_top_level(AsmFunction node):
                     count_insert += 1
 
             elif isinstance(instructions[i].binary_op,
-                            (AsmBitAnd, AsmBitOr, AsmBitXor)):
-                if is_from_addr_to_addr_instruction(i):
-                    correct_any_from_addr_to_addr_instruction(i, k)
+                            (AsmBitShiftLeft, AsmBitShiftRight)):
+                if is_from_long_imm_instruction(i):
+                    correct_any_from_quad_word_imm_to_any(i, k)
                     count_insert += 1
 
-            elif isinstance(instructions[i].binary_op,
-                            (AsmBitShiftLeft, AsmBitShiftRight)):
                 if is_from_addr_to_addr_instruction(i):
                     correct_shl_shr_from_addr_to_addr(i, k)
                     count_insert += 1
@@ -349,6 +347,7 @@ cdef void correct_function_top_level(AsmFunction node):
             elif isinstance(instructions[i].binary_op, AsmMult):
                 if is_from_long_imm_instruction(i):
                     correct_any_from_quad_word_imm_to_any(i, k)
+                    k += 1
                     count_insert += 1
 
                 if is_to_addr_instruction(i):

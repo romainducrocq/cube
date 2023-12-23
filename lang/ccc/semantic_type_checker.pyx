@@ -4,6 +4,7 @@ from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStati
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 from ccc.parser_c_ast cimport CNot, CAnd, COr, CAdd, CSubtract, CMultiply, CDivide, CRemainder
+from ccc.parser_c_ast cimport CBitAnd, CBitOr, CBitXor, CBitShiftLeft, CBitShiftRight
 from ccc.parser_c_ast cimport CConstInt, CConstLong
 
 from ccc.semantic_symbol_table cimport *
@@ -111,7 +112,8 @@ cdef void checktype_binary_expression(CBinary node):
         node.exp_left = cast_expression(node.exp_left, common_type)
     if not is_same_type(node.exp_right.exp_type, common_type):
         node.exp_right = cast_expression(node.exp_right, common_type)
-    if isinstance(node.binary_op, (CAdd, CSubtract, CMultiply, CDivide, CRemainder)):
+    if isinstance(node.binary_op, (CAdd, CSubtract, CMultiply, CDivide, CRemainder,
+                                   CBitAnd, CBitOr, CBitXor, CBitShiftLeft, CBitShiftRight)):
         node.exp_type = common_type
     else:
         node.exp_type = Int()
