@@ -17,10 +17,9 @@ ln -s ../LANG-CCC/${PACKAGE_NAME}/* .
 if [ ${#} -ne 0 ]; then
     test ${@}
 else
-#    for i in $(seq 1 10); do
-#        test --chapter ${i} --latest-only --bitwise --compound --goto
-#    done
-    test --chapter 11 --latest-only --bitwise --compound --goto
+    for i in $(seq 1 11); do
+        test --chapter ${i} --latest-only --bitwise --compound --goto
+    done
 fi
 
 exit 0

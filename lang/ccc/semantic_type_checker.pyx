@@ -186,8 +186,6 @@ cdef void checktype_function_declaration(CFunctionDeclaration node):
 
 
 cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
-    # TODO => <exp_type> None (p218 Don’t call typecheck_exp on static initializers) ?
-    # for i in $(find ../../tests/**/valid/ -type f -name "*.c"); do echo ${i}; ccc --validate ${i} | grep "<exp_type> None" -B 5; done >log.txt
     if isinstance(static_init_type, Int):
         if isinstance(node.constant, CConstInt):
             return Initial(IntInit(copy_int(node.constant.value)))
@@ -201,8 +199,6 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
 
 
 cdef Initial checktype_no_init_initial(Type static_init_type):
-    # TODO => <exp_type> None (p218 Don’t call typecheck_exp on static initializers) ?
-    # for i in $(find ../../tests/**/valid/ -type f -name "*.c"); do echo ${i}; ccc --validate ${i} | grep "<exp_type> None" -B 5; done >log.txt
     if isinstance(static_init_type, Int):
         return Initial(IntInit(TInt(0)))
     elif isinstance(static_init_type, Long):
