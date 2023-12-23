@@ -20,7 +20,7 @@ cdef class QuadWord(AssemblyType):
         self._fields = ()
 
 
-cdef class BackendSymbolEntry(AST):
+cdef class BackendSymbol(AST):
     # symbol = Obj(type assembly_type, bool is_static)
     #        | Fun(bool defined)
     def __cinit__(self):

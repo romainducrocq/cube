@@ -16,6 +16,10 @@
     - a. similar to prebuild
 - 8. Implement standard library
 
+NOTES: (in next chapters, see if) 
+- Typecheck all bitwise operands incompatible with double ?
+- Typecheck bitwise shiftleft, shiftright undefined behavior ? 
+- Represent Asm Imm as a single type with value as str ?
 
 BACKLOG
 
@@ -33,3 +37,4 @@ BACKLOG
     => performance: http://romankleiner.blogspot.com/2015/06/cython-and-regular-expressions.html
 
 - (?) add timeit to ./test.sh to time exec
+
