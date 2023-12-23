@@ -1,4 +1,4 @@
-from abc_builtin_ast cimport TLong
+from ccc.abc_builtin_ast cimport TLong
 
 from ccc.semantic_symbol_table cimport IntInit, LongInit
 
