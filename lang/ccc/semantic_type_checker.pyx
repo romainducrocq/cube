@@ -128,7 +128,7 @@ cdef void checktype_conditional_expression(CConditional node):
 
 cdef void checktype_return_statement(CReturn node):
     if not is_same_type(node.exp.exp_type, symbol_table[function_declaration_name_str].type_t.ret_type):
-        cast_expression(node.exp, symbol_table[function_declaration_name_str].type_t.ret_type)
+        node.exp = cast_expression(node.exp, symbol_table[function_declaration_name_str].type_t.ret_type)
 
 
 cdef Symbol checktype_param(FunType fun_type, Py_ssize_t param):
