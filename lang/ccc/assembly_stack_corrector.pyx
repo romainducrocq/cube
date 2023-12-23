@@ -1,14 +1,14 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
-from ccc.assembly_asm_ast cimport AsmInstruction, AsmImmInt, AsmImmLong, AsmMov, AsmMovSx, AsmPush, AsmCmp, AsmSetCC
+from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmMovSx, AsmPush, AsmCmp, AsmSetCC
 from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmMult
 from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData
 from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_backend_symbol_table cimport backend_symbol_table, AssemblyType, LongWord, QuadWord
 
-from ccc.util_ctypes cimport int32, is_int32_overflow
+from ccc.util_ctypes cimport int32
 
 
 cdef int32 OFFSET_LONG_WORD = -4
@@ -127,7 +127,7 @@ cdef void replace_pseudo_registers(AsmInstruction node):
 cdef AsmBinary allocate_stack_bytes(int32 byte):
     cdef AsmBinaryOp binary_op = AsmSub()
     cdef AssemblyType assembly_type = QuadWord()
-    cdef AsmOperand src = AsmImmInt(TInt(byte))
+    cdef AsmOperand src = AsmImm(TIdentifier(str(byte)))
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
     return AsmBinary(binary_op, assembly_type, src, dst)
 
@@ -135,7 +135,7 @@ cdef AsmBinary allocate_stack_bytes(int32 byte):
 cdef AsmBinary deallocate_stack_bytes(int32 byte):
     cdef AsmBinaryOp binary_op = AsmAdd()
     cdef AssemblyType assembly_type = QuadWord()
-    cdef AsmOperand src = AsmImmInt(TInt(byte))
+    cdef AsmOperand src = AsmImm(TIdentifier(str(byte)))
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
     return AsmBinary(binary_op, assembly_type, src, dst)
 
@@ -246,16 +246,16 @@ cdef void correct_any_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
 
 
 cdef bint is_from_long_imm_instruction(Py_ssize_t i):
-    return isinstance(fun_instructions[i].src, AsmImmLong) and \
-           is_int32_overflow(fun_instructions[i].src.value.long_t)
+    return isinstance(fun_instructions[i].src, AsmImm) and \
+            int(fun_instructions[i].src.value.str_t) > 2147483647
 
 
 cdef bint is_from_imm_instruction(Py_ssize_t i):
-    return isinstance(fun_instructions[i].src, (AsmImmInt, AsmImmLong))
+    return isinstance(fun_instructions[i].src, AsmImm)
 
 
 cdef bint is_to_imm_instruction(Py_ssize_t i):
-    return isinstance(fun_instructions[i].dst, (AsmImmInt, AsmImmLong))
+    return isinstance(fun_instructions[i].dst, AsmImm)
 
 
 cdef bint is_from_addr_instruction(Py_ssize_t i):

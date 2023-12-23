@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport copy_identifier, copy_int, copy_long
+from ccc.abc_builtin_ast cimport copy_identifier
 
 from ccc.parser_c_ast cimport Int, Long, CConstInt, CConstLong
 from ccc.intermediate_tac_ast cimport *
@@ -9,7 +9,7 @@ from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, co
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes, correct_stack
 
-from ccc.util_ctypes cimport int32, int64_to_int32, int32_to_int64
+from ccc.util_ctypes cimport int32
 
 
 cdef TInt generate_alignment(Type node):
@@ -23,14 +23,14 @@ cdef TInt generate_alignment(Type node):
             "An error occurred in assembly generation, not all nodes were visited")
 
 
-cdef AsmImmInt generate_int_imm_operand(CConstInt node):
-    cdef TInt value = copy_int(node.value)
-    return AsmImmInt(value)
+cdef AsmImm generate_int_imm_operand(CConstInt node):
+    cdef TIdentifier value = TIdentifier(str(node.value.int_t))
+    return AsmImm(value)
 
 
-cdef AsmImmLong generate_long_imm_operand(CConstLong node):
-    cdef TLong value = copy_long(node.value)
-    return AsmImmLong(value)
+cdef AsmImm generate_long_imm_operand(CConstLong node):
+    cdef TIdentifier value = TIdentifier(str(node.value.long_t))
+    return AsmImm(value)
 
 
 cdef AsmOperand generate_imm_operand(TacConstant node):
@@ -166,7 +166,7 @@ cdef void generate_reg_arg_fun_call_instructions(TacValue node, Py_ssize_t arg):
 cdef void generate_stack_arg_fun_call_instructions(TacValue node):
     cdef AsmOperand src = generate_operand(node)
     cdef AssemblyType assembly_type = generate_assembly_type(node)
-    if isinstance(src, (AsmRegister, AsmImmInt, AsmImmLong)) or \
+    if isinstance(src, (AsmRegister, AsmImm)) or \
        isinstance(assembly_type, QuadWord):
         instructions.append(AsmPush(src))
         return
@@ -205,17 +205,20 @@ cdef void generate_fun_call_instructions(TacFunCall node):
 cdef void generate_sign_extend_instructions(TacSignExtend node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
-    if isinstance(src, AsmImmInt):
-        src = AsmImmLong(TLong(int32_to_int64(src.value.int_t)))
     instructions.append(AsmMovSx(src, dst))
+
+
+cdef void generate_imm_truncate_instructions(AsmImm node):
+    if int(node.value.str_t) > 2147483647:
+        node.value.str_t = str(int(node.value.str_t) - 4294967296)
 
 
 cdef void generate_truncate_instructions(TacTruncate node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = LongWord()
-    if isinstance(src, AsmImmLong):
-        src = AsmImmInt(TInt(int64_to_int32(src.value.long_t)))
+    if isinstance(src, AsmImm):
+        generate_imm_truncate_instructions(src)
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 
@@ -245,7 +248,7 @@ cdef void generate_copy_instructions(TacCopy node):
 
 
 cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
-    cdef AsmOperand imm_zero = AsmImmInt(TInt(0))
+    cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
     cdef AsmCondCode cond_code = generate_condition_code(TacEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
@@ -255,7 +258,7 @@ cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
 
 
 cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
-    cdef AsmOperand imm_zero = AsmImmInt(TInt(0))
+    cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
     cdef AsmCondCode cond_code = generate_condition_code(TacNotEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
@@ -265,7 +268,7 @@ cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
 
 
 cdef void generate_unary_operator_conditional_instructions(TacUnary node):
-    cdef imm_zero = AsmImmInt(TInt(0))
+    cdef imm_zero = AsmImm(TIdentifier("0"))
     cdef cond_code = generate_condition_code(TacEqual())
     cdef src = generate_operand(node.src)
     cdef cmp_dst = generate_operand(node.dst)
@@ -286,7 +289,7 @@ cdef void generate_unary_operator_arithmetic_instructions(TacUnary node):
 
 
 cdef void generate_binary_operator_conditional_instructions(TacBinary node):
-    cdef imm_zero = AsmImmInt(TInt(0))
+    cdef imm_zero = AsmImm(TIdentifier("0"))
     cdef cond_code = generate_condition_code(node.binary_op)
     cdef src1 = generate_operand(node.src1)
     cdef src2 = generate_operand(node.src2)

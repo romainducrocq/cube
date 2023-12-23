@@ -19,7 +19,8 @@
 NOTES: (in next chapters, see if) 
 - Typecheck all bitwise operands incompatible with double ?
 - Typecheck bitwise shiftleft, shiftright undefined behavior ? 
-- Represent Asm Imm as a single type with value as str ?
+- keep <Represent Asm Imm as single type with str value> ?
+    -> or revert to commit 96d872e
 
 BACKLOG
 

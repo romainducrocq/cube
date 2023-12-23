@@ -1,4 +1,4 @@
-from ccc.parser_c_ast cimport AST, TIdentifier, TInt, TLong, StaticInit
+from ccc.parser_c_ast cimport AST, TIdentifier, TInt, StaticInit
 
 from ccc.assembly_backend_symbol_table cimport AssemblyType
 
@@ -128,8 +128,7 @@ cdef class AsmLE(AsmCondCode):
 
 
 cdef class AsmOperand(AST):
-    # operand = ImmInt(int)
-    #         | ImmLong(long)
+    # operand = Imm(int)
     #         | Reg(reg)
     #         | Pseudo(identifier)
     #         | Stack(int)
@@ -138,21 +137,12 @@ cdef class AsmOperand(AST):
         self._fields = ()
 
 
-cdef class AsmImmInt(AsmOperand):
-    # ImmInt(int value)
+cdef class AsmImm(AsmOperand):
+    # Imm(int value)
     def __cinit__(self):
         self._fields = ('value',)
 
-    def __init__(self, TInt value):
-        self.value = value
-
-
-cdef class AsmImmLong(AsmOperand):
-    # ImmLong(long value)
-    def __cinit__(self):
-        self._fields = ('value',)
-
-    def __init__(self, TLong value):
+    def __init__(self, TIdentifier value):
         self.value = value
 
 

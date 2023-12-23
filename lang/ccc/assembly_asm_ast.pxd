@@ -1,4 +1,4 @@
-from ccc.parser_c_ast cimport AST, TIdentifier, TInt, TLong, StaticInit
+from ccc.parser_c_ast cimport AST, TIdentifier, TInt, StaticInit
 
 from ccc.assembly_backend_symbol_table cimport AssemblyType
 
@@ -79,12 +79,8 @@ cdef class AsmOperand(AST):
     pass
 
 
-cdef class AsmImmInt(AsmOperand):
-    cdef public TInt value
-
-
-cdef class AsmImmLong(AsmOperand):
-    cdef public TLong value
+cdef class AsmImm(AsmOperand):
+    cdef public TIdentifier value
 
 
 cdef class AsmRegister(AsmOperand):

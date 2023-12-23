@@ -1,3 +1,5 @@
+from abc_builtin_ast cimport TLong
+
 from ccc.semantic_symbol_table cimport IntInit, LongInit
 
 from ccc.assembly_asm_ast cimport *
@@ -186,18 +188,14 @@ cdef str emit_type_instruction_suffix(AssemblyType node):
 
 
 cdef str emit_operand(AsmOperand node, int32 byte):
-    # ImmInt(int)      -> $ $<int>
-    # ImmLong(long)    -> $ $<long>
+    # Imm(int)         -> $ $<int>
     # Register(reg)    -> $ %reg
     # Stack(int)       -> $ <int>(%rbp)
     # Data(identifier) -> $ <identifier>(%rip)
     cdef str operand
 
-    if isinstance(node, AsmImmInt):
-        operand = emit_int(node.value)
-        return "$" + operand
-    elif isinstance(node, AsmImmLong):
-        operand = emit_long(node.value)
+    if isinstance(node, AsmImm):
+        operand = emit_identifier(node.value)
         return "$" + operand
     elif isinstance(node, AsmRegister):
         if byte == 1:
