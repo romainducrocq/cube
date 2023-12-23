@@ -128,7 +128,7 @@ function check_pass () {
 }
 
 function check_single () {
-    gcc -pedantic -Werror ${FILE}.c -o ${FILE} > /dev/null 2>&1
+    gcc -pedantic-errors ${FILE}.c -o ${FILE} > /dev/null 2>&1
     RET_GCC=${?}
 
     if [ ${RET_GCC} -ne 0 ]; then
@@ -156,7 +156,7 @@ function compile_client () {
     RET_CCC=${?}
 
     if [ ${RET_CCC} -eq 0 ]; then
-        gcc -pedantic -Werror ${FILE}.o ${FILE}_client.o -o ${FILE} > /dev/null 2>&1
+        gcc -pedantic-errors ${FILE}.o ${FILE}_client.o -o ${FILE} > /dev/null 2>&1
         RET_CCC=${?}
     fi
 
@@ -165,7 +165,7 @@ function compile_client () {
 }
 
 function check_client () {
-    gcc -pedantic -Werror ${FILE}.c ${FILE}_client.c -o ${FILE} > /dev/null 2>&1
+    gcc -pedantic-errors ${FILE}.c ${FILE}_client.c -o ${FILE} > /dev/null 2>&1
     OUT_GCC=$(${FILE})
     RET_GCC=${?}
     rm ${FILE}
@@ -173,7 +173,7 @@ function check_client () {
     if [ -f "${FILE}.o" ]; then rm ${FILE}.o; fi
     if [ -f "${FILE}_client.o" ]; then rm ${FILE}_client.o; fi
 
-    gcc -pedantic -Werror -c ${FILE}_client.c -o ${FILE}_client.o > /dev/null 2>&1
+    gcc -pedantic-errors -c ${FILE}_client.c -o ${FILE}_client.o > /dev/null 2>&1
     compile_client ${FILE}.c
     check_pass 1
     RET_PASS=${?}
@@ -185,7 +185,7 @@ function check_client () {
         return
     fi
 
-    gcc -pedantic -Werror -c ${FILE}.c  -o ${FILE}.o > /dev/null 2>&1
+    gcc -pedantic-errors -c ${FILE}.c  -o ${FILE}.o > /dev/null 2>&1
     compile_client ${FILE}_client.c
     check_pass 1
     RET_PASS=${?}
