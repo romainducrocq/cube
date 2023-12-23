@@ -20,6 +20,7 @@ TEST_DIRS=(
 "9_functions"
 "10_file-scope_variables_and_storage-class_specifiers"
 "11_long_integers"
+"12_unsigned_integers"
 )
 
 function file () {
