@@ -183,8 +183,8 @@ cdef void correct_mov_sx_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t 
     #     $ movl   reg, addr
     cdef AsmOperand src_dst = instructions[i].dst
     instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-    instructions.insert(k + 1, AsmMov(QuadWord(),
-                                      instructions[i].dst, src_dst))
+    instructions.insert(k, AsmMov(QuadWord(),
+                                  instructions[i].dst, src_dst))
 
 cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
     # cmp (_, imm)
@@ -297,6 +297,7 @@ cdef void correct_function_top_level(AsmFunction node):
         elif isinstance(instructions[i], AsmMovSx):
             if is_from_imm_instruction(i):
                 correct_mov_sx_from_imm_to_any_instructions(i, k)
+                k += 1
                 count_insert += 1
 
             if is_to_addr_instruction(i):
