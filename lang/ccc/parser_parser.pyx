@@ -5,7 +5,7 @@ from ccc.parser_precedence cimport parse_token_precedence
 
 from ccc.semantic_symbol_table cimport Type, Int, Long, FunType
 
-from ccc.util_ctypes cimport int32, str_to_int32, str_to_int64
+from ccc.util_ctypes cimport int32, str_to_int32, str_to_int64, str_to_uint32, str_to_uint64
 
 
 cdef list[Token] tokens = []
@@ -80,6 +80,16 @@ cdef TLong parse_long():
     return TLong(str_to_int64(next_token.token))
 
 
+cdef TUInt parse_uint():
+    # <uint> ::= ? A constant token ?
+    return TUInt(str_to_uint32(next_token.token))
+
+
+cdef TULong parse_ulong():
+    # <ulong> ::= ? A constant token ?
+    return TULong(str_to_uint64(next_token.token))
+
+
 cdef CConstInt parse_int_constant():
     cdef TInt value = parse_int()
     return CConstInt(value)
@@ -88,6 +98,16 @@ cdef CConstInt parse_int_constant():
 cdef CConstLong parse_long_constant():
     cdef TLong value = parse_long()
     return CConstLong(value)
+
+
+cdef CConstUInt parse_uint_constant():
+    cdef TUInt value = parse_uint()
+    return CConstUInt(value)
+
+
+cdef CConstULong parse_ulong_constant():
+    cdef TULong value = parse_ulong()
+    return CConstULong(value)
 
 
 cdef CConst parse_constant():
@@ -107,6 +127,26 @@ cdef CConst parse_constant():
         return parse_int_constant()
 
     return parse_long_constant()
+
+
+cdef CConst parse_unsigned_constant():
+    # <const> ::= <uint> | <ulong>
+    if pop_next().token_kind == TOKEN_KIND.get('unsigned_long_constant'):
+        next_token.token = next_token.token[:-1]
+    next_token.token = next_token.token[:-1]
+
+    cdef object value = int(next_token.token)
+
+    if value > 18446744073709551615:
+
+        raise RuntimeError(
+            f"Constant {next_token.token} is too large to be represented as an unsigned int or a unsigned long")
+
+    if next_token.token_kind == TOKEN_KIND.get('unsigned_constant') and \
+       value <= 4294967295:
+        return parse_uint_constant()
+
+    return parse_ulong_constant()
 
 
 cdef CBinaryOp parse_binary_op():
@@ -205,6 +245,11 @@ cdef CConstant parse_constant_factor():
     return CConstant(constant)
 
 
+cdef CConstant parse_unsigned_constant_factor():
+    cdef CConst constant = parse_unsigned_constant()
+    return CConstant(constant)
+
+
 cdef CUnary parse_unary_factor():
     cdef CUnaryOp unary_op = parse_unary_op()
     cdef CExp exp = parse_factor()
@@ -240,13 +285,18 @@ cdef CExp parse_factor():
     elif peek_token.token_kind in (TOKEN_KIND.get('constant'),
                                    TOKEN_KIND.get('long_constant')):
         return parse_constant_factor()
+    elif peek_token.token_kind in (TOKEN_KIND.get('unsigned_constant'),
+                                   TOKEN_KIND.get('unsigned_long_constant')):
+        return parse_unsigned_constant_factor()
     elif peek_token.token_kind in (TOKEN_KIND.get('unop_complement'),
                                    TOKEN_KIND.get('unop_negation'),
                                    TOKEN_KIND.get('unop_not')):
         return parse_unary_factor()
     elif pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
         if peek_next().token_kind in (TOKEN_KIND.get('key_int'),
-                                      TOKEN_KIND.get('key_long')):
+                                      TOKEN_KIND.get('key_long'),
+                                      TOKEN_KIND.get('key_signed'),
+                                      TOKEN_KIND.get('key_unsigned')):
             return parse_cast_factor()
         else:
             return parse_inner_exp_factor()
@@ -493,6 +543,8 @@ cdef CForInit parse_for_init():
     # <for-init> ::= <variable-declaration> | [<exp>] ";"
     if peek_next().token_kind in (TOKEN_KIND.get('key_int'),
                                   TOKEN_KIND.get('key_long'),
+                                  TOKEN_KIND.get('key_signed'),
+                                  TOKEN_KIND.get('key_unsigned'),
                                   TOKEN_KIND.get('key_static'),
                                   TOKEN_KIND.get('key_extern')):
         return parse_decl_for_init()
@@ -514,6 +566,8 @@ cdef CBlockItem parse_block_item():
     # <block-item> ::= <statement> | <declaration>
     if peek_token.token_kind in (TOKEN_KIND.get('key_int'),
                                  TOKEN_KIND.get('key_long'),
+                                 TOKEN_KIND.get('key_signed'),
+                                 TOKEN_KIND.get('key_unsigned'),
                                  TOKEN_KIND.get('key_static'),
                                  TOKEN_KIND.get('key_extern')):
         return parse_d_block_item()
@@ -547,7 +601,9 @@ cdef Type parse_type_specifier():
                                                  TOKEN_KIND.get('parenthesis_close')):
             break
         elif peek_next_i(specifier).token_kind in (TOKEN_KIND.get('key_int'),
-                                                   TOKEN_KIND.get('key_long')):
+                                                   TOKEN_KIND.get('key_long'),
+                                                   TOKEN_KIND.get('key_signed'),
+                                                   TOKEN_KIND.get('key_unsigned')):
             type_token_kinds.append(pop_next_i(specifier).token_kind)
         elif peek_next_i(specifier).token_kind in (TOKEN_KIND.get('key_static'),
                                                    TOKEN_KIND.get('key_extern')):
@@ -562,11 +618,35 @@ cdef Type parse_type_specifier():
             return Int()
         elif type_token_kinds[0] == TOKEN_KIND.get('key_long'):
             return Long()
+        elif type_token_kinds[0] == TOKEN_KIND.get('key_unsigned'):
+            return UInt()
+        elif type_token_kinds[0] == TOKEN_KIND.get('key_signed'):
+            return Int()
 
-    if len(type_token_kinds) == 2:
+    elif len(type_token_kinds) == 2:
+        if TOKEN_KIND.get('key_unsigned') in type_token_kinds:
+            if TOKEN_KIND.get('key_int') in type_token_kinds:
+                return UInt()
+            elif TOKEN_KIND.get('key_long') in type_token_kinds:
+                return ULong()
+
+        elif TOKEN_KIND.get('key_signed') in type_token_kinds:
+            if TOKEN_KIND.get('key_int') in type_token_kinds:
+                return Int()
+            elif TOKEN_KIND.get('key_long') in type_token_kinds:
+                return Long()
+
+        elif TOKEN_KIND.get('key_int') in type_token_kinds and \
+             TOKEN_KIND.get('key_long') in type_token_kinds:
+            return Long()
+
+    elif len(type_token_kinds) == 3:
         if TOKEN_KIND.get('key_int') in type_token_kinds and \
            TOKEN_KIND.get('key_long') in type_token_kinds:
-            return Long()
+            if TOKEN_KIND.get('key_unsigned') in type_token_kinds:
+                return ULong()
+            elif TOKEN_KIND.get('key_signed') in type_token_kinds:
+                return Long()
 
     raise RuntimeError(
             f"Expected token type \"type specifier\" but found token \"{str(type_token_kinds)}\"")
@@ -599,7 +679,9 @@ cdef CFunctionDeclaration parse_function_declaration(Type ret_type):
     if peek_next().token_kind == TOKEN_KIND.get('key_void'):
         _ = pop_next()
     elif peek_token.token_kind in (TOKEN_KIND.get('key_int'),
-                                   TOKEN_KIND.get('key_long')):
+                                   TOKEN_KIND.get('key_long'),
+                                   TOKEN_KIND.get('key_signed'),
+                                   TOKEN_KIND.get('key_unsigned')):
         param_types.append(parse_type_specifier())
         params.append(parse_identifier())
         while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):

@@ -209,6 +209,8 @@ cdef void generate_sign_extend_instructions(TacSignExtend node):
 
 
 cdef void generate_imm_truncate_instructions(AsmImm node):
+    # TODO
+    # cdef object value = int(node.value.str_t)
     if int(node.value.str_t) > 2147483647:
         node.value.str_t = str(int(node.value.str_t) - 4294967296)
 

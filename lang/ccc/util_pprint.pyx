@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt, TLong, ast_iter_fields #
+from ccc.abc_builtin_ast cimport AST, TIdentifier, TInt, TLong, TUInt, TULong, ast_iter_fields #
 #
 from ccc.lexer_lexer cimport Token #
 #
@@ -45,6 +45,10 @@ cdef void _ast_pretty_string_builtin(str _child_kind, object _child_node): #
         pretty_string += str(_child_node.int_t) + '\n' #
     elif isinstance(_child_node, TLong): #
         pretty_string += str(_child_node.long_t) + '\n' #
+    elif isinstance(_child_node, TUInt): #
+        pretty_string += str(_child_node.uint_t) + '\n' #
+    elif isinstance(_child_node, TULong): #
+        pretty_string += str(_child_node.ulong_t) + '\n' #
     else: #
         pretty_string += str(_child_node) + '\n' #
 #
@@ -53,7 +57,7 @@ cdef void _ast_pretty_string_child(str _child_kind, object _child_node): #
     global pretty_string #
     global indent #
 #
-    if type(_child_node) in (TIdentifier, TInt, TLong, bool, type(None)): #
+    if type(_child_node) in (TIdentifier, TInt, TLong, TUInt, TULong, bool, type(None)): #
         _ast_pretty_string_builtin(_child_kind, _child_node) #
     else: #
         _ast_pretty_string(_child_kind, _child_node) #
