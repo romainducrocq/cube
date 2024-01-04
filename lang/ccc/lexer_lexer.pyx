@@ -59,6 +59,8 @@ TOKEN_KIND = IotaEnum((
 
     "key_int",
     "key_long",
+    "key_signed",
+    "key_unsigned",
     "key_void",
     "key_return",
     "key_if",
@@ -73,6 +75,8 @@ TOKEN_KIND = IotaEnum((
     "key_extern",
 
     "identifier",
+    "unsigned_long_constant",
+    "unsigned_constant",
     "long_constant",
     "constant",
 
@@ -127,6 +131,8 @@ cdef dict[int32, str] TOKEN_REGEX = {
 
     TOKEN_KIND.get('key_int'): r"int\b",
     TOKEN_KIND.get('key_long'): r"long\b",
+    TOKEN_KIND.get('key_signed'): r"signed\b",
+    TOKEN_KIND.get('key_unsigned'): r"unsigned\b",
     TOKEN_KIND.get('key_void'): r"void\b",
     TOKEN_KIND.get('key_return'): r"return\b",
     TOKEN_KIND.get('key_if'): r"if\b",
@@ -141,6 +147,8 @@ cdef dict[int32, str] TOKEN_REGEX = {
     TOKEN_KIND.get('key_extern'): r"extern\b",
 
     TOKEN_KIND.get('identifier'): r"[a-zA-Z_]\w*\b",
+    TOKEN_KIND.get('unsigned_long_constant'): r"[0-9]+([lL][uU]|[uU][lL])\b",
+    TOKEN_KIND.get('unsigned_constant'): r"[0-9]+[uU]\b",
     TOKEN_KIND.get('long_constant'): r"[0-9]+[lL]\b",
     TOKEN_KIND.get('constant'): r"[0-9]+\b",
 
