@@ -1,4 +1,4 @@
-from ccc.util_ctypes cimport int32, int64, int64_to_int32, int32_to_int64
+from ccc.util_ctypes cimport int32, int64, uint32, uint64, int64_to_int32, int32_to_int64
 
 
 cdef class AST:
@@ -33,6 +33,24 @@ cdef class TLong(AST):
         self.long_t = long_t
 
 
+cdef class TUInt(AST):
+    # uint uint_t
+    def __cinit__(self):
+        self._fields = ('uint_t',)
+
+    def __init__(self, uint32 uint_t):
+        self.uint_t = uint_t
+
+
+cdef class TULong(AST):
+    # ulong ulong_t
+    def __cinit__(self):
+        self._fields = ('ulong_t',)
+
+    def __init__(self, uint64 ulong_t):
+        self.ulong_t = ulong_t
+
+
 cdef TIdentifier copy_identifier(TIdentifier node):
     # <identifier> = Built-in identifier type
     return TIdentifier(node.str_t)
@@ -46,6 +64,16 @@ cdef TInt copy_int(TInt node):
 cdef TLong copy_long(TLong node):
     # <long> = Built-in long type
     return TLong(node.long_t)
+
+
+cdef TUInt copy_uint(TUInt node):
+    # <uint> = Built-in unsigned int type
+    return TUInt(node.uint_t)
+
+
+cdef TULong copy_ulong(TULong node):
+    # <ulong> = Built-in unsigned long type
+    return TULong(node.ulong_t)
 
 
 cdef TInt copy_long_to_int(TLong node):

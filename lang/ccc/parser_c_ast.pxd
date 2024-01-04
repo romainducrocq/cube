@@ -14,6 +14,14 @@ cdef class CConstLong(CConst):
     cdef public TLong value
 
 
+cdef class CConstUInt(CConst):
+    cdef public TUInt value
+
+
+cdef class CConstULong(CConst):
+    cdef public TULong value
+
+
 cdef class CUnaryOp(AST):
     pass
 

@@ -1,9 +1,11 @@
-from ccc.abc_builtin_ast cimport AST, TInt, TLong
+from ccc.abc_builtin_ast cimport AST, TInt, TLong, TUInt, TULong
 
 
 cdef class Type(AST):
     # type = Int
     #      | Long
+    #      | UInt
+    #      | ULong
     #      | FunType(type*, type)
     def __cinit__(self):
         self._fields = ()
@@ -17,6 +19,18 @@ cdef class Int(Type):
 
 cdef class Long(Type):
     # Long
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class UInt(Type):
+    # UInt
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class ULong(Type):
+    # ULong
     def __cinit__(self):
         self._fields = ()
 

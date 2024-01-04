@@ -5,6 +5,8 @@ from ccc.semantic_symbol_table cimport *
 cdef class CConst(AST):
     # const = ConstInt(int)
     #       | ConstLong(long)
+    #       | ConstUInt(uint)
+    #       | ConstULong(ulong)
     def __cinit__(self):
         self._fields = ()
 
@@ -24,6 +26,24 @@ cdef class CConstLong(CConst):
         self._fields = ('value',)
 
     def __init__(self, TLong value):
+        self.value = value
+
+
+cdef class CConstUInt(CConst):
+    # ConstUInt(uint)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TUInt value):
+        self.value = value
+
+
+cdef class CConstULong(CConst):
+    # ConstULong(ulong)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TULong value):
         self.value = value
 
 
