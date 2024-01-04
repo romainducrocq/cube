@@ -1,11 +1,11 @@
-from ccc.abc_builtin_ast cimport copy_int, copy_long, copy_long_to_int, copy_int_to_long
+from ccc.abc_builtin_ast cimport int32, copy_int, copy_long, copy_long_to_int, copy_int_to_long
 
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern, CReturn
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 from ccc.parser_c_ast cimport CNot, CAnd, COr, CAdd, CSubtract, CMultiply, CDivide, CRemainder
 from ccc.parser_c_ast cimport CBitAnd, CBitOr, CBitXor, CBitShiftLeft, CBitShiftRight
-from ccc.parser_c_ast cimport CConstInt, CConstLong
+from ccc.parser_c_ast cimport CConstInt, CConstLong, CConstUInt, CConstULong
 
 from ccc.semantic_symbol_table cimport *
 
@@ -30,11 +30,33 @@ cdef bint is_same_fun_type(FunType fun_type1, FunType fun_type2):
     return True
 
 
+cdef int32 get_type_size(Type type1):
+    if isinstance(type1, (Int, UInt)):
+        return 32
+    elif isinstance(type1, (Long, ULong)):
+        return 64
+    else:
+        return -1
+
+
+cdef bint is_type_signed(Type type1):
+    return isinstance(type1, (Int, Long))
+
+
 cdef Type get_joint_type(Type type1, Type type2):
     if is_same_type(type1, type2):
         return type1
+    cdef int32 type1_size = get_type_size(type1)
+    cdef int32 type2_size = get_type_size(type2)
+    if type1_size == type2_size:
+        if is_type_signed(type1):
+            return type2
+        else:
+            return type1
+    if type1_size > type2_size:
+        return type1
     else:
-        return Long()
+        return type2
 
 
 cdef void checktype_cast_expression(CCast node):
@@ -82,6 +104,10 @@ cdef void checktype_constant_expression(CConstant node):
         node.exp_type = Int()
     elif isinstance(node.constant, CConstLong):
         node.exp_type = Long()
+    elif isinstance(node.constant, CConstUInt):
+        node.exp_type = UInt()
+    elif isinstance(node.constant, CConstULong):
+        node.exp_type = ULong()
 
 
 cdef void checktype_assignment_expression(CAssignment node):

@@ -48,6 +48,8 @@ cdef class FunType(Type):
 cdef class StaticInit(AST):
     # static_init = IntInit(int)
     #             | LongInit(int)
+    #             | UIntInit(int)
+    #             | ULongInit(int)
     def __cinit__(self):
         self._fields = ()
 
@@ -62,11 +64,29 @@ cdef class IntInit(StaticInit):
 
 
 cdef class LongInit(StaticInit):
-    # LongInit(int)
+    # LongInit(long)
     def __cinit__(self):
         self._fields = ('value',)
 
     def __init__(self, TLong value):
+        self.value = value
+
+
+cdef class UIntInit(StaticInit):
+    # UIntInit(int)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TUInt value):
+        self.value = value
+
+
+cdef class ULongInit(StaticInit):
+    # ULongInit(int)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TULong value):
         self.value = value
 
 

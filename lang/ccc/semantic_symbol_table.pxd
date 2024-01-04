@@ -38,6 +38,14 @@ cdef class LongInit(StaticInit):
     cdef public TLong value
 
 
+cdef class UIntInit(StaticInit):
+    cdef public TUInt value
+
+
+cdef class ULongInit(StaticInit):
+    cdef public TULong value
+
+
 cdef class InitialValue(AST):
     pass
 
