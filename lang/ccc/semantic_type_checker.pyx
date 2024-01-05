@@ -1,4 +1,8 @@
-from ccc.abc_builtin_ast cimport int32, copy_int, copy_long, copy_long_to_int, copy_int_to_long
+from ccc.abc_builtin_ast cimport int32, copy_int, copy_long, copy_uint, copy_ulong
+from ccc.abc_builtin_ast cimport copy_int_to_long, copy_int_to_uint, copy_int_to_ulong
+from ccc.abc_builtin_ast cimport copy_long_to_int, copy_long_to_uint, copy_long_to_ulong
+from ccc.abc_builtin_ast cimport copy_uint_to_int, copy_uint_to_long, copy_uint_to_ulong
+from ccc.abc_builtin_ast cimport copy_ulong_to_int, copy_ulong_to_long, copy_ulong_to_uint
 
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern, CReturn
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
@@ -225,11 +229,37 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
             return Initial(IntInit(copy_int(node.constant.value)))
         elif isinstance(node.constant, CConstLong):
             return Initial(IntInit(copy_long_to_int(node.constant.value)))
+        elif isinstance(node.constant, CConstUInt):
+            return Initial(IntInit(copy_uint_to_int(node.constant.value)))
+        elif isinstance(node.constant, CConstULong):
+            return Initial(IntInit(copy_ulong_to_int(node.constant.value)))
     elif isinstance(static_init_type, Long):
         if isinstance(node.constant, CConstInt):
             return Initial(LongInit(copy_int_to_long(node.constant.value)))
         elif isinstance(node.constant, CConstLong):
             return Initial(LongInit(copy_long(node.constant.value)))
+        elif isinstance(node.constant, CConstUInt):
+            return Initial(LongInit(copy_uint_to_long(node.constant.value)))
+        elif isinstance(node.constant, CConstULong):
+            return Initial(LongInit(copy_ulong_to_long(node.constant.value)))
+    elif isinstance(static_init_type, UInt):
+        if isinstance(node.constant, CConstInt):
+            return Initial(UIntInit(copy_int_to_uint(node.constant.value)))
+        elif isinstance(node.constant, CConstLong):
+            return Initial(UIntInit(copy_long_to_uint(node.constant.value)))
+        elif isinstance(node.constant, CConstUInt):
+            return Initial(UIntInit(copy_uint(node.constant.value)))
+        elif isinstance(node.constant, CConstULong):
+            return Initial(UIntInit(copy_ulong_to_uint(node.constant.value)))
+    elif isinstance(static_init_type, ULong):
+        if isinstance(node.constant, CConstInt):
+            return Initial(ULongInit(copy_int_to_ulong(node.constant.value)))
+        elif isinstance(node.constant, CConstLong):
+            return Initial(ULongInit(copy_long_to_ulong(node.constant.value)))
+        elif isinstance(node.constant, CConstUInt):
+            return Initial(ULongInit(copy_uint_to_ulong(node.constant.value)))
+        elif isinstance(node.constant, CConstULong):
+            return Initial(ULongInit(copy_ulong(node.constant.value)))
 
 
 cdef Initial checktype_no_init_initial(Type static_init_type):

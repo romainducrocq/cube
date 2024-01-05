@@ -63,21 +63,3 @@ cdef uint32_t str_to_uint32(str str_uint32):
 
 cdef uint64_t str_to_uint64(str str_uint64):
     return <uint64_t>str_to_uint(str_uint64)
-
-
-cdef int64_t MAX_INT32 = 2147483647
-cdef int64_t POW_2_32 = 4294967296
-
-
-cdef bint is_int32_overflow(int64_t val_int64):
-    return val_int64 > MAX_INT32
-
-
-cdef int32_t int64_to_int32(int64_t val_int64):
-    if is_int32_overflow(val_int64):
-        val_int64 -= POW_2_32
-    return <int32_t>val_int64
-
-
-cdef int64_t int32_to_int64(int32_t val_int32):
-    return <int64_t>val_int32

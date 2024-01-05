@@ -1,4 +1,4 @@
-from ccc.util_ctypes cimport int32, int64, uint32, uint64, int64_to_int32, int32_to_int64
+from ccc.util_ctypes cimport int32, int64, uint32, uint64
 
 
 cdef class AST:
@@ -76,12 +76,52 @@ cdef TULong copy_ulong(TULong node):
     return TULong(node.ulong_t)
 
 
-cdef TInt copy_long_to_int(TLong node):
-    return TInt(int64_to_int32(node.long_t))
-
-
 cdef TLong copy_int_to_long(TInt node):
-    return TLong(int32_to_int64(node.int_t))
+    return TLong(<int64>node.int_t)
+
+
+cdef TUInt copy_int_to_uint(TInt node):
+    return TUInt(<uint32>node.int_t)
+
+
+cdef TULong copy_int_to_ulong(TInt node):
+    return TULong(<uint64>node.int_t)
+
+
+cdef TInt copy_long_to_int(TLong node):
+    return TInt(<int32>node.long_t)
+
+
+cdef TUInt copy_long_to_uint(TLong node):
+    return TUInt(<uint32>node.long_t)
+
+
+cdef TULong copy_long_to_ulong(TLong node):
+    return TULong(<uint64>node.long_t)
+
+
+cdef TInt copy_uint_to_int(TUInt node):
+    return TInt(<int32>node.uint_t)
+
+
+cdef TLong copy_uint_to_long(TUInt node):
+    return TLong(<int64>node.uint_t)
+
+
+cdef TULong copy_uint_to_ulong(TUInt node):
+    return TULong(<uint64>node.uint_t)
+
+
+cdef TInt copy_ulong_to_int(TULong node):
+    return TInt(<int32>node.ulong_t)
+
+
+cdef TLong copy_ulong_to_long(TULong node):
+    return TLong(<int64>node.ulong_t)
+
+
+cdef TUInt copy_ulong_to_uint(TULong node):
+    return TUInt(<uint32>node.ulong_t)
 
 #
 cdef list[tuple[object, str]] ast_iter_fields(AST node): #
