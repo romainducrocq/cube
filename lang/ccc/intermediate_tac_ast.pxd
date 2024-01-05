@@ -115,6 +115,11 @@ cdef class TacTruncate(TacInstruction):
     cdef public TacValue dst
 
 
+cdef class TacZeroExtend(TacInstruction):
+    cdef public TacValue src
+    cdef public TacValue dst
+
+
 cdef class TacFunCall(TacInstruction):
     cdef public TIdentifier name
     cdef public list[TacValue] args

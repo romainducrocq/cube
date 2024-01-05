@@ -173,6 +173,7 @@ cdef class TacInstruction(AST):
     # instruction = Return(val)
     #             | SignExtend(val src, val dst)
     #             | Truncate(val src, val dst)
+    #             | ZeroExtend(val src, val dst)
     #             | FunCall(identifier fun_name, val* args, val dst)
     #             | Unary(unary_operator, val src, val dst)
     #             | Binary(binary_operator, val src1, val src2, val dst)
@@ -206,6 +207,16 @@ cdef class TacSignExtend(TacInstruction):
 
 cdef class TacTruncate(TacInstruction):
     # Truncate(val src, val dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, TacValue src, TacValue dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class TacZeroExtend(TacInstruction):
+    # ZeroExtend(val src, val dst)
     def __cinit__(self):
         self._fields = ('src', 'dst')
 

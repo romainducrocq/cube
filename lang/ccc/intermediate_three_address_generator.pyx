@@ -1,9 +1,9 @@
-from ccc.abc_builtin_ast cimport copy_identifier
+from ccc.abc_builtin_ast cimport int32, copy_identifier
 
 from ccc.parser_c_ast cimport *
 
 from ccc.semantic_name cimport represent_label_identifier, represent_variable_identifier
-from ccc.semantic_type_checker cimport is_same_type
+from ccc.semantic_type_checker cimport is_same_type, is_type_signed, get_type_size
 
 from ccc.intermediate_tac_ast cimport *
 
@@ -126,10 +126,16 @@ cdef TacValue represent_exp_cast_instructions(CCast node):
     if is_same_type(node.target_type, node.exp.exp_type):
         return src
     cdef TacValue dst = represent_inner_value(node)
-    if isinstance(node.target_type, Long):
+    cdef int32 target_type_size = get_type_size(node.target_type)
+    cdef int32 inner_type_size = get_type_size(node.exp.exp_type)
+    if target_type_size == inner_type_size:
+        instructions.append(TacCopy(src, dst))
+    elif target_type_size < inner_type_size:
+        instructions.append(TacTruncate(src, dst))
+    elif is_type_signed(node.exp.exp_type):
         instructions.append(TacSignExtend(src, dst))
     else:
-        instructions.append(TacTruncate(src, dst))
+        instructions.append(TacZeroExtend(src, dst))
     return dst
 
 
