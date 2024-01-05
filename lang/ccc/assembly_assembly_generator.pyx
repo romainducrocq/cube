@@ -61,8 +61,8 @@ cdef AsmOperand generate_operand(TacValue node):
             "An error occurred in assembly generation, not all nodes were visited")
 
 
-cdef AsmCondCode generate_condition_code(TacBinaryOp node):
-    # cond_code = E | NE | G | GE | L | LE
+cdef AsmCondCode generate_signed_condition_code(TacBinaryOp node):
+    # signed_cond_code = E | NE | G | GE | L | LE
     if isinstance(node, TacEqual):
         return AsmE()
     elif isinstance(node, TacNotEqual):
@@ -75,6 +75,26 @@ cdef AsmCondCode generate_condition_code(TacBinaryOp node):
         return AsmG()
     elif isinstance(node, TacGreaterOrEqual):
         return AsmGE()
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
+cdef AsmCondCode generate_unsigned_condition_code(TacBinaryOp node):
+    # unsigned_cond_code = E | NE | A | AE | B | BE
+    if isinstance(node, TacEqual):
+        return AsmE()
+    elif isinstance(node, TacNotEqual):
+        return AsmNE()
+    elif isinstance(node, TacLessThan):
+        return AsmB()
+    elif isinstance(node, TacLessOrEqual):
+        return AsmBE()
+    elif isinstance(node, TacGreaterThan):
+        return AsmA()
+    elif isinstance(node, TacGreaterOrEqual):
+        return AsmAE()
     else:
 
         raise RuntimeError(
@@ -251,7 +271,7 @@ cdef void generate_copy_instructions(TacCopy node):
 
 cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
-    cdef AsmCondCode cond_code = generate_condition_code(TacEqual())
+    cdef AsmCondCode cond_code = generate_signed_condition_code(TacEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
@@ -261,7 +281,7 @@ cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
 
 cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
-    cdef AsmCondCode cond_code = generate_condition_code(TacNotEqual())
+    cdef AsmCondCode cond_code = generate_signed_condition_code(TacNotEqual())
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
@@ -270,10 +290,10 @@ cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
 
 
 cdef void generate_unary_operator_conditional_instructions(TacUnary node):
-    cdef imm_zero = AsmImm(TIdentifier("0"))
-    cdef cond_code = generate_condition_code(TacEqual())
-    cdef src = generate_operand(node.src)
-    cdef cmp_dst = generate_operand(node.dst)
+    cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
+    cdef AsmCondCode cond_code = generate_signed_condition_code(TacEqual())
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand cmp_dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = generate_assembly_type(node.src)
     cdef AssemblyType assembly_type_dst = generate_assembly_type(node.dst)
     instructions.append(AsmCmp(assembly_type_src, imm_zero, src))
@@ -291,11 +311,11 @@ cdef void generate_unary_operator_arithmetic_instructions(TacUnary node):
 
 
 cdef void generate_binary_operator_conditional_instructions(TacBinary node):
-    cdef imm_zero = AsmImm(TIdentifier("0"))
-    cdef cond_code = generate_condition_code(node.binary_op)
-    cdef src1 = generate_operand(node.src1)
-    cdef src2 = generate_operand(node.src2)
-    cdef cmp_dst = generate_operand(node.dst)
+    cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
+    cdef AsmCondCode cond_code = generate_signed_condition_code(node.binary_op)
+    cdef AsmOperand src1 = generate_operand(node.src1)
+    cdef AsmOperand src2 = generate_operand(node.src2)
+    cdef AsmOperand cmp_dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
     cdef AssemblyType assembly_type_dst = generate_assembly_type(node.dst)
     instructions.append(AsmCmp(assembly_type_src1, src2, src1))
