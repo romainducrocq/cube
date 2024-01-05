@@ -520,6 +520,14 @@ cdef StaticInit represent_tentative_static_init(Type static_init_type):
         return IntInit(TInt(0))
     elif isinstance(static_init_type, Long):
         return LongInit(TLong(0))
+    if isinstance(static_init_type, UInt):
+        return UIntInit(TUInt(0))
+    elif isinstance(static_init_type, ULong):
+        return ULongInit(TULong(0))
+    else:
+
+        raise RuntimeError(
+            "An error occurred in three address code representation, not all nodes were visited")
 
 
 cdef void represent_static_variable_top_level(StaticAttr node, Type static_init_type, str symbol):
