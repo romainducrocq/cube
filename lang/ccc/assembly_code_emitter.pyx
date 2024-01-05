@@ -1,13 +1,12 @@
-from ccc.abc_builtin_ast cimport TLong
+from ccc.abc_builtin_ast cimport TLong, TUInt, TULong
 
-from ccc.semantic_symbol_table cimport IntInit, LongInit
+from ccc.semantic_symbol_table cimport IntInit, LongInit, UIntInit, ULongInit
 
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_backend_symbol_table cimport LongWord, QuadWord
 
 from ccc.util_ctypes cimport int32
 from ccc.util_fopen cimport file_open_write, write_line, file_close_write
-
 
 
 cdef str emit_identifier(TIdentifier node):
@@ -23,6 +22,16 @@ cdef str emit_int(TInt node):
 cdef str emit_long(TLong node):
     # long -> $ long
     return str(node.long_t)
+
+
+cdef str emit_uint(TUInt node):
+    # uint -> $ uint
+    return str(node.uint_t)
+
+
+cdef str emit_ulong(TULong node):
+    # ulong -> $ ulong
+    return str(node.ulong_t)
 
 
 cdef str emit_register_1byte(AsmReg node):
@@ -143,6 +152,10 @@ cdef str emit_condition_code(AsmCondCode node):
     # LE -> $ le
     # G  -> $ g
     # GE -> $ ge
+    # B  -> $ b
+    # BE -> $ be
+    # A  -> $ a
+    # AE -> $ ae
     if isinstance(node, AsmE):
         return "e"
     elif isinstance(node, AsmNE):
@@ -155,6 +168,14 @@ cdef str emit_condition_code(AsmCondCode node):
         return "g"
     elif isinstance(node, AsmGE):
         return "ge"
+    elif isinstance(node, AsmB):
+        return "b"
+    elif isinstance(node, AsmBE):
+        return "be"
+    elif isinstance(node, AsmA):
+        return "a"
+    elif isinstance(node, AsmAE):
+        return "ae"
     else:
 
         raise RuntimeError(
@@ -363,6 +384,13 @@ cdef void emit_idiv_instructions(AsmIdiv node):
     emit(f"idiv{t} {src}", 1)
 
 
+cdef void emit_div_instructions(AsmDiv node):
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str src = emit_operand(node.src, byte)
+    emit(f"div{t} {src}", 1)
+
+
 cdef void emit_cdq_instructions(AsmCdq node):
     if isinstance(node.assembly_type, LongWord):
         emit("cdq", 1)
@@ -390,6 +418,7 @@ cdef void emit_instructions(AsmInstruction node):
     # Unary(unary_operator, t, operand)    -> $ <unary_operator><t> <operand>
     # Binary(binary_operator, t, src, dst) -> $ <binary_operator><t> <src>, <dst>
     # Idiv(t, operand)                     -> $ idiv<t> <operand>
+    # Div(t, operand)                      -> $ div<t> <operand>
     # Cdq<l>                               -> $ cdq
     # Cdq<q>                               -> $ cqo
     if isinstance(node, AsmRet):
@@ -418,6 +447,8 @@ cdef void emit_instructions(AsmInstruction node):
         emit_binary_instructions(node)
     elif isinstance(node, AsmIdiv):
         emit_idiv_instructions(node)
+    elif isinstance(node, AsmDiv):
+        emit_div_instructions(node)
     elif isinstance(node, AsmCdq):
         emit_cdq_instructions(node)
     else:
@@ -510,7 +541,26 @@ cdef void emit_static_variable_top_level(AsmStaticVariable node):
         else:
             static_init = f".zero 8"
             emit_bss_static_variable_top_level(node, static_init)
+    elif isinstance(node.initial_value, UIntInit):
+        if node.initial_value.value.uint_t:
+            static_init = emit_uint(node.initial_value.value)
+            static_init = f".long {static_init}"
+            emit_data_static_variable_top_level(node, static_init)
+        else:
+            static_init = f".zero 4"
+            emit_bss_static_variable_top_level(node, static_init)
+    elif isinstance(node.initial_value, ULongInit):
+        if node.initial_value.value.ulong_t:
+            static_init = emit_ulong(node.initial_value.value)
+            static_init = f".quad {static_init}"
+            emit_data_static_variable_top_level(node, static_init)
+        else:
+            static_init = f".zero 8"
+            emit_bss_static_variable_top_level(node, static_init)
+
     else:
+
+        print(type(node.initial_value))
 
         raise RuntimeError(
             "An error occurred in code emission, not all nodes were visited")
