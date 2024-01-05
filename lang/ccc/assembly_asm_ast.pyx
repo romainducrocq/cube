@@ -79,14 +79,16 @@ cdef class AsmSp(AsmReg):
 
 
 cdef class AsmCondCode(AST):
-    # 
     # cond_code = E
     #           | NE
     #           | G
     #           | GE
     #           | L
     #           | LE
-    # 
+    #           | A
+    #           | AE
+    #           | B
+    #           | BE
     def __cinit__(self):
         self._fields = ()
 
@@ -123,6 +125,30 @@ cdef class AsmL(AsmCondCode):
 
 cdef class AsmLE(AsmCondCode):
     # LE
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmA(AsmCondCode):
+    # A
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmAE(AsmCondCode):
+    # AE
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmB(AsmCondCode):
+    # B
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmBE(AsmCondCode):
+    # BE
     def __cinit__(self):
         self._fields = ()
 
@@ -265,10 +291,12 @@ cdef class AsmNeg(AsmUnaryOp):
 cdef class AsmInstruction(AST):
     # instruction = Mov(assembly_type, operand src, operand dst)
     #             | MovSx(operand src, operand dst)
+    #             | MovZeroExtend(operand src, operand dst)
     #             | Unary(unary_operator, assembly_type, operand)
     #             | Binary(binary_operator, assembly_type, operand, operand)
     #             | Cmp(assembly_type, operand, operand)
     #             | Idiv(assembly_type, operand)
+    #             | Div(assembly_type, operand)
     #             | Cdq(assembly_type)
     #             | Jmp(identifier)
     #             | JmpCC(cond_code, identifier)
@@ -295,7 +323,17 @@ cdef class AsmMov(AsmInstruction):
 
 
 cdef class AsmMovSx(AsmInstruction):
-    # AsmMovSx(operand src, operand dst)
+    # MovSx(operand src, operand dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, AsmOperand src, AsmOperand dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class AsmMovZeroExtend(AsmInstruction):
+    # MovZeroExtend(operand src, operand dst)
     def __cinit__(self):
         self._fields = ('src', 'dst')
 
@@ -340,6 +378,16 @@ cdef class AsmCmp(AsmInstruction):
 
 cdef class AsmIdiv(AsmInstruction):
     # Idiv(assembly_type, operand src)
+    def __cinit__(self):
+        self._fields = ('assembly_type', 'src')
+
+    def __init__(self, AssemblyType assembly_type, AsmOperand src):
+        self.assembly_type = assembly_type
+        self.src = src
+
+
+cdef class AsmDiv(AsmInstruction):
+    # Div(assembly_type, operand src)
     def __cinit__(self):
         self._fields = ('assembly_type', 'src')
 

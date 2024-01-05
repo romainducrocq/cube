@@ -75,6 +75,22 @@ cdef class AsmLE(AsmCondCode):
     pass
 
 
+cdef class AsmA(AsmCondCode):
+    pass
+
+
+cdef class AsmAE(AsmCondCode):
+    pass
+
+
+cdef class AsmB(AsmCondCode):
+    pass
+
+
+cdef class AsmBE(AsmCondCode):
+    pass
+
+
 cdef class AsmOperand(AST):
     pass
 
@@ -162,6 +178,11 @@ cdef class AsmMovSx(AsmInstruction):
     cdef public AsmOperand dst
 
 
+cdef class AsmMovZeroExtend(AsmInstruction):
+    cdef public AsmOperand src
+    cdef public AsmOperand dst
+
+
 cdef class AsmUnary(AsmInstruction):
     cdef public AsmUnaryOp unary_op
     cdef public AssemblyType assembly_type
@@ -182,6 +203,11 @@ cdef class AsmCmp(AsmInstruction):
 
 
 cdef class AsmIdiv(AsmInstruction):
+    cdef public AssemblyType assembly_type
+    cdef public AsmOperand src
+
+
+cdef class AsmDiv(AsmInstruction):
     cdef public AssemblyType assembly_type
     cdef public AsmOperand src
 
