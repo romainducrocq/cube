@@ -1,8 +1,8 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
-from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmMovSx, AsmPush, AsmCmp, AsmSetCC
-from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmMult
+from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmMovSx, AsmMovZeroExtend, AsmPush, AsmCmp, AsmSetCC
+from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmDiv, AsmMult
 from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData
 from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
@@ -71,6 +71,13 @@ cdef void replace_mov_sx_pseudo_registers(AsmMovSx node):
         node.dst = replace_operand_pseudo_register(node.dst)
 
 
+cdef void replace_mov_zero_extend_pseudo_registers(AsmMovZeroExtend node):
+    if isinstance(node.src, AsmPseudo):
+        node.src = replace_operand_pseudo_register(node.src)
+    if isinstance(node.dst, AsmPseudo):
+        node.dst = replace_operand_pseudo_register(node.dst)
+
+
 cdef void replace_push_pseudo_registers(AsmPush node):
     if isinstance(node.src, AsmPseudo):
         node.src = replace_operand_pseudo_register(node.src)
@@ -105,11 +112,18 @@ cdef void replace_idiv_pseudo_registers(AsmIdiv node):
         node.src = replace_operand_pseudo_register(node.src)
 
 
+cdef void replace_div_pseudo_registers(AsmDiv node):
+    if isinstance(node.src, AsmPseudo):
+        node.src = replace_operand_pseudo_register(node.src)
+
+
 cdef void replace_pseudo_registers(AsmInstruction node):
     if isinstance(node, AsmMov):
         replace_mov_pseudo_registers(node)
     elif isinstance(node, AsmMovSx):
         replace_mov_sx_pseudo_registers(node)
+    elif isinstance(node, AsmMovZeroExtend):
+        replace_mov_zero_extend_pseudo_registers(node)
     elif isinstance(node, AsmPush):
         replace_push_pseudo_registers(node)
     elif isinstance(node, AsmCmp):
@@ -122,6 +136,8 @@ cdef void replace_pseudo_registers(AsmInstruction node):
         replace_binary_pseudo_registers(node)
     elif isinstance(node, AsmIdiv):
         replace_idiv_pseudo_registers(node)
+    elif isinstance(node, AsmDiv):
+        replace_div_pseudo_registers(node)
 
 
 cdef AsmBinary allocate_stack_bytes(int32 byte):
@@ -176,7 +192,7 @@ cdef void correct_mov_sx_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k
                                           src_src, fun_instructions[i].src))
 
 
-cdef void correct_mov_sx_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
+cdef void correct_mov_sx_zero_extend_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
     # movsx (_, addr)
     # $ movslq _, addr ->
     #     $ movslq _  , reg
@@ -185,6 +201,12 @@ cdef void correct_mov_sx_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t 
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
     fun_instructions.insert(k, AsmMov(QuadWord(),
                                       fun_instructions[i].dst, src_dst))
+
+
+cdef void correct_mov_zero_extend_from_any_to_any_instructions(Py_ssize_t i):
+    fun_instructions[i] = AsmMov(LongWord(),
+                                 fun_instructions[i].src, fun_instructions[i].dst)
+
 
 cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
     # cmp (_, imm)
@@ -209,7 +231,7 @@ cdef void correct_shl_shr_from_addr_to_addr(Py_ssize_t i, Py_ssize_t k):
 
 
 cdef void correct_mul_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
-    # mul (_, addr)
+    # imul (_, addr)
     # $ imull imm, addr ->
     #     $ movl  addr, reg
     #     $ imull imm , reg
@@ -224,7 +246,7 @@ cdef void correct_mul_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
 
 
 cdef void correct_div_from_imm(Py_ssize_t i, Py_ssize_t k):
-    # idiv (imm)
+    # idiv | div (imm)
     # $ idivl imm ->
     #     $ movl  imm, reg
     #     $ idivl reg
@@ -301,7 +323,14 @@ cdef void correct_function_top_level(AsmFunction node):
                 count_insert += 1
 
             if is_to_addr_instruction(i):
-                correct_mov_sx_from_any_to_addr_instructions(i, k)
+                correct_mov_sx_zero_extend_from_any_to_addr_instructions(i, k)
+                count_insert += 1
+
+        elif isinstance(fun_instructions[i], AsmMovZeroExtend):
+            correct_mov_zero_extend_from_any_to_any_instructions(i)
+
+            if is_to_addr_instruction(i):
+                correct_mov_sx_zero_extend_from_any_to_addr_instructions(i, k)
                 count_insert += 1
 
         elif isinstance(fun_instructions[i], AsmCmp):
@@ -354,7 +383,7 @@ cdef void correct_function_top_level(AsmFunction node):
                     correct_mul_from_any_to_addr(i, k)
                     count_insert += 2
 
-        elif isinstance(fun_instructions[i], AsmIdiv):
+        elif isinstance(fun_instructions[i], (AsmIdiv, AsmDiv)):
             if is_from_imm_instruction(i):
                 correct_div_from_imm(i, k)
                 count_insert += 1
