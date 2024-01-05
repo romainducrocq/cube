@@ -1,13 +1,13 @@
-from ccc.semantic_symbol_table cimport symbol_table, Int, Long, FunType
+from ccc.semantic_symbol_table cimport symbol_table, Int, Long, UInt, ULong, FunType
 from ccc.semantic_symbol_table cimport IdentifierAttr, FunAttr, StaticAttr
 
 from ccc.assembly_backend_symbol_table cimport *
 
 
 cdef AssemblyType convert_backend_assembly_type(str name_str):
-    if isinstance(symbol_table[name_str].type_t, Int):
+    if isinstance(symbol_table[name_str].type_t, (Int, UInt)):
         return LongWord()
-    elif isinstance(symbol_table[name_str].type_t, Long):
+    elif isinstance(symbol_table[name_str].type_t, (Long, ULong)):
         return QuadWord()
     else:
 

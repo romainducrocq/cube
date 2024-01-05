@@ -9,7 +9,7 @@ from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssi
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 from ccc.parser_c_ast cimport CNot, CAnd, COr, CAdd, CSubtract, CMultiply, CDivide, CRemainder
 from ccc.parser_c_ast cimport CBitAnd, CBitOr, CBitXor, CBitShiftLeft, CBitShiftRight
-from ccc.parser_c_ast cimport CConstInt, CConstLong, CConstUInt, CConstULong
+from ccc.parser_c_ast cimport CConst, CConstInt, CConstLong, CConstUInt, CConstULong
 
 from ccc.semantic_symbol_table cimport *
 
@@ -45,6 +45,10 @@ cdef int32 get_type_size(Type type1):
 
 cdef bint is_type_signed(Type type1):
     return isinstance(type1, (Int, Long))
+
+
+cdef bint is_const_signed(CConst node):
+    return isinstance(node, (CConstInt, CConstLong))
 
 
 cdef Type get_joint_type(Type type1, Type type2):

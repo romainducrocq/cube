@@ -1,7 +1,10 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
-from ccc.parser_c_ast cimport Int, Long, CConstInt, CConstLong
+from ccc.parser_c_ast cimport Int, Long, UInt, ULong, CConstInt, CConstLong, CConstUInt, CConstULong
 from ccc.intermediate_tac_ast cimport *
+
+from ccc.semantic_symbol_table cimport symbol_table
+from ccc.semantic_type_checker cimport is_type_signed, is_const_signed
 
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_backend_symbol_table cimport AssemblyType, LongWord, QuadWord
@@ -13,9 +16,9 @@ from ccc.util_ctypes cimport int32
 
 
 cdef TInt generate_alignment(Type node):
-    if isinstance(node, Int):
+    if isinstance(node, (Int, UInt)):
         return TInt(4)
-    elif isinstance(node, Long):
+    elif isinstance(node, (Long, ULong)):
         return TInt(8)
     else:
 
@@ -33,11 +36,26 @@ cdef AsmImm generate_long_imm_operand(CConstLong node):
     return AsmImm(value)
 
 
+cdef AsmImm generate_uint_imm_operand(CConstUInt node):
+    cdef TIdentifier value = TIdentifier(str(node.value.uint_t))
+    return AsmImm(value)
+
+
+cdef AsmImm generate_ulong_imm_operand(CConstULong node):
+    cdef TIdentifier value = TIdentifier(str(node.value.ulong_t))
+    return AsmImm(value)
+
+
 cdef AsmOperand generate_imm_operand(TacConstant node):
     if isinstance(node.constant, CConstInt):
         return generate_int_imm_operand(node.constant)
     elif isinstance(node.constant, CConstLong):
         return generate_long_imm_operand(node.constant)
+    elif isinstance(node.constant, CConstUInt):
+        return generate_uint_imm_operand(node.constant)
+    elif isinstance(node.constant, CConstULong):
+        return generate_ulong_imm_operand(node.constant)
+
     else:
 
         raise RuntimeError(
@@ -137,10 +155,29 @@ cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
             "An error occurred in assembly generation, not all nodes were visited")
 
 
+cdef bint is_constant_value_signed(TacConstant node):
+    return is_const_signed(node.constant)
+
+
+cdef bint is_variable_value_signed(TacVariable node):
+    return is_type_signed(symbol_table[node.name.str_t].type_t)
+
+
+cdef bint is_value_signed(TacValue node):
+    if isinstance(node, TacConstant):
+        return is_constant_value_signed(node)
+    elif isinstance(node, TacVariable):
+        return is_variable_value_signed(node)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
 cdef AssemblyType generate_constant_assembly_type(TacConstant node):
-    if isinstance(node.constant, CConstInt):
+    if isinstance(node.constant, (CConstInt, CConstUInt)):
         return LongWord()
-    elif isinstance(node.constant, CConstLong):
+    elif isinstance(node.constant, (CConstLong, CConstULong)):
         return QuadWord()
     else:
 
@@ -228,11 +265,16 @@ cdef void generate_sign_extend_instructions(TacSignExtend node):
     instructions.append(AsmMovSx(src, dst))
 
 
+cdef void generate_zero_extend_instructions(TacZeroExtend node):
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    instructions.append(AsmMovZeroExtend(src, dst))
+
+
 cdef void generate_imm_truncate_instructions(AsmImm node):
-    # TODO
-    # cdef object value = int(node.value.str_t)
-    if int(node.value.str_t) > 2147483647:
-        node.value.str_t = str(int(node.value.str_t) - 4294967296)
+    cdef object value = int(node.value.str_t)
+    if value > 2147483647:
+        node.value.str_t = str(value - 4294967296)
 
 
 cdef void generate_truncate_instructions(TacTruncate node):
@@ -312,7 +354,11 @@ cdef void generate_unary_operator_arithmetic_instructions(TacUnary node):
 
 cdef void generate_binary_operator_conditional_instructions(TacBinary node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
-    cdef AsmCondCode cond_code = generate_signed_condition_code(node.binary_op)
+    cdef AsmCondCode cond_code
+    if is_value_signed(node.src1):
+        cond_code = generate_signed_condition_code(node.binary_op)
+    else:
+        cond_code = generate_unsigned_condition_code(node.binary_op)
     cdef AsmOperand src1 = generate_operand(node.src1)
     cdef AsmOperand src2 = generate_operand(node.src2)
     cdef AsmOperand cmp_dst = generate_operand(node.dst)
@@ -333,7 +379,7 @@ cdef void generate_binary_operator_arithmetic_instructions(TacBinary node):
     instructions.append(AsmBinary(binary_op, assembly_type_src1, src2, src1_dst))
 
 
-cdef void generate_binary_operator_arithmetic_divide_instructions(TacBinary node):
+cdef void generate_binary_operator_arithmetic_signed_divide_instructions(TacBinary node):
     cdef AsmOperand src1 = generate_operand(node.src1)
     cdef AsmOperand src2 = generate_operand(node.src2)
     cdef AsmOperand dst = generate_operand(node.dst)
@@ -346,7 +392,29 @@ cdef void generate_binary_operator_arithmetic_divide_instructions(TacBinary node
     instructions.append(AsmMov(assembly_type_src1, dst_src, dst))
 
 
-cdef void generate_binary_operator_arithmetic_remainder_instructions(TacBinary node):
+cdef void generate_binary_operator_arithmetic_unsigned_divide_instructions(TacBinary node):
+    cdef AsmOperand src1 = generate_operand(node.src1)
+    cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
+    cdef AsmOperand src2 = generate_operand(node.src2)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AsmOperand src1_dst = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand imm_zero_dst = generate_register(REGISTER_KIND.get('Dx'))
+    cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
+    instructions.append(AsmMov(assembly_type_src1, src1, src1_dst))
+    instructions.append(AsmMov(assembly_type_src1, imm_zero, imm_zero_dst))
+    instructions.append(AsmDiv(assembly_type_src1, src2))
+    instructions.append(AsmMov(assembly_type_src1, dst_src, dst))
+
+
+cdef void generate_binary_operator_arithmetic_divide_instructions(TacBinary node):
+    if is_value_signed(node.src1):
+        generate_binary_operator_arithmetic_signed_divide_instructions(node)
+    else:
+        generate_binary_operator_arithmetic_unsigned_divide_instructions(node)
+
+
+cdef void generate_binary_operator_arithmetic_signed_remainder_instructions(TacBinary node):
     cdef AsmOperand src1 = generate_operand(node.src1)
     cdef AsmOperand src2 = generate_operand(node.src2)
     cdef AsmOperand dst = generate_operand(node.dst)
@@ -359,11 +427,35 @@ cdef void generate_binary_operator_arithmetic_remainder_instructions(TacBinary n
     instructions.append(AsmMov(assembly_type_src1, dst_src, dst))
 
 
+cdef void generate_binary_operator_arithmetic_unsigned_remainder_instructions(TacBinary node):
+    cdef AsmOperand src1 = generate_operand(node.src1)
+    cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
+    cdef AsmOperand src2 = generate_operand(node.src2)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AsmOperand src1_dst = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand imm_zero_dst = generate_register(REGISTER_KIND.get('Dx'))
+    cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Dx'))
+    cdef AssemblyType assembly_type_src1 = generate_assembly_type(node.src1)
+    instructions.append(AsmMov(assembly_type_src1, src1, src1_dst))
+    instructions.append(AsmMov(assembly_type_src1, imm_zero, imm_zero_dst))
+    instructions.append(AsmDiv(assembly_type_src1, src2))
+    instructions.append(AsmMov(assembly_type_src1, dst_src, dst))
+
+
+cdef void generate_binary_operator_arithmetic_remainder_instructions(TacBinary node):
+    if is_value_signed(node.src1):
+        generate_binary_operator_arithmetic_signed_remainder_instructions(node)
+    else:
+        generate_binary_operator_arithmetic_unsigned_remainder_instructions(node)
+
+
 cdef void generate_instructions(TacInstruction node):
     if isinstance(node, TacFunCall):
         generate_fun_call_instructions(node)
     elif isinstance(node, TacSignExtend):
         generate_sign_extend_instructions(node)
+    elif isinstance(node, TacZeroExtend):
+        generate_zero_extend_instructions(node)
     elif isinstance(node, TacTruncate):
         generate_truncate_instructions(node)
     elif isinstance(node, TacLabel):
@@ -494,6 +586,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
 
     convert_symbol_table()
 
-    correct_stack(asm_ast)
+    # correct_stack(asm_ast)
 
     return asm_ast
