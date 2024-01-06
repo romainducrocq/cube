@@ -144,6 +144,14 @@ cdef void checktype_binary_expression(CBinary node):
     if isinstance(node.binary_op, (CAnd, COr)):
         node.exp_type = Int()
         return
+    elif isinstance(node.binary_op, (CBitShiftLeft, CBitShiftRight)):
+        # Note: https://stackoverflow.com/a/70130146
+        # if the value of the right operand is negative or is greater than or equal
+        # to the width of the promoted left operand, the behavior is undefined
+        if not is_same_type(node.exp_left.exp_type, node.exp_right.exp_type):
+            node.exp_right = cast_expression(node.exp_right, node.exp_left.exp_type)
+        node.exp_type = node.exp_left.exp_type
+        return
     cdef Type common_type = get_joint_type(node.exp_left.exp_type, node.exp_right.exp_type)
     if not is_same_type(node.exp_left.exp_type, common_type):
         node.exp_left = cast_expression(node.exp_left, common_type)
@@ -154,11 +162,6 @@ cdef void checktype_binary_expression(CBinary node):
     elif isinstance(node.binary_op, (CBitAnd, CBitOr, CBitXor)):
         # Note: https://stackoverflow.com/a/1723938
         # if the value of an operand is a double, it must be cast to integer type
-        node.exp_type = common_type
-    elif isinstance(node.binary_op, (CBitShiftLeft, CBitShiftRight)):
-        # Note: https://stackoverflow.com/a/70130146
-        # if the value of the right operand is negative or is greater than or equal
-        # to the width of the promoted left operand, the behavior is undefined
         node.exp_type = common_type
     else:
         node.exp_type = Int()
