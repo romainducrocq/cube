@@ -26,7 +26,7 @@
 ### Types
 
 - [x] Long integers  
-- [ ] Unsigned integers  
+- [x] Unsigned integers  
 - [ ] Floating-point numbers  
 - [ ] Pointers  
 - [ ] Arrays and pointer arithmetic  
