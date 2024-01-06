@@ -21,6 +21,7 @@ TEST_DIRS=(
 "10_file-scope_variables_and_storage-class_specifiers"
 "11_long_integers"
 "12_unsigned_integers"
+"13_floating-point_numbers"
 )
 
 function file () {
