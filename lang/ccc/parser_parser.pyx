@@ -312,10 +312,11 @@ cdef CAssignment parse_assigment_exp(CExp exp_left, int32 precedence):
     return CAssignment(exp_left, exp_right)
 
 
-cdef CAssignmentCompound parse_assigment_compound_exp(CExp exp_left, int32 precedence):
+cdef CAssignment parse_assigment_compound_exp(CExp exp_left, int32 precedence):
     cdef CBinaryOp binary_op = parse_binary_op()
     cdef CExp exp_right = parse_exp(precedence)
-    return CAssignmentCompound(binary_op, exp_left, exp_right)
+    exp_right = CAssignmentCompound(binary_op, exp_left, exp_right)
+    return CAssignment(exp_left, exp_right)
 
 
 cdef CConditional parse_ternary_exp(CExp exp_left, int32 precedence):

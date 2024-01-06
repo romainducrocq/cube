@@ -149,11 +149,9 @@ cdef TacValue represent_exp_assignment_instructions(CAssignment node):
 cdef TacValue represent_exp_assignment_compound_instructions(CAssignmentCompound node):
     cdef TacValue src1 = represent_exp_instructions(node.exp_left)
     cdef TacValue src2 = represent_exp_instructions(node.exp_right)
-    cdef TacValue val = represent_inner_value(node.exp_left)
+    cdef TacValue dst = represent_inner_value(node.exp_left)
     cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
-    instructions.append(TacBinary(binary_op, src1, src2, val))
-    cdef TacValue dst = represent_value(node.exp_left)
-    instructions.append(TacCopy(val, dst))
+    instructions.append(TacBinary(binary_op, src1, src2, dst))
     return dst
 
 

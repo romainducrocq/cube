@@ -125,9 +125,12 @@ cdef void checktype_assignment_expression(CAssignment node):
 
 
 cdef void checktype_assignment_compound_expression(CAssignmentCompound node):
-    if not is_same_type(node.exp_right.exp_type, node.exp_left.exp_type):
-        node.exp_right = cast_expression(node.exp_right, node.exp_left.exp_type)
-    node.exp_type = node.exp_left.exp_type
+    cdef Type common_type = get_joint_type(node.exp_left.exp_type, node.exp_right.exp_type)
+    if not is_same_type(node.exp_left.exp_type, common_type):
+        node.exp_left = cast_expression(node.exp_left, common_type)
+    if not is_same_type(node.exp_right.exp_type, common_type):
+        node.exp_right = cast_expression(node.exp_right, common_type)
+    node.exp_type = common_type
 
 
 cdef void checktype_unary_expression(CUnary node):

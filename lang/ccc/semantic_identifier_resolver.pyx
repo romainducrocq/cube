@@ -108,12 +108,6 @@ cdef void resolve_assignment_expression(CAssignment node):
 
 
 cdef void resolve_assignment_compound_expression(CAssignmentCompound node):
-    if not isinstance(node.exp_left, CVar):
-
-        raise RuntimeError(
-            f"Left expression {type(node.exp_left)} is an invalid lvalue")
-
-    resolve_expression(node.exp_left)
     resolve_expression(node.exp_right)
 
 
