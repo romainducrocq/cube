@@ -59,6 +59,7 @@ TOKEN_KIND = IotaEnum((
 
     "key_int",
     "key_long",
+    "key_double",
     "key_signed",
     "key_unsigned",
     "key_void",
@@ -75,6 +76,7 @@ TOKEN_KIND = IotaEnum((
     "key_extern",
 
     "identifier",
+    "float_constant",
     "unsigned_long_constant",
     "unsigned_constant",
     "long_constant",
@@ -131,6 +133,7 @@ cdef dict[int32, str] TOKEN_REGEX = {
 
     TOKEN_KIND.get('key_int'): r"int\b",
     TOKEN_KIND.get('key_long'): r"long\b",
+    TOKEN_KIND.get('key_double'): r"double\b",
     TOKEN_KIND.get('key_signed'): r"signed\b",
     TOKEN_KIND.get('key_unsigned'): r"unsigned\b",
     TOKEN_KIND.get('key_void'): r"void\b",
@@ -147,10 +150,11 @@ cdef dict[int32, str] TOKEN_REGEX = {
     TOKEN_KIND.get('key_extern'): r"extern\b",
 
     TOKEN_KIND.get('identifier'): r"[a-zA-Z_]\w*\b",
-    TOKEN_KIND.get('unsigned_long_constant'): r"[0-9]+([lL][uU]|[uU][lL])\b",
-    TOKEN_KIND.get('unsigned_constant'): r"[0-9]+[uU]\b",
-    TOKEN_KIND.get('long_constant'): r"[0-9]+[lL]\b",
-    TOKEN_KIND.get('constant'): r"[0-9]+\b",
+    TOKEN_KIND.get('float_constant'): r"(([0-9]*\.[0-9]+|[0-9]+\.?)[Ee][+-]?[0-9]+|[0-9]*\.[0-9]+|[0-9]+\.)(?![\w.])",
+    TOKEN_KIND.get('unsigned_long_constant'): r"[0-9]+([lL][uU]|[uU][lL])(?![\w.])",
+    TOKEN_KIND.get('unsigned_constant'): r"[0-9]+[uU](?![\w.])",
+    TOKEN_KIND.get('long_constant'): r"[0-9]+[lL](?![\w.])",
+    TOKEN_KIND.get('constant'): r"[0-9]+(?![\w.])",
 
     TOKEN_KIND.get('skip'): r"[ \n\r\t\f\v]",
     TOKEN_KIND.get('error'): r"."
