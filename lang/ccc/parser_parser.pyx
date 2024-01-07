@@ -121,8 +121,11 @@ cdef CConstULong parse_ulong_constant():
 
 
 cdef CConst parse_constant():
-    # <const> ::= <int> | <long>
-    if pop_next().token_kind == TOKEN_KIND.get('long_constant'):
+    # <const> ::= <int> | <long> | <double>
+    if pop_next().token_kind == TOKEN_KIND.get('float_constant'):
+        return parse_double_constant()
+
+    elif next_token.token_kind == TOKEN_KIND.get('long_constant'):
         next_token.token = next_token.token[:-1]
 
     cdef object value = int(next_token.token)
@@ -255,12 +258,6 @@ cdef CConstant parse_constant_factor():
     return CConstant(constant)
 
 
-cdef CConstant parse_double_constant_factor():
-    _ = pop_next()
-    cdef CConst constant = parse_double_constant()
-    return CConstant(constant)
-
-
 cdef CConstant parse_unsigned_constant_factor():
     cdef CConst constant = parse_unsigned_constant()
     return CConstant(constant)
@@ -291,7 +288,7 @@ cdef CExp parse_function_call_factor():
 
 
 cdef CExp parse_factor():
-    # <factor> ::= <const> | <identifier> | | "(" { <type-specifier> }+ ")" <factor> | <unop> <factor> | "(" <exp> ")"
+    # <factor> ::= <const> | <identifier> | "(" { <type-specifier> }+ ")" <factor> | <unop> <factor> | "(" <exp> ")"
     #            | <identifier> "(" [ <argument-list> ] ")"
     if peek_next().token_kind == TOKEN_KIND.get('identifier'):
         if peek_next_i(1).token_kind == TOKEN_KIND.get('parenthesis_open'):
@@ -299,10 +296,9 @@ cdef CExp parse_factor():
         else:
             return parse_var_factor()
     elif peek_token.token_kind in (TOKEN_KIND.get('constant'),
-                                   TOKEN_KIND.get('long_constant')):
+                                   TOKEN_KIND.get('long_constant'),
+                                   TOKEN_KIND.get('float_constant')):
         return parse_constant_factor()
-    elif peek_token.token_kind == TOKEN_KIND.get('float_constant'):
-        return parse_double_constant_factor()
     elif peek_token.token_kind in (TOKEN_KIND.get('unsigned_constant'),
                                    TOKEN_KIND.get('unsigned_long_constant')):
         return parse_unsigned_constant_factor()
