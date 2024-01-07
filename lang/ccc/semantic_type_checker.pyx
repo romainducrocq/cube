@@ -9,7 +9,7 @@ from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssi
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 from ccc.parser_c_ast cimport CNot, CAnd, COr, CAdd, CSubtract, CMultiply, CDivide, CRemainder
 from ccc.parser_c_ast cimport CBitAnd, CBitOr, CBitXor, CBitShiftLeft, CBitShiftRight
-from ccc.parser_c_ast cimport CConst, CConstInt, CConstLong, CConstUInt, CConstULong
+from ccc.parser_c_ast cimport CConst, CConstInt, CConstLong, CConstDouble, CConstUInt, CConstULong
 
 from ccc.semantic_symbol_table cimport *
 
@@ -54,6 +54,9 @@ cdef bint is_const_signed(CConst node):
 cdef Type get_joint_type(Type type1, Type type2):
     if is_same_type(type1, type2):
         return type1
+    elif isinstance(type1, Double) or \
+         isinstance(type2, Double):
+        return Double
     cdef int32 type1_size = get_type_size(type1)
     cdef int32 type2_size = get_type_size(type2)
     if type1_size == type2_size:
@@ -112,6 +115,8 @@ cdef void checktype_constant_expression(CConstant node):
         node.exp_type = Int()
     elif isinstance(node.constant, CConstLong):
         node.exp_type = Long()
+    elif isinstance(node.constant, CConstDouble):
+        node.exp_type = Double()
     elif isinstance(node.constant, CConstUInt):
         node.exp_type = UInt()
     elif isinstance(node.constant, CConstULong):

@@ -13,15 +13,15 @@ cdef class Long(Type):
     pass
 
 
+cdef class Double(Type):
+    pass
+
+
 cdef class UInt(Type):
     pass
 
 
 cdef class ULong(Type):
-    pass
-
-
-cdef class Double(Type):
     pass
 
 
@@ -40,6 +40,10 @@ cdef class IntInit(StaticInit):
 
 cdef class LongInit(StaticInit):
     cdef public TLong value
+
+
+cdef class DoubleInit(StaticInit):
+    cdef public TDouble value
 
 
 cdef class UIntInit(StaticInit):

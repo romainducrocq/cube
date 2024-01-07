@@ -4,6 +4,7 @@ from ccc.abc_builtin_ast cimport AST, TInt, TLong, TUInt, TULong, TDouble
 cdef class Type(AST):
     # type = Int
     #      | Long
+    #      | Double
     #      | UInt
     #      | ULong
     #      | FunType(type*, type)
@@ -23,6 +24,12 @@ cdef class Long(Type):
         self._fields = ()
 
 
+cdef class Double(Type):
+    # Double
+    def __cinit__(self):
+        self._fields = ()
+
+
 cdef class UInt(Type):
     # UInt
     def __cinit__(self):
@@ -31,12 +38,6 @@ cdef class UInt(Type):
 
 cdef class ULong(Type):
     # ULong
-    def __cinit__(self):
-        self._fields = ()
-
-
-cdef class Double(Type):
-    # Double
     def __cinit__(self):
         self._fields = ()
 
@@ -54,6 +55,7 @@ cdef class FunType(Type):
 cdef class StaticInit(AST):
     # static_init = IntInit(int)
     #             | LongInit(int)
+    #             | DoubleInit(double)
     #             | UIntInit(int)
     #             | ULongInit(int)
     def __cinit__(self):
@@ -70,11 +72,20 @@ cdef class IntInit(StaticInit):
 
 
 cdef class LongInit(StaticInit):
-    # LongInit(long)
+    # LongInit(int)
     def __cinit__(self):
         self._fields = ('value',)
 
     def __init__(self, TLong value):
+        self.value = value
+
+
+cdef class DoubleInit(StaticInit):
+    # DoubleInit(int)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TDouble value):
         self.value = value
 
 
