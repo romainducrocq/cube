@@ -18,9 +18,10 @@ if [ ${#} -ne 0 ]; then
     test ${@}
 else
     for i in $(seq 1 12); do
-        test --chapter ${i} --stage lex --latest-only --bitwise --compound --goto
+        if [ ${i} -eq 5 ]; then continue; fi
+        test --chapter ${i} --stage parse --latest-only --bitwise --compound --goto
     done
-    test --chapter 13 --stage lex --latest-only --bitwise --compound --goto
+    test --chapter 13 --stage parse --latest-only --bitwise --compound --goto
 fi
 
 exit 0

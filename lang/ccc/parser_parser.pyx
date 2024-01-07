@@ -90,6 +90,11 @@ cdef TULong parse_ulong():
     return TULong(str_to_uint64(next_token.token))
 
 
+cdef TDouble parse_double():
+    # <double> ::= ? A constant token ?
+    return TDouble(str_to_double(next_token.token))
+
+
 cdef CConstInt parse_int_constant():
     cdef TInt value = parse_int()
     return CConstInt(value)
@@ -98,6 +103,11 @@ cdef CConstInt parse_int_constant():
 cdef CConstLong parse_long_constant():
     cdef TLong value = parse_long()
     return CConstLong(value)
+
+
+cdef CConstDouble parse_double_constant():
+    cdef TDouble value = parse_double()
+    return CConstDouble(value)
 
 
 cdef CConstUInt parse_uint_constant():
@@ -245,6 +255,12 @@ cdef CConstant parse_constant_factor():
     return CConstant(constant)
 
 
+cdef CConstant parse_double_constant_factor():
+    _ = pop_next()
+    cdef CConst constant = parse_double_constant()
+    return CConstant(constant)
+
+
 cdef CConstant parse_unsigned_constant_factor():
     cdef CConst constant = parse_unsigned_constant()
     return CConstant(constant)
@@ -285,6 +301,8 @@ cdef CExp parse_factor():
     elif peek_token.token_kind in (TOKEN_KIND.get('constant'),
                                    TOKEN_KIND.get('long_constant')):
         return parse_constant_factor()
+    elif peek_token.token_kind == TOKEN_KIND.get('float_constant'):
+        return parse_double_constant_factor()
     elif peek_token.token_kind in (TOKEN_KIND.get('unsigned_constant'),
                                    TOKEN_KIND.get('unsigned_long_constant')):
         return parse_unsigned_constant_factor()
@@ -295,8 +313,9 @@ cdef CExp parse_factor():
     elif pop_next().token_kind == TOKEN_KIND.get('parenthesis_open'):
         if peek_next().token_kind in (TOKEN_KIND.get('key_int'),
                                       TOKEN_KIND.get('key_long'),
-                                      TOKEN_KIND.get('key_signed'),
-                                      TOKEN_KIND.get('key_unsigned')):
+                                      TOKEN_KIND.get('key_double'),
+                                      TOKEN_KIND.get('key_unsigned'),
+                                      TOKEN_KIND.get('key_signed')):
             return parse_cast_factor()
         else:
             return parse_inner_exp_factor()
@@ -544,8 +563,9 @@ cdef CForInit parse_for_init():
     # <for-init> ::= <variable-declaration> | [<exp>] ";"
     if peek_next().token_kind in (TOKEN_KIND.get('key_int'),
                                   TOKEN_KIND.get('key_long'),
-                                  TOKEN_KIND.get('key_signed'),
+                                  TOKEN_KIND.get('key_double'),
                                   TOKEN_KIND.get('key_unsigned'),
+                                  TOKEN_KIND.get('key_signed'),
                                   TOKEN_KIND.get('key_static'),
                                   TOKEN_KIND.get('key_extern')):
         return parse_decl_for_init()
@@ -567,8 +587,9 @@ cdef CBlockItem parse_block_item():
     # <block-item> ::= <statement> | <declaration>
     if peek_token.token_kind in (TOKEN_KIND.get('key_int'),
                                  TOKEN_KIND.get('key_long'),
-                                 TOKEN_KIND.get('key_signed'),
+                                 TOKEN_KIND.get('key_double'),
                                  TOKEN_KIND.get('key_unsigned'),
+                                 TOKEN_KIND.get('key_signed'),
                                  TOKEN_KIND.get('key_static'),
                                  TOKEN_KIND.get('key_extern')):
         return parse_d_block_item()
@@ -603,8 +624,9 @@ cdef Type parse_type_specifier():
             break
         elif peek_next_i(specifier).token_kind in (TOKEN_KIND.get('key_int'),
                                                    TOKEN_KIND.get('key_long'),
-                                                   TOKEN_KIND.get('key_signed'),
-                                                   TOKEN_KIND.get('key_unsigned')):
+                                                   TOKEN_KIND.get('key_double'),
+                                                   TOKEN_KIND.get('key_unsigned'),
+                                                   TOKEN_KIND.get('key_signed')):
             type_token_kinds.append(pop_next_i(specifier).token_kind)
         elif peek_next_i(specifier).token_kind in (TOKEN_KIND.get('key_static'),
                                                    TOKEN_KIND.get('key_extern')):
@@ -619,6 +641,8 @@ cdef Type parse_type_specifier():
             return Int()
         elif type_token_kinds[0] == TOKEN_KIND.get('key_long'):
             return Long()
+        elif type_token_kinds[0] == TOKEN_KIND.get('key_double'):
+            return Double()
         elif type_token_kinds[0] == TOKEN_KIND.get('key_unsigned'):
             return UInt()
         elif type_token_kinds[0] == TOKEN_KIND.get('key_signed'):
@@ -681,8 +705,9 @@ cdef CFunctionDeclaration parse_function_declaration(Type ret_type):
         _ = pop_next()
     elif peek_token.token_kind in (TOKEN_KIND.get('key_int'),
                                    TOKEN_KIND.get('key_long'),
-                                   TOKEN_KIND.get('key_signed'),
-                                   TOKEN_KIND.get('key_unsigned')):
+                                   TOKEN_KIND.get('key_double'),
+                                   TOKEN_KIND.get('key_unsigned'),
+                                   TOKEN_KIND.get('key_signed')):
         param_types.append(parse_type_specifier())
         params.append(parse_identifier())
         while peek_next().token_kind == TOKEN_KIND.get('separator_comma'):
