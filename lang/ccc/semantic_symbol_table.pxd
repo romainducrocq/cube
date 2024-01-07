@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport AST, TInt, TLong, TUInt, TULong
+from ccc.abc_builtin_ast cimport AST, TInt, TLong, TUInt, TULong, TDouble
 
 
 cdef class Type(AST):
@@ -18,6 +18,10 @@ cdef class UInt(Type):
 
 
 cdef class ULong(Type):
+    pass
+
+
+cdef class Double(Type):
     pass
 
 

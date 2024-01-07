@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport AST, TInt, TLong, TUInt, TULong
+from ccc.abc_builtin_ast cimport AST, TInt, TLong, TUInt, TULong, TDouble
 
 
 cdef class Type(AST):
@@ -31,6 +31,12 @@ cdef class UInt(Type):
 
 cdef class ULong(Type):
     # ULong
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class Double(Type):
+    # Double
     def __cinit__(self):
         self._fields = ()
 

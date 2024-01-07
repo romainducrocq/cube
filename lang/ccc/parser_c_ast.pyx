@@ -7,6 +7,7 @@ cdef class CConst(AST):
     #       | ConstLong(long)
     #       | ConstUInt(uint)
     #       | ConstULong(ulong)
+    #       | ConstDouble(double)
     def __cinit__(self):
         self._fields = ()
 
@@ -44,6 +45,15 @@ cdef class CConstULong(CConst):
         self._fields = ('value',)
 
     def __init__(self, TULong value):
+        self.value = value
+
+
+cdef class CConstDouble(CConst):
+    # ConstDouble(double)
+    def __cinit__(self):
+        self._fields = ('value',)
+
+    def __init__(self, TDouble value):
         self.value = value
 
 

@@ -5,7 +5,7 @@ from ccc.parser_precedence cimport parse_token_precedence
 
 from ccc.semantic_symbol_table cimport Type, Int, Long, FunType
 
-from ccc.util_ctypes cimport int32, str_to_int32, str_to_int64, str_to_uint32, str_to_uint64
+from ccc.util_ctypes cimport int32, str_to_int32, str_to_int64, str_to_uint32, str_to_uint64, str_to_double
 
 
 cdef list[Token] tokens = []

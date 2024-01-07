@@ -51,6 +51,15 @@ cdef class TULong(AST):
         self.ulong_t = ulong_t
 
 
+cdef class TDouble(AST):
+    # double double_t
+    def __cinit__(self):
+        self._fields = ('double_t',)
+
+    def __init__(self, double double_t):
+        self.double_t = double_t
+
+
 cdef TIdentifier copy_identifier(TIdentifier node):
     # <identifier> = Built-in identifier type
     return TIdentifier(node.str_t)

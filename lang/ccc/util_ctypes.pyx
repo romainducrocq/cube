@@ -6,7 +6,9 @@ cdef extern from "errno.h":
     int errno
 cdef extern from "inttypes.h":
     intmax_t strtoimax(const char *, char **, int)
-    uintmax_t strtoumax(const char *, char**, int)
+    uintmax_t strtoumax(const char *, char **, int)
+cdef extern from "stdlib.h":
+    double strtod(const char *, char **)
 
 
 cdef intmax_t str_to_int(str str_int):
@@ -63,3 +65,23 @@ cdef uint32_t str_to_uint32(str str_uint32):
 
 cdef uint64_t str_to_uint64(str str_uint64):
     return <uint64_t>str_to_uint(str_uint64)
+
+
+cdef double str_to_double(str str_double):
+    cdef bytes b_str_double = str_double.encode("UTF-8")
+    cdef char *c_str_double = b_str_double
+    cdef char *end_ptr = NULL
+    errno = 0
+    cdef double val_double = strtod(c_str_double, &end_ptr)
+    if end_ptr == c_str_double:
+
+        raise RuntimeError(
+            f"String \"{str_double}\" is not a floating point number")
+
+    if (errno == ERANGE) \
+       or (errno != 0 and val_double == 0):
+
+        raise RuntimeError(
+            f"String \"{str_double}\" is out of range")
+
+    return val_double

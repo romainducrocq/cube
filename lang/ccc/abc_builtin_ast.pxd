@@ -18,6 +18,9 @@ cdef class TUInt(AST):
 cdef class TULong(AST):
     cdef public uint64 ulong_t
 
+cdef class TDouble(AST):
+    cdef public double double_t
+
 cdef TInt copy_int(TInt node)
 cdef TLong copy_long(TLong node)
 cdef TUInt copy_uint(TUInt node)

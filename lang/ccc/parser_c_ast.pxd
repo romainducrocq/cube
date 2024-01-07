@@ -22,6 +22,10 @@ cdef class CConstULong(CConst):
     cdef public TULong value
 
 
+cdef class CConstDouble(CConst):
+    cdef public TDouble value
+
+
 cdef class CUnaryOp(AST):
     pass
 
