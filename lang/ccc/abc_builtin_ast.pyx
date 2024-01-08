@@ -75,6 +75,11 @@ cdef TLong copy_long(TLong node):
     return TLong(node.long_t)
 
 
+cdef TDouble copy_double(TDouble node):
+    # <double> = Built-in long type
+    return TDouble(node.double_t)
+
+
 cdef TUInt copy_uint(TUInt node):
     # <uint> = Built-in unsigned int type
     return TUInt(node.uint_t)
@@ -89,6 +94,10 @@ cdef TLong copy_int_to_long(TInt node):
     return TLong(<int64>node.int_t)
 
 
+cdef TDouble copy_int_to_double(TInt node):
+    return TDouble(<double>node.int_t)
+
+
 cdef TUInt copy_int_to_uint(TInt node):
     return TUInt(<uint32>node.int_t)
 
@@ -101,6 +110,10 @@ cdef TInt copy_long_to_int(TLong node):
     return TInt(<int32>node.long_t)
 
 
+cdef TDouble copy_long_to_double(TLong node):
+    return TDouble(<double>node.long_t)
+
+
 cdef TUInt copy_long_to_uint(TLong node):
     return TUInt(<uint32>node.long_t)
 
@@ -109,12 +122,32 @@ cdef TULong copy_long_to_ulong(TLong node):
     return TULong(<uint64>node.long_t)
 
 
+cdef TInt copy_double_to_int(TDouble node):
+    return TInt(<int32>node.double_t)
+
+
+cdef TLong copy_double_to_long(TDouble node):
+    return TLong(<int64>node.double_t)
+
+
+cdef TUInt copy_double_to_uint(TDouble node):
+    return TUInt(<uint32>node.double_t)
+
+
+cdef TULong copy_double_to_ulong(TDouble node):
+    return TULong(<uint64>node.double_t)
+
+
 cdef TInt copy_uint_to_int(TUInt node):
     return TInt(<int32>node.uint_t)
 
 
 cdef TLong copy_uint_to_long(TUInt node):
     return TLong(<int64>node.uint_t)
+
+
+cdef TDouble copy_uint_to_double(TUInt node):
+    return TDouble(<double>node.uint_t)
 
 
 cdef TULong copy_uint_to_ulong(TUInt node):
@@ -127,6 +160,10 @@ cdef TInt copy_ulong_to_int(TULong node):
 
 cdef TLong copy_ulong_to_long(TULong node):
     return TLong(<int64>node.ulong_t)
+
+
+cdef TDouble copy_ulong_to_double(TULong node):
+    return TDouble(<double>node.ulong_t)
 
 
 cdef TUInt copy_ulong_to_uint(TULong node):

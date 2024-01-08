@@ -1,13 +1,14 @@
-from ccc.abc_builtin_ast cimport int32, copy_int, copy_long, copy_uint, copy_ulong
-from ccc.abc_builtin_ast cimport copy_int_to_long, copy_int_to_uint, copy_int_to_ulong
-from ccc.abc_builtin_ast cimport copy_long_to_int, copy_long_to_uint, copy_long_to_ulong
-from ccc.abc_builtin_ast cimport copy_uint_to_int, copy_uint_to_long, copy_uint_to_ulong
-from ccc.abc_builtin_ast cimport copy_ulong_to_int, copy_ulong_to_long, copy_ulong_to_uint
+from ccc.abc_builtin_ast cimport int32, copy_int, copy_long, copy_double, copy_uint, copy_ulong
+from ccc.abc_builtin_ast cimport copy_int_to_long, copy_int_to_double, copy_int_to_uint, copy_int_to_ulong
+from ccc.abc_builtin_ast cimport copy_long_to_int, copy_long_to_double, copy_long_to_uint, copy_long_to_ulong
+from ccc.abc_builtin_ast cimport copy_double_to_int, copy_double_to_long, copy_double_to_uint, copy_double_to_ulong
+from ccc.abc_builtin_ast cimport copy_uint_to_int, copy_uint_to_long, copy_uint_to_double, copy_uint_to_ulong
+from ccc.abc_builtin_ast cimport copy_ulong_to_int, copy_ulong_to_long, copy_ulong_to_double, copy_ulong_to_uint
 
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern, CReturn
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
-from ccc.parser_c_ast cimport CNot, CAnd, COr, CAdd, CSubtract, CMultiply, CDivide, CRemainder
+from ccc.parser_c_ast cimport CNot, CComplement, CAnd, COr, CAdd, CSubtract, CMultiply, CDivide, CRemainder
 from ccc.parser_c_ast cimport CBitAnd, CBitOr, CBitXor, CBitShiftLeft, CBitShiftRight
 from ccc.parser_c_ast cimport CConst, CConstInt, CConstLong, CConstDouble, CConstUInt, CConstULong
 
@@ -37,18 +38,18 @@ cdef bint is_same_fun_type(FunType fun_type1, FunType fun_type2):
 cdef int32 get_type_size(Type type1):
     if isinstance(type1, (Int, UInt)):
         return 32
-    elif isinstance(type1, (Long, ULong)):
+    elif isinstance(type1, (Long, Double, ULong)):
         return 64
     else:
         return -1
 
 
 cdef bint is_type_signed(Type type1):
-    return isinstance(type1, (Int, Long))
+    return isinstance(type1, (Int, Long, Double))
 
 
 cdef bint is_const_signed(CConst node):
-    return isinstance(node, (CConstInt, CConstLong))
+    return isinstance(node, (CConstInt, CConstLong, CConstDouble))
 
 
 cdef Type get_joint_type(Type type1, Type type2):
@@ -56,7 +57,7 @@ cdef Type get_joint_type(Type type1, Type type2):
         return type1
     elif isinstance(type1, Double) or \
          isinstance(type2, Double):
-        return Double
+        return Double()
     cdef int32 type1_size = get_type_size(type1)
     cdef int32 type2_size = get_type_size(type2)
     if type1_size == type2_size:
@@ -142,6 +143,12 @@ cdef void checktype_unary_expression(CUnary node):
     if isinstance(node.unary_op, CNot):
         node.exp_type = Int()
     else:
+        if isinstance(node.unary_op, CComplement) and \
+           isinstance(node.exp.exp_type, Double):
+
+            raise RuntimeError(
+                "An error occurred in type checking, unary operator can not be used on floating-point number")
+
         node.exp_type = node.exp.exp_type
 
 
@@ -156,18 +163,26 @@ cdef void checktype_binary_expression(CBinary node):
         if not is_same_type(node.exp_left.exp_type, node.exp_right.exp_type):
             node.exp_right = cast_expression(node.exp_right, node.exp_left.exp_type)
         node.exp_type = node.exp_left.exp_type
+        if isinstance(node.exp_type, Double):
+
+            raise RuntimeError(
+                "An error occurred in type checking, binary operator can not be used on floating-point number")
+
         return
     cdef Type common_type = get_joint_type(node.exp_left.exp_type, node.exp_right.exp_type)
     if not is_same_type(node.exp_left.exp_type, common_type):
         node.exp_left = cast_expression(node.exp_left, common_type)
     if not is_same_type(node.exp_right.exp_type, common_type):
         node.exp_right = cast_expression(node.exp_right, common_type)
-    if isinstance(node.binary_op, (CAdd, CSubtract, CMultiply, CDivide, CRemainder)):
+    if isinstance(node.binary_op, (CAdd, CSubtract, CMultiply, CDivide)):
         node.exp_type = common_type
-    elif isinstance(node.binary_op, (CBitAnd, CBitOr, CBitXor)):
-        # Note: https://stackoverflow.com/a/1723938
-        # if the value of an operand is a double, it must be cast to integer type
+    if isinstance(node.binary_op, (CRemainder, CBitAnd, CBitOr, CBitXor)):
         node.exp_type = common_type
+        if isinstance(node.exp_type, Double):
+
+            raise RuntimeError(
+                "An error occurred in type checking, binary operator can not be used on floating-point number")
+
     else:
         node.exp_type = Int()
 
@@ -244,6 +259,8 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
             return Initial(IntInit(copy_int(node.constant.value)))
         elif isinstance(node.constant, CConstLong):
             return Initial(IntInit(copy_long_to_int(node.constant.value)))
+        elif isinstance(node.constant, CConstDouble):
+            return Initial(IntInit(copy_double_to_int(node.constant.value)))
         elif isinstance(node.constant, CConstUInt):
             return Initial(IntInit(copy_uint_to_int(node.constant.value)))
         elif isinstance(node.constant, CConstULong):
@@ -253,15 +270,30 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
             return Initial(LongInit(copy_int_to_long(node.constant.value)))
         elif isinstance(node.constant, CConstLong):
             return Initial(LongInit(copy_long(node.constant.value)))
+        elif isinstance(node.constant, CConstDouble):
+            return Initial(LongInit(copy_double_to_long(node.constant.value)))
         elif isinstance(node.constant, CConstUInt):
             return Initial(LongInit(copy_uint_to_long(node.constant.value)))
         elif isinstance(node.constant, CConstULong):
             return Initial(LongInit(copy_ulong_to_long(node.constant.value)))
+    elif isinstance(static_init_type, Double):
+        if isinstance(node.constant, CConstInt):
+            return Initial(DoubleInit(copy_int_to_double(node.constant.value)))
+        elif isinstance(node.constant, CConstLong):
+            return Initial(DoubleInit(copy_long_to_double(node.constant.value)))
+        elif isinstance(node.constant, CConstDouble):
+            return Initial(DoubleInit(copy_double(node.constant.value)))
+        elif isinstance(node.constant, CConstUInt):
+            return Initial(DoubleInit(copy_uint_to_double(node.constant.value)))
+        elif isinstance(node.constant, CConstULong):
+            return Initial(DoubleInit(copy_ulong_to_double(node.constant.value)))
     elif isinstance(static_init_type, UInt):
         if isinstance(node.constant, CConstInt):
             return Initial(UIntInit(copy_int_to_uint(node.constant.value)))
         elif isinstance(node.constant, CConstLong):
             return Initial(UIntInit(copy_long_to_uint(node.constant.value)))
+        elif isinstance(node.constant, CConstDouble):
+            return Initial(UIntInit(copy_double_to_uint(node.constant.value)))
         elif isinstance(node.constant, CConstUInt):
             return Initial(UIntInit(copy_uint(node.constant.value)))
         elif isinstance(node.constant, CConstULong):
@@ -271,6 +303,8 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
             return Initial(ULongInit(copy_int_to_ulong(node.constant.value)))
         elif isinstance(node.constant, CConstLong):
             return Initial(ULongInit(copy_long_to_ulong(node.constant.value)))
+        elif isinstance(node.constant, CConstDouble):
+            return Initial(ULongInit(copy_double_to_ulong(node.constant.value)))
         elif isinstance(node.constant, CConstUInt):
             return Initial(ULongInit(copy_uint_to_ulong(node.constant.value)))
         elif isinstance(node.constant, CConstULong):
@@ -282,6 +316,12 @@ cdef Initial checktype_no_init_initial(Type static_init_type):
         return Initial(IntInit(TInt(0)))
     elif isinstance(static_init_type, Long):
         return Initial(LongInit(TLong(0)))
+    elif isinstance(static_init_type, Double):
+        return Initial(DoubleInit(TDouble(0)))
+    elif isinstance(static_init_type, UInt):
+        return Initial(UIntInit(TUInt(0)))
+    elif isinstance(static_init_type, ULong):
+        return Initial(ULongInit(TULong(0)))
 
 
 cdef void checktype_file_scope_variable_declaration(CVariableDeclaration node):
