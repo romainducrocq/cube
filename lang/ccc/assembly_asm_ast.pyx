@@ -14,6 +14,16 @@ cdef class AsmReg(AST):
     #     | R10
     #     | R11
     #     | SP
+    #     | XMM0
+    #     | XMM1
+    #     | XMM2
+    #     | XMM3
+    #     | XMM4
+    #     | XMM5
+    #     | XMM6
+    #     | XMM7
+    #     | XMM14
+    #     | XMM15
     def __cinit__(self):
         self._fields = ()
 
@@ -74,6 +84,66 @@ cdef class AsmR11(AsmReg):
 
 cdef class AsmSp(AsmReg):
     # SP
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM0(AsmReg):
+    # XMM0
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM1(AsmReg):
+    # XMM1
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM2(AsmReg):
+    # XMM2
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM3(AsmReg):
+    # XMM3
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM4(AsmReg):
+    # XMM4
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM5(AsmReg):
+    # XMM5
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM6(AsmReg):
+    # XMM6
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM7(AsmReg):
+    # XMM7
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM14(AsmReg):
+    # XMM14
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmXMM15(AsmReg):
+    # XMM15
     def __cinit__(self):
         self._fields = ()
 
@@ -212,6 +282,7 @@ cdef class AsmBinaryOp(AST):
     # binary_operator = Add
     #                 | Sub
     #                 | Mult
+    #                 | DivDouble
     #                 | BitAnd
     #                 | BitOr
     #                 | BitXor
@@ -235,6 +306,12 @@ cdef class AsmSub(AsmBinaryOp):
 
 cdef class AsmMult(AsmBinaryOp):
     # Mult
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmDivDouble(AsmBinaryOp):
+    # DivDouble
     def __cinit__(self):
         self._fields = ()
 
@@ -272,6 +349,7 @@ cdef class AsmBitShiftRight(AsmBinaryOp):
 cdef class AsmUnaryOp(AST):
     # unary_operator = Not
     #                | Neg
+    #                | Shr
     def __cinit__(self):
         self._fields = ()
 
@@ -288,10 +366,18 @@ cdef class AsmNeg(AsmUnaryOp):
         self._fields = ()
 
 
+cdef class AsmShr(AsmUnaryOp):
+    # Shr
+    def __cinit__(self):
+        self._fields = ()
+
+
 cdef class AsmInstruction(AST):
     # instruction = Mov(assembly_type, operand src, operand dst)
     #             | MovSx(operand src, operand dst)
     #             | MovZeroExtend(operand src, operand dst)
+    #             | Cvttsd2si(assembly_type, operand, operand)
+    #             | Cvtsi2sd(assembly_type, operand, operand)
     #             | Unary(unary_operator, assembly_type, operand)
     #             | Binary(binary_operator, assembly_type, operand, operand)
     #             | Cmp(assembly_type, operand, operand)
@@ -338,6 +424,28 @@ cdef class AsmMovZeroExtend(AsmInstruction):
         self._fields = ('src', 'dst')
 
     def __init__(self, AsmOperand src, AsmOperand dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class AsmCvttsd2si(AsmInstruction):
+    # Cvttsd2si(assembly_type, operand src, operand dst)
+    def __cinit__(self):
+        self._fields = ('assembly_type', 'src', 'dst')
+
+    def __init__(self, AssemblyType assembly_type, AsmOperand src, AsmOperand dst):
+        self.assembly_type = assembly_type
+        self.src = src
+        self.dst = dst
+
+
+cdef class AsmCvtsi2sd(AsmInstruction):
+    # Cvtsi2sd(assembly_type, operand src, operand dst)
+    def __cinit__(self):
+        self._fields = ('assembly_type', 'src', 'dst')
+
+    def __init__(self, AssemblyType assembly_type, AsmOperand src, AsmOperand dst):
+        self.assembly_type = assembly_type
         self.src = src
         self.dst = dst
 
@@ -469,7 +577,8 @@ cdef class AsmRet(AsmInstruction):
 
 cdef class AsmTopLevel(AST):
     # top_level = Function(identifier name, bool global, instruction* instructions)
-    #           | StaticVariable(identifier, bool global, int init)
+    #           | StaticVariable(identifier, bool global, int alignment, static_init init)
+    #           | StaticConstant(identifier, int alignment, static_init init)
     def __cinit__(self):
         self._fields = ()
 
@@ -493,6 +602,17 @@ cdef class AsmStaticVariable(AsmTopLevel):
     def __init__(self, TIdentifier name, bint is_global, TInt alignment, StaticInit initial_value):
         self.name = name
         self.is_global = is_global
+        self.alignment = alignment
+        self.initial_value = initial_value
+
+
+cdef class AsmStaticConstant(AsmTopLevel):
+    # StaticConstant(identifier, int alignment, static_init init)
+    def __cinit__(self):
+        self._fields = ('name', 'alignment', 'initial_value')
+
+    def __init__(self, TIdentifier name, TInt alignment, StaticInit initial_value):
+        self.name = name
         self.alignment = alignment
         self.initial_value = initial_value
 

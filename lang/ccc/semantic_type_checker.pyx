@@ -317,7 +317,7 @@ cdef Initial checktype_no_init_initial(Type static_init_type):
     elif isinstance(static_init_type, Long):
         return Initial(LongInit(TLong(0)))
     elif isinstance(static_init_type, Double):
-        return Initial(DoubleInit(TDouble(0)))
+        return Initial(DoubleInit(TDouble(0.0)))
     elif isinstance(static_init_type, UInt):
         return Initial(UIntInit(TUInt(0)))
     elif isinstance(static_init_type, ULong):

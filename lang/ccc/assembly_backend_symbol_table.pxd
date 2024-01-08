@@ -13,6 +13,10 @@ cdef class QuadWord(AssemblyType):
     pass
 
 
+cdef class BackendDouble(AssemblyType):
+    pass
+
+
 cdef class BackendSymbol(AST):
     pass
 

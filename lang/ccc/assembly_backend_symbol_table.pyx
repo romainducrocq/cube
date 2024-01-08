@@ -4,6 +4,7 @@ from ccc.abc_builtin_ast cimport AST
 cdef class AssemblyType(AST):
     # assembly_type = LongWord
     #               | QuadWord
+    #               | BackendDouble
     def __cinit__(self):
         self._fields = ()
 
@@ -16,6 +17,12 @@ cdef class LongWord(AssemblyType):
 
 cdef class QuadWord(AssemblyType):
     # QuadWord
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class BackendDouble(AssemblyType):
+    # BackendDouble
     def __cinit__(self):
         self._fields = ()
 

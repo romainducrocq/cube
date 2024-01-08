@@ -529,7 +529,7 @@ cdef StaticInit represent_tentative_static_init(Type static_init_type):
     elif isinstance(static_init_type, Long):
         return LongInit(TLong(0))
     elif isinstance(static_init_type, Double):
-        return DoubleInit(TDouble(0))
+        return DoubleInit(TDouble(0.0))
     elif isinstance(static_init_type, UInt):
         return UIntInit(TUInt(0))
     elif isinstance(static_init_type, ULong):

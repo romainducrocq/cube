@@ -47,6 +47,46 @@ cdef class AsmSp(AsmReg):
     pass
 
 
+cdef class AsmXMM0(AsmReg):
+    pass
+
+
+cdef class AsmXMM1(AsmReg):
+    pass
+
+
+cdef class AsmXMM2(AsmReg):
+    pass
+
+
+cdef class AsmXMM3(AsmReg):
+    pass
+
+
+cdef class AsmXMM4(AsmReg):
+    pass
+
+
+cdef class AsmXMM5(AsmReg):
+    pass
+
+
+cdef class AsmXMM6(AsmReg):
+    pass
+
+
+cdef class AsmXMM7(AsmReg):
+    pass
+
+
+cdef class AsmXMM14(AsmReg):
+    pass
+
+
+cdef class AsmXMM15(AsmReg):
+    pass
+
+
 cdef class AsmCondCode(AST):
     pass
 
@@ -131,6 +171,10 @@ cdef class AsmMult(AsmBinaryOp):
     pass
 
 
+cdef class AsmDivDouble(AsmBinaryOp):
+    pass
+
+
 cdef class AsmBitAnd(AsmBinaryOp):
     pass
 
@@ -163,6 +207,10 @@ cdef class AsmNeg(AsmUnaryOp):
     pass
 
 
+cdef class AsmShr(AsmUnaryOp):
+    pass
+
+
 cdef class AsmInstruction(AST):
     pass
 
@@ -179,6 +227,18 @@ cdef class AsmMovSx(AsmInstruction):
 
 
 cdef class AsmMovZeroExtend(AsmInstruction):
+    cdef public AsmOperand src
+    cdef public AsmOperand dst
+
+
+cdef class AsmCvttsd2si(AsmInstruction):
+    cdef public AssemblyType assembly_type
+    cdef public AsmOperand src
+    cdef public AsmOperand dst
+
+
+cdef class AsmCvtsi2sd(AsmInstruction):
+    cdef public AssemblyType assembly_type
     cdef public AsmOperand src
     cdef public AsmOperand dst
 
@@ -259,6 +319,12 @@ cdef class AsmFunction(AsmTopLevel):
 cdef class AsmStaticVariable(AsmTopLevel):
     cdef public TIdentifier name
     cdef public bint is_global
+    cdef public TInt alignment
+    cdef public StaticInit initial_value
+
+
+cdef class AsmStaticConstant(AsmTopLevel):
+    cdef public TIdentifier name
     cdef public TInt alignment
     cdef public StaticInit initial_value
 
