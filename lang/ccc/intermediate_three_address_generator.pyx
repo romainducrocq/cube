@@ -126,6 +126,16 @@ cdef TacValue represent_exp_cast_instructions(CCast node):
     if is_same_type(node.target_type, node.exp.exp_type):
         return src
     cdef TacValue dst = represent_inner_value(node)
+    if isinstance(node.exp.exp_type, Double):
+        if is_type_signed(node.target_type):
+            instructions.append(TacDoubleToInt(src, dst))
+        else:
+            instructions.append(TacDoubleToUInt(src, dst))
+    elif isinstance(node.target_type, Double):
+        if is_type_signed(node.exp.exp_type):
+            instructions.append(TacIntToDouble(src, dst))
+        else:
+            instructions.append(TacUIntToDouble(src, dst))
     cdef int32 target_type_size = get_type_size(node.target_type)
     cdef int32 inner_type_size = get_type_size(node.exp.exp_type)
     if target_type_size == inner_type_size:
@@ -518,7 +528,9 @@ cdef StaticInit represent_tentative_static_init(Type static_init_type):
         return IntInit(TInt(0))
     elif isinstance(static_init_type, Long):
         return LongInit(TLong(0))
-    if isinstance(static_init_type, UInt):
+    elif isinstance(static_init_type, Double):
+        return DoubleInit(TDouble(0))
+    elif isinstance(static_init_type, UInt):
         return UIntInit(TUInt(0))
     elif isinstance(static_init_type, ULong):
         return ULongInit(TULong(0))

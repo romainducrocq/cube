@@ -18,9 +18,9 @@ if [ ${#} -ne 0 ]; then
     test ${@}
 else
     for i in $(seq 1 12); do
-        test --chapter ${i} --stage validate --latest-only --bitwise --compound --goto
+        test --chapter ${i} --stage tacky --latest-only --bitwise --compound --goto
     done
-    test --chapter 13 --stage validate --latest-only --bitwise --compound --goto
+    test --chapter 13 --stage tacky --latest-only --bitwise --compound --goto
 fi
 
 exit 0
