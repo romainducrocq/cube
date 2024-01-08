@@ -120,6 +120,26 @@ cdef class TacZeroExtend(TacInstruction):
     cdef public TacValue dst
 
 
+cdef class TacDoubleToInt(TacInstruction):
+    cdef public TacValue src
+    cdef public TacValue dst
+
+
+cdef class TacDoubleToUInt(TacInstruction):
+    cdef public TacValue src
+    cdef public TacValue dst
+
+
+cdef class TacIntToDouble(TacInstruction):
+    cdef public TacValue src
+    cdef public TacValue dst
+
+
+cdef class TacUIntToDouble(TacInstruction):
+    cdef public TacValue src
+    cdef public TacValue dst
+
+
 cdef class TacFunCall(TacInstruction):
     cdef public TIdentifier name
     cdef public list[TacValue] args

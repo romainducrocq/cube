@@ -174,6 +174,10 @@ cdef class TacInstruction(AST):
     #             | SignExtend(val src, val dst)
     #             | Truncate(val src, val dst)
     #             | ZeroExtend(val src, val dst)
+    #             | TacDoubleToInt(val src, val dst)
+    #             | TacDoubleToUInt(val src, val dst)
+    #             | TacIntToDouble(val src, val dst)
+    #             | TacUIntToDouble(val src, val dst)
     #             | FunCall(identifier fun_name, val* args, val dst)
     #             | Unary(unary_operator, val src, val dst)
     #             | Binary(binary_operator, val src1, val src2, val dst)
@@ -217,6 +221,46 @@ cdef class TacTruncate(TacInstruction):
 
 cdef class TacZeroExtend(TacInstruction):
     # ZeroExtend(val src, val dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, TacValue src, TacValue dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class TacDoubleToInt(TacInstruction):
+    # DoubleToInt(val src, val dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, TacValue src, TacValue dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class TacDoubleToUInt(TacInstruction):
+    # DoubleToUInt(val src, val dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, TacValue src, TacValue dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class TacIntToDouble(TacInstruction):
+    # IntToDouble(val src, val dst)
+    def __cinit__(self):
+        self._fields = ('src', 'dst')
+
+    def __init__(self, TacValue src, TacValue dst):
+        self.src = src
+        self.dst = dst
+
+
+cdef class TacUIntToDouble(TacInstruction):
+    # UIntToDouble(val src, val dst)
     def __cinit__(self):
         self._fields = ('src', 'dst')
 
