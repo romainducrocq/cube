@@ -24,6 +24,7 @@ cdef class BackendSymbol(AST):
 cdef class BackendObj(BackendSymbol):
     cdef public AssemblyType assembly_type
     cdef public bint is_static
+    cdef public bint is_constant
 
 
 cdef class BackendFun(BackendSymbol):

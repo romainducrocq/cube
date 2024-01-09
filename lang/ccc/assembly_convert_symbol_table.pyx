@@ -1,7 +1,10 @@
 from ccc.semantic_symbol_table cimport symbol_table, Int, Long, Double, UInt, ULong, FunType
-from ccc.semantic_symbol_table cimport IdentifierAttr, FunAttr, StaticAttr
+from ccc.semantic_symbol_table cimport IdentifierAttr, FunAttr, StaticAttr, DoubleInit
 
 from ccc.assembly_backend_symbol_table cimport *
+
+
+static_constant_top_levels = []
 
 
 cdef AssemblyType convert_backend_assembly_type(str name_str):
@@ -24,6 +27,26 @@ cdef void add_backend_symbol(BackendSymbol node):
     backend_symbol_table[symbol] = node
 
 
+cdef void convert_double_static_constant():
+    cdef AssemblyType assembly_type = BackendDouble()
+    cdef bint is_static = True
+    add_backend_symbol(BackendObj(assembly_type, is_static))
+
+
+cdef void convert_static_constant_top_levels():
+    global symbol
+
+    cdef int static_constant
+    for static_constant in range(len(static_constant_top_levels)):
+        symbol = static_constant_top_levels[static_constant].name.str
+        if isinstance(static_constant_top_levels[static_constant].initial_value, DoubleInit):
+            convert_double_static_constant()
+        else:
+
+            raise RuntimeError(
+                "An error occurred in backend symbol table conversion, not all nodes were visited")
+
+
 cdef void convert_fun_type(FunAttr node):
     cdef bint is_defined = node.is_defined
     add_backend_symbol(BackendFun(is_defined))
@@ -39,6 +62,8 @@ cdef void convert_obj_type(IdentifierAttr node):
 
 cdef void convert_symbol_table():
     global symbol
+
+    convert_static_constant_top_levels()
 
     for symbol in symbol_table:
         if isinstance(symbol_table[symbol].type_t, FunType):

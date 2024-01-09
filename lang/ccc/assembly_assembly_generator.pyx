@@ -1,13 +1,16 @@
-from ccc.abc_builtin_ast cimport copy_identifier
+from ccc.abc_builtin_ast cimport TDouble, copy_identifier, copy_double
 
-from ccc.parser_c_ast cimport Int, Long, UInt, ULong, CConstInt, CConstLong, CConstUInt, CConstULong
+from ccc.parser_c_ast cimport Int, Long, Double, UInt, ULong
+from ccc.parser_c_ast cimport CConstInt, CConstLong, CConstDouble, CConstUInt, CConstULong
 from ccc.intermediate_tac_ast cimport *
 
-from ccc.semantic_symbol_table cimport symbol_table
+from ccc.semantic_name cimport represent_label_identifier
+from ccc.semantic_symbol_table cimport symbol_table, DoubleInit
 from ccc.semantic_type_checker cimport is_type_signed, is_const_signed
 
 from ccc.assembly_asm_ast cimport *
-from ccc.assembly_backend_symbol_table cimport AssemblyType, LongWord, QuadWord
+from ccc.assembly_backend_symbol_table cimport AssemblyType, LongWord, QuadWord, BackendDouble
+from ccc.assembly_convert_symbol_table cimport static_constant_top_levels
 from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, convert_symbol_table
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes, correct_stack
@@ -15,10 +18,13 @@ from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack
 from ccc.util_ctypes cimport int32
 
 
+cdef set[str] static_const_serialize_set = set()
+
+
 cdef TInt generate_alignment(Type node):
     if isinstance(node, (Int, UInt)):
         return TInt(4)
-    elif isinstance(node, (Long, ULong)):
+    elif isinstance(node, (Long, Double, ULong)):
         return TInt(8)
     else:
 
@@ -46,16 +52,35 @@ cdef AsmImm generate_ulong_imm_operand(CConstULong node):
     return AsmImm(value)
 
 
-cdef AsmOperand generate_imm_operand(TacConstant node):
+cdef void generate_double_static_constant_operand(TIdentifier name, TDouble value):
+    cdef TIdentifier identifier = copy_identifier(name)
+    cdef TInt alignment = TInt(8)
+    cdef StaticInit initial_value = DoubleInit(copy_double(value))
+    static_constant_top_levels.append(AsmStaticConstant(identifier, alignment, initial_value))
+
+
+cdef AsmData generate_double_constant_operand(CConstDouble node):
+    # TODO assert str(0.0) != str(-0.0)
+    # if not, check sign with libc <math.h> signbit(double)
+    cdef str str_double = str(node.value.double_t)
+    cdef TIdentifier identifier = represent_label_identifier("double")
+    if str_double not in static_const_serialize_set:
+        static_const_serialize_set.add(str_double)
+        generate_double_static_constant_operand(identifier, node.value)
+    return AsmData(identifier)
+
+
+cdef AsmOperand generate_constant_operand(TacConstant node):
     if isinstance(node.constant, CConstInt):
         return generate_int_imm_operand(node.constant)
     elif isinstance(node.constant, CConstLong):
         return generate_long_imm_operand(node.constant)
+    elif isinstance(node.constant, CConstDouble):
+        return generate_double_constant_operand(node.constant)
     elif isinstance(node.constant, CConstUInt):
         return generate_uint_imm_operand(node.constant)
     elif isinstance(node.constant, CConstULong):
         return generate_ulong_imm_operand(node.constant)
-
     else:
 
         raise RuntimeError(
@@ -68,9 +93,10 @@ cdef AsmPseudo generate_pseudo_operand(TacVariable node):
 
 
 cdef AsmOperand generate_operand(TacValue node):
-    # operand = ImmInt(int) | ImmLong(long) | Reg(reg) | Pseudo(identifier) | Stack(int) | Data(identifier)
+    # operand = ImmInt(int) | ImmLong(long) | ImmInt(uint) | ImmLong(ulong) | Reg(reg) | Pseudo(identifier)
+    #         | Stack(int) | Data(identifier)
     if isinstance(node, TacConstant):
-        return generate_imm_operand(node)
+        return generate_constant_operand(node)
     elif isinstance(node, TacVariable):
         return generate_pseudo_operand(node)
     else:
@@ -177,6 +203,8 @@ cdef bint is_value_signed(TacValue node):
 cdef AssemblyType generate_constant_assembly_type(TacConstant node):
     if isinstance(node.constant, (CConstInt, CConstUInt)):
         return LongWord()
+    elif isinstance(node.constant, CConstDouble):
+        return BackendDouble()
     elif isinstance(node.constant, (CConstLong, CConstULong)):
         return QuadWord()
     else:
@@ -569,10 +597,13 @@ cdef AsmTopLevel generate_top_level(TacTopLevel node):
 
 cdef AsmProgram generate_program(TacProgram node):
     # program = Program(function_definition)
+    static_const_serialize_set.clear()
+    static_constant_top_levels.clear()
     cdef Py_ssize_t top_level
     cdef list[AsmTopLevel] top_levels = []
     for top_level in range(len(node.top_levels)):
         top_levels.append(generate_top_level(node.top_levels[top_level]))
+    top_levels = static_constant_top_levels + top_levels
     return AsmProgram(top_levels)
 
 
