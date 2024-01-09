@@ -52,21 +52,18 @@ cdef AsmImm generate_ulong_imm_operand(CConstULong node):
     return AsmImm(value)
 
 
-cdef void generate_double_static_constant_operand(TIdentifier name, TDouble value):
-    cdef TIdentifier identifier = copy_identifier(name)
-    cdef TInt alignment = TInt(8)
-    cdef StaticInit initial_value = DoubleInit(copy_double(value))
-    static_constant_top_levels.append(AsmStaticConstant(identifier, alignment, initial_value))
+cdef TIdentifier generate_double_static_constant(TDouble value):
+    # TODO assert str(0.0) != str(-0.0)
+    # if not, check sign with libc <math.h> signbit(double)
+    cdef str str_double = str(value.double_t)
+    cdef TIdentifier double_const = represent_label_identifier("double")
+    if is_unique_static_constant_top_level(str_double):
+        append_double_static_constant_top_level(double_const, value)
+    return double_const
 
 
 cdef AsmData generate_double_constant_operand(CConstDouble node):
-    # TODO assert str(0.0) != str(-0.0)
-    # if not, check sign with libc <math.h> signbit(double)
-    cdef str str_double = str(node.value.double_t)
-    cdef TIdentifier identifier = represent_label_identifier("double")
-    if str_double not in static_const_serialize_set:
-        static_const_serialize_set.add(str_double)
-        generate_double_static_constant_operand(identifier, node.value)
+    cdef TIdentifier identifier = copy_identifier(generate_double_static_constant(node.value))
     return AsmData(identifier)
 
 
@@ -580,6 +577,19 @@ cdef AsmStaticVariable generate_static_variable_top_level(TacStaticVariable node
     cdef TInt alignment = generate_alignment(node.static_init_type)
     cdef StaticInit initial_value = node.initial_value
     return AsmStaticVariable(name, is_global, alignment, initial_value)
+
+
+cdef bint is_unique_static_constant_top_level(str str_static_const):
+    if str_static_const in static_const_serialize_set:
+        return False
+    static_const_serialize_set.add(str_static_const)
+    return True
+
+
+cdef void append_double_static_constant_top_level(TIdentifier name, TDouble value):
+    cdef TInt alignment = TInt(8)
+    cdef StaticInit initial_value = DoubleInit(copy_double(value))
+    static_constant_top_levels.append(AsmStaticConstant(name, alignment, initial_value))
 
 
 cdef AsmTopLevel generate_top_level(TacTopLevel node):
