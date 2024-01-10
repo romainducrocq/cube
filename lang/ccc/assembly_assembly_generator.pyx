@@ -341,6 +341,30 @@ cdef void generate_truncate_instructions(TacTruncate node):
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 
+cdef void generate_double_to_int_instructions(TacDoubleToInt node):
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AssemblyType assembly_type_src = generate_assembly_type(node.dst)
+    instructions.append(AsmCvttsd2si(assembly_type_src, src, dst))
+
+
+cdef void generate_double_to_uint_instructions(TacDoubleToUInt node):
+    # TODO
+    pass
+
+
+cdef void generate_int_to_double_instructions(TacIntToDouble node):
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AssemblyType assembly_type_src = generate_assembly_type(node.src)
+    instructions.append(AsmCvtsi2sd(assembly_type_src, src, dst))
+
+
+cdef void generate_uint_to_double_instructions(TacUIntToDouble node):
+    # TODO
+    pass
+
+
 cdef void generate_label_instructions(TacLabel node):
     cdef TIdentifier name = copy_identifier(node.name)
     instructions.append(AsmLabel(name))
@@ -624,6 +648,14 @@ cdef void generate_instructions(TacInstruction node):
         generate_zero_extend_instructions(node)
     elif isinstance(node, TacTruncate):
         generate_truncate_instructions(node)
+    elif isinstance(node, TacDoubleToInt):
+        generate_double_to_int_instructions(node)
+    elif isinstance(node, TacDoubleToUInt):
+        generate_double_to_uint_instructions(node)
+    elif isinstance(node, TacIntToDouble):
+        generate_int_to_double_instructions(node)
+    elif isinstance(node, TacUIntToDouble):
+        generate_uint_to_double_instructions(node)
     elif isinstance(node, TacLabel):
         generate_label_instructions(node)
     elif isinstance(node, TacJump):
