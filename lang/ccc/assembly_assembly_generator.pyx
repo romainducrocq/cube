@@ -377,6 +377,17 @@ cdef void generate_unary_operator_arithmetic_instructions(TacUnary node):
     instructions.append(AsmUnary(unary_op, assembly_type_src, src_dst))
 
 
+cdef void generate_unary_instructions(TacUnary node):
+    if isinstance(node.unary_op, TacNot):
+        generate_unary_operator_conditional_instructions(node)
+    elif isinstance(node.unary_op, (TacComplement, TacNegate)):
+        generate_unary_operator_arithmetic_instructions(node)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
 cdef void generate_binary_operator_conditional_instructions(TacBinary node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
     cdef AsmCondCode cond_code
@@ -474,6 +485,23 @@ cdef void generate_binary_operator_arithmetic_remainder_instructions(TacBinary n
         generate_binary_operator_arithmetic_unsigned_remainder_instructions(node)
 
 
+cdef void generate_binary_instructions(TacBinary node):
+    if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual, TacGreaterThan,
+                                   TacGreaterOrEqual)):
+        generate_binary_operator_conditional_instructions(node)
+    elif isinstance(node.binary_op, (TacAdd, TacSubtract, TacMultiply, TacBitAnd, TacBitOr, TacBitXor,
+                                     TacBitShiftLeft, TacBitShiftRight)):
+        generate_binary_operator_arithmetic_instructions(node)
+    elif isinstance(node.binary_op, TacDivide):
+        generate_binary_operator_arithmetic_divide_instructions(node)
+    elif isinstance(node.binary_op, TacRemainder):
+        generate_binary_operator_arithmetic_remainder_instructions(node)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
 cdef void generate_instructions(TacInstruction node):
     if isinstance(node, TacFunCall):
         generate_fun_call_instructions(node)
@@ -496,31 +524,9 @@ cdef void generate_instructions(TacInstruction node):
     elif isinstance(node, TacJumpIfNotZero):
         generate_jump_if_not_zero_instructions(node)
     elif isinstance(node, TacUnary):
-        if isinstance(node.unary_op, TacNot):
-            generate_unary_operator_conditional_instructions(node)
-        elif isinstance(node.unary_op, (TacComplement, TacNegate)):
-            generate_unary_operator_arithmetic_instructions(node)
-        else:
-
-            raise RuntimeError(
-                "An error occurred in assembly generation, not all nodes were visited")
-
+        generate_unary_instructions(node)
     elif isinstance(node, TacBinary):
-        if isinstance(node.binary_op, (TacEqual, TacNotEqual, TacLessThan, TacLessOrEqual, TacGreaterThan,
-                                       TacGreaterOrEqual)):
-            generate_binary_operator_conditional_instructions(node)
-        elif isinstance(node.binary_op, (TacAdd, TacSubtract, TacMultiply, TacBitAnd, TacBitOr, TacBitXor,
-                                         TacBitShiftLeft, TacBitShiftRight)):
-            generate_binary_operator_arithmetic_instructions(node)
-        elif isinstance(node.binary_op, TacDivide):
-            generate_binary_operator_arithmetic_divide_instructions(node)
-        elif isinstance(node.binary_op, TacRemainder):
-            generate_binary_operator_arithmetic_remainder_instructions(node)
-        else:
-
-            raise RuntimeError(
-                "An error occurred in assembly generation, not all nodes were visited")
-
+        generate_binary_instructions(node)
     else:
 
         raise RuntimeError(
