@@ -45,11 +45,11 @@ cdef int32 get_type_size(Type type1):
 
 
 cdef bint is_type_signed(Type type1):
-    return isinstance(type1, (Int, Long, Double))
+    return isinstance(type1, (Int, Long))
 
 
 cdef bint is_const_signed(CConst node):
-    return isinstance(node, (CConstInt, CConstLong, CConstDouble))
+    return isinstance(node, (CConstInt, CConstLong))
 
 
 cdef Type get_joint_type(Type type1, Type type2):
