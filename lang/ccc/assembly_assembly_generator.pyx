@@ -341,26 +341,47 @@ cdef void generate_truncate_instructions(TacTruncate node):
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 
-cdef void generate_double_to_int_instructions(TacDoubleToInt node):
+cdef void generate_double_to_signed_instructions(TacDoubleToInt node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = generate_assembly_type(node.dst)
     instructions.append(AsmCvttsd2si(assembly_type_src, src, dst))
 
 
-cdef void generate_double_to_uint_instructions(TacDoubleToUInt node):
+cdef void generate_uint_double_to_unsigned_instructions(TacDoubleToUInt node):
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AsmOperand src_dst = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AssemblyType assembly_type_src = QuadWord()
+    cdef AssemblyType assembly_type_dst = LongWord()
+    instructions.append(AsmCvttsd2si(assembly_type_src, src, src_dst))
+    instructions.append(AsmMov(assembly_type_dst, dst_src, dst))
+
+
+cdef void generate_ulong_double_to_unsigned_instructions(TacDoubleToUInt node):
     # TODO
     pass
 
 
-cdef void generate_int_to_double_instructions(TacIntToDouble node):
+cdef void generate_double_to_unsigned_instructions(TacDoubleToUInt node):
+    if isinstance(generate_assembly_type(node.dst), LongWord):
+        # cvttsd2siq %xmm0, %rax
+        # movl %eax, -4(%rbp)
+        generate_uint_double_to_unsigned_instructions(node)
+    else:
+        # TODO
+        generate_ulong_double_to_unsigned_instructions(node)
+
+
+cdef void generate_signed_to_double_instructions(TacIntToDouble node):
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = generate_assembly_type(node.src)
     instructions.append(AsmCvtsi2sd(assembly_type_src, src, dst))
 
 
-cdef void generate_uint_to_double_instructions(TacUIntToDouble node):
+cdef void generate_unsigned_to_double_instructions(TacUIntToDouble node):
     # TODO
     pass
 
@@ -649,13 +670,13 @@ cdef void generate_instructions(TacInstruction node):
     elif isinstance(node, TacTruncate):
         generate_truncate_instructions(node)
     elif isinstance(node, TacDoubleToInt):
-        generate_double_to_int_instructions(node)
+        generate_double_to_signed_instructions(node)
     elif isinstance(node, TacDoubleToUInt):
-        generate_double_to_uint_instructions(node)
+        generate_double_to_unsigned_instructions(node)
     elif isinstance(node, TacIntToDouble):
-        generate_int_to_double_instructions(node)
+        generate_signed_to_double_instructions(node)
     elif isinstance(node, TacUIntToDouble):
-        generate_uint_to_double_instructions(node)
+        generate_unsigned_to_double_instructions(node)
     elif isinstance(node, TacLabel):
         generate_label_instructions(node)
     elif isinstance(node, TacJump):
