@@ -367,8 +367,6 @@ cdef void generate_double_to_signed_instructions(TacDoubleToInt node):
 
 
 cdef void generate_uint_double_to_unsigned_instructions(TacDoubleToUInt node):
-    # cvttsd2siq %xmm0, %rax
-    # movl %eax, -4(%rbp)
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AsmOperand src_dst = generate_register(REGISTER_KIND.get('Ax'))
@@ -389,20 +387,20 @@ cdef void generate_ulong_double_to_unsigned_instructions(TacDoubleToUInt node):
     cdef AssemblyType assembly_type_si = QuadWord()
     cdef TIdentifier target_after = represent_label_identifier("sd2si_after")
     cdef AsmOperand dst_out_of_range_sd = generate_register(REGISTER_KIND.get('Xmm1'))
-    cdef AsmBinaryOp binary_op_out_of_range_sd = AsmSub()
+    cdef AsmBinaryOp binary_op_out_of_range_sd_sub = AsmSub()
     cdef AsmOperand upper_bound_si = AsmImm(TIdentifier("9223372036854775808"))
     cdef AsmOperand src_out_of_range_si = generate_register(REGISTER_KIND.get('Dx'))
-    cdef AsmBinaryOp binary_op_out_of_range_si = AsmAdd()
+    cdef AsmBinaryOp binary_op_out_of_range_si_add = AsmAdd()
     instructions.append(AsmCmp(assembly_type_sd, upper_bound_sd, src))
     instructions.append(AsmJmpCC(cond_code_ae, target_out_of_range))
     instructions.append(AsmCvttsd2si(assembly_type_si, src, dst))
     instructions.append(AsmJmp(target_after))
     instructions.append(AsmLabel(target_out_of_range))
     instructions.append(AsmMov(assembly_type_sd, src, dst_out_of_range_sd))
-    instructions.append(AsmBinary(binary_op_out_of_range_sd, assembly_type_sd, upper_bound_sd, dst_out_of_range_sd))
+    instructions.append(AsmBinary(binary_op_out_of_range_sd_sub, assembly_type_sd, upper_bound_sd, dst_out_of_range_sd))
     instructions.append(AsmCvttsd2si(assembly_type_si, dst_out_of_range_sd, dst))
     instructions.append(AsmMov(assembly_type_si, upper_bound_si, src_out_of_range_si))
-    instructions.append(AsmBinary(binary_op_out_of_range_si, assembly_type_si, src_out_of_range_si, dst))
+    instructions.append(AsmBinary(binary_op_out_of_range_si_add, assembly_type_si, src_out_of_range_si, dst))
     instructions.append(AsmLabel(target_after))
 
 
@@ -421,13 +419,60 @@ cdef void generate_signed_to_double_instructions(TacIntToDouble node):
 
 
 cdef void generate_uint_unsigned_to_double_instructions(TacUIntToDouble node):
-    # TODO
-    pass
+    # movl $4294967290, %eax
+    # cvtsi2sdq %rax, %xmm0
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AsmOperand src_dst = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AssemblyType assembly_type_src = LongWord()
+    cdef AssemblyType assembly_type_dst = QuadWord()
+    instructions.append(AsmMovZeroExtend(assembly_type_src, src, src_dst))
+    instructions.append(AsmCvtsi2sd(assembly_type_dst, dst_src, dst))
 
 
 cdef void generate_ulong_unsigned_to_double_instructions(TacUIntToDouble node):
-    # TODO
-    pass
+    cdef AsmOperand lower_bound_si = AsmImm(TIdentifier("0"))
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AssemblyType assembly_type_si = QuadWord()
+    cdef AsmCondCode cond_code_l = AsmL()
+    cdef TIdentifier target_out_of_range = represent_label_identifier("si2sd_out_of_range")
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef TIdentifier target_after = represent_label_identifier("si2sd_after")
+    cdef AsmOperand dst_out_of_range_si = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand dst_out_of_range_si_shr = generate_register(REGISTER_KIND.get('Dx'))
+    cdef AsmUnaryOp unary_op_out_of_range_si_shr = AsmShr()
+    cdef AsmOperand set_bit_si = AsmImm(TIdentifier("1"))
+    cdef AsmBinaryOp binary_op_out_of_range_si_and = AsmBitAnd()
+    cdef AsmBinaryOp binary_op_out_of_range_si_or = AsmBitOr()
+    cdef AssemblyType assembly_type_sq = BackendDouble()
+    cdef AsmBinaryOp binary_op_out_of_range_sq_add = AsmAdd()
+    #   cmpq $0, -8(%rbp)
+    instructions.append(AsmCmp(assembly_type_si, lower_bound_si, src))
+    #   jl .L_out_of_range
+    instructions.append(AsmJmpCC(cond_code_l, target_out_of_range))
+    #   cvtsi2sdq -8(%rbp), %xmm0
+    instructions.append(AsmCvtsi2sd(assembly_type_si, src, dst))
+    #   jmp .L_end
+    instructions.append(AsmJmp(target_after))
+    # .L_out_of_range:
+    instructions.append(AsmLabel(target_out_of_range))
+    #   movq -8(%rbp), %rax
+    instructions.append(AsmMov(assembly_type_si, src, dst_out_of_range_si))
+    #   movq %rax, %rdx
+    instructions.append(AsmMov(assembly_type_si, dst_out_of_range_si, dst_out_of_range_si_shr))
+    #   shrq %rdx
+    instructions.append(AsmUnary(unary_op_out_of_range_si_shr, assembly_type_si, dst_out_of_range_si_shr))
+    #   andq $1, %rax
+    instructions.append(AsmBinary(binary_op_out_of_range_si_and, assembly_type_si, set_bit_si, dst_out_of_range_si))
+    #   orq %rax, %rdx
+    instructions.append(AsmBinary(binary_op_out_of_range_si_or, assembly_type_si, dst_out_of_range_si, dst_out_of_range_si_shr))
+    #   cvtsi2sdq %rdx, %xmm0
+    instructions.append(AsmCvtsi2sd(assembly_type_si, dst_out_of_range_si_shr, dst))
+    #   addsd %xmm0, %xmm0
+    instructions.append(AsmBinary(binary_op_out_of_range_sq_add, assembly_type_sq, dst, dst))
+    # .L_end:
+    instructions.append(AsmLabel(target_after))
 
 
 cdef void generate_unsigned_to_double_instructions(TacUIntToDouble node):
