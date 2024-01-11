@@ -93,8 +93,7 @@ cdef AsmPseudo generate_pseudo_operand(TacVariable node):
 
 
 cdef AsmOperand generate_operand(TacValue node):
-    # operand = ImmInt(int) | ImmLong(long) | ImmInt(uint) | ImmLong(ulong) | Reg(reg) | Pseudo(identifier)
-    #         | Stack(int) | Data(identifier)
+    # operand = Imm(int) | Reg(reg) | Pseudo(identifier) | Stack(int) | Data(identifier)
     if isinstance(node, TacConstant):
         return generate_constant_operand(node)
     elif isinstance(node, TacVariable):
@@ -172,7 +171,7 @@ cdef AsmBinaryOp generate_binary_op(TacBinaryOp node):
 
 
 cdef AsmUnaryOp generate_unary_op(TacUnaryOp node):
-    # unary_operator = Not | Neg
+    # unary_operator = Not | Neg | Shr
     if isinstance(node, TacComplement):
         return AsmNot()
     elif isinstance(node, TacNegate):
@@ -782,10 +781,13 @@ cdef void generate_instructions(TacInstruction node):
 
 
 cdef void generate_list_instructions(list[TacInstruction] list_node):
-    # instruction = Mov(operand src, operand dst) | Unary(unary_operator, operand) | Cmp(operand, operand)
-    #             | Idiv(operand) | Cdq | Jmp(identifier) | JmpCC(cond_code, identifier)
-    #             | SetCC(cond_code, operand) | Label(identifier) | AllocateStack(int) | Ret
-
+    # instruction = Mov(assembly_type, operand src, operand dst) | MovSx(operand src, operand dst)
+    #             | MovZeroExtend(operand src, operand dst) | Cvttsd2si(assembly_type, operand, operand)
+    #             | Cvtsi2sd(assembly_type, operand, operand) | Unary(unary_operator, assembly_type, operand)
+    #             | Binary(binary_operator, assembly_type, operand, operand) | Cmp(assembly_type, operand, operand)
+    #             | Idiv(assembly_type, operand) | Div(assembly_type, operand) | Cdq(assembly_type)
+    #             | Jmp(identifier) | JmpCC(cond_code, identifier) | SetCC(cond_code, operand) | Label(identifier)
+    #             | AllocateStack(int) | DeallocateStack(int) | Push(operand) | Call(identifier) | Ret
     cdef Py_ssize_t instruction
     for instruction in range(len(list_node)):
         generate_instructions(list_node[instruction])
@@ -841,7 +843,8 @@ cdef void append_double_static_constant_top_level(TIdentifier name, double value
 
 cdef AsmTopLevel generate_top_level(TacTopLevel node):
     # top_level = Function(identifier name, bool global, instruction* instructions)
-    #           | StaticVariable(identifier, bool global, int init)
+    #           | StaticVariable(identifier, bool global, int alignment, static_init initial_value)
+    #           | AsmStaticConstant(identifier, int alignment, static_init initial_value)
     if isinstance(node, TacFunction):
         return generate_function_top_level(node)
     elif isinstance(node, TacStaticVariable):
