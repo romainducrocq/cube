@@ -285,6 +285,7 @@ cdef void generate_zero_out_xmm_reg_instructions():
 
 cdef list[AsmInstruction] instructions = []
 cdef list[str] arg_registers = ["Di", "Si", "Dx", "Cx", "R8", "R9"]
+cdef list[str] arg_sse_registers = ["Xmm0", "Xmm1", "Xmm2", "Xmm3", "Xmm4", "Xmm5", "Xmm6", "Xmm7"]
 
 
 cdef void generate_reg_arg_fun_call_instructions(TacValue node, Py_ssize_t arg):
@@ -808,16 +809,16 @@ cdef void generate_list_instructions(list[TacInstruction] list_node):
         generate_instructions(list_node[instruction])
 
 
-cdef void generate_reg_param_function_instructions(TIdentifier node, Py_ssize_t param):
-    cdef AsmOperand src = generate_register(REGISTER_KIND.get(arg_registers[param]))
+cdef void generate_reg_param_function_instructions(TIdentifier node, str arg_register):
+    cdef AsmOperand src = generate_register(REGISTER_KIND.get(arg_register))
     cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
     cdef AssemblyType assembly_type_param = convert_backend_assembly_type(node.str_t)
     instructions.append(AsmMov(assembly_type_param, src, dst))
 
 
-cdef void generate_stack_param_function_instructions(TIdentifier node, int32 param):
-    cdef AsmOperand src = AsmStack(TInt((param - 4) * 8))
+cdef void generate_stack_param_function_instructions(TIdentifier node, int32 byte):
+    cdef AsmOperand src = AsmStack(TInt(byte * 8))
     cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
     cdef AssemblyType assembly_type_param = convert_backend_assembly_type(node.str_t)
@@ -833,11 +834,21 @@ cdef AsmFunction generate_function_top_level(TacFunction node):
     cdef list[TacInstruction] body = []
     instructions = body
     cdef Py_ssize_t param
+    cdef Py_ssize_t param_reg = 0
+    cdef Py_ssize_t param_sse_reg = 0
     for param in range(len(node.params)):
-        if param < 6:
-            generate_reg_param_function_instructions(node.params[param], param)
+        if isinstance(symbol_table[node.params[param].str_t].type_t, Double):
+            if param_sse_reg < 8:
+                generate_reg_param_function_instructions(node.params[param], arg_sse_registers[param_sse_reg])
+            else:
+                generate_stack_param_function_instructions(node.params[param],  param_sse_reg - 6)
+            param_sse_reg += 1
         else:
-            generate_stack_param_function_instructions(node.params[param], param)
+            if param_reg < 6:
+                generate_reg_param_function_instructions(node.params[param], arg_registers[param_reg])
+            else:
+                generate_stack_param_function_instructions(node.params[param],  param_reg - 4)
+            param_reg += 1
     generate_list_instructions(node.body)
     return AsmFunction(name, is_global, body)
 
