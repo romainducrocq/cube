@@ -30,7 +30,8 @@ cdef void add_backend_symbol(BackendSymbol node):
 cdef void convert_double_static_constant():
     cdef AssemblyType assembly_type = BackendDouble()
     cdef bint is_static = True
-    add_backend_symbol(BackendObj(assembly_type, is_static))
+    cdef bint is_constant = True
+    add_backend_symbol(BackendObj(assembly_type, is_static, is_constant))
 
 
 cdef void convert_static_constant_top_levels():
@@ -38,7 +39,7 @@ cdef void convert_static_constant_top_levels():
 
     cdef int static_constant
     for static_constant in range(len(static_constant_top_levels)):
-        symbol = static_constant_top_levels[static_constant].name.str
+        symbol = static_constant_top_levels[static_constant].name.str_t
         if isinstance(static_constant_top_levels[static_constant].initial_value, DoubleInit):
             convert_double_static_constant()
         else:
@@ -54,10 +55,9 @@ cdef void convert_fun_type(FunAttr node):
 
 cdef void convert_obj_type(IdentifierAttr node):
     cdef AssemblyType assembly_type = convert_backend_assembly_type(symbol)
-    cdef bint is_static = False
-    if isinstance(node, StaticAttr):
-        is_static = True
-    add_backend_symbol(BackendObj(assembly_type, is_static))
+    cdef bint is_static = isinstance(node, StaticAttr)
+    cdef bint is_constant = False
+    add_backend_symbol(BackendObj(assembly_type, is_static, is_constant))
 
 
 cdef void convert_symbol_table():
