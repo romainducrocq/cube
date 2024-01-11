@@ -419,8 +419,6 @@ cdef void generate_signed_to_double_instructions(TacIntToDouble node):
 
 
 cdef void generate_uint_unsigned_to_double_instructions(TacUIntToDouble node):
-    # movl $4294967290, %eax
-    # cvtsi2sdq %rax, %xmm0
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AsmOperand src_dst = generate_register(REGISTER_KIND.get('Ax'))
@@ -447,31 +445,18 @@ cdef void generate_ulong_unsigned_to_double_instructions(TacUIntToDouble node):
     cdef AsmBinaryOp binary_op_out_of_range_si_or = AsmBitOr()
     cdef AssemblyType assembly_type_sq = BackendDouble()
     cdef AsmBinaryOp binary_op_out_of_range_sq_add = AsmAdd()
-    #   cmpq $0, -8(%rbp)
     instructions.append(AsmCmp(assembly_type_si, lower_bound_si, src))
-    #   jl .L_out_of_range
     instructions.append(AsmJmpCC(cond_code_l, target_out_of_range))
-    #   cvtsi2sdq -8(%rbp), %xmm0
     instructions.append(AsmCvtsi2sd(assembly_type_si, src, dst))
-    #   jmp .L_end
     instructions.append(AsmJmp(target_after))
-    # .L_out_of_range:
     instructions.append(AsmLabel(target_out_of_range))
-    #   movq -8(%rbp), %rax
     instructions.append(AsmMov(assembly_type_si, src, dst_out_of_range_si))
-    #   movq %rax, %rdx
     instructions.append(AsmMov(assembly_type_si, dst_out_of_range_si, dst_out_of_range_si_shr))
-    #   shrq %rdx
     instructions.append(AsmUnary(unary_op_out_of_range_si_shr, assembly_type_si, dst_out_of_range_si_shr))
-    #   andq $1, %rax
     instructions.append(AsmBinary(binary_op_out_of_range_si_and, assembly_type_si, set_bit_si, dst_out_of_range_si))
-    #   orq %rax, %rdx
     instructions.append(AsmBinary(binary_op_out_of_range_si_or, assembly_type_si, dst_out_of_range_si, dst_out_of_range_si_shr))
-    #   cvtsi2sdq %rdx, %xmm0
     instructions.append(AsmCvtsi2sd(assembly_type_si, dst_out_of_range_si_shr, dst))
-    #   addsd %xmm0, %xmm0
     instructions.append(AsmBinary(binary_op_out_of_range_sq_add, assembly_type_sq, dst, dst))
-    # .L_end:
     instructions.append(AsmLabel(target_after))
 
 
