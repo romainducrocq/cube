@@ -478,12 +478,27 @@ cdef void generate_jump_instructions(TacJump node):
     instructions.append(AsmJmp(target))
 
 
-cdef void generate_return_instructions(TacReturn node):
+cdef void generate_return_integer_instructions(TacReturn node):
     cdef AsmOperand src = generate_operand(node.val)
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Ax'))
     cdef AssemblyType assembly_type_val = generate_assembly_type(node.val)
     instructions.append(AsmMov(assembly_type_val, src, dst))
     instructions.append(AsmRet())
+
+
+cdef void generate_return_double_instructions(TacReturn node):
+    cdef AsmOperand src = generate_operand(node.val)
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Xmm0'))
+    cdef AssemblyType assembly_type_val = BackendDouble()
+    instructions.append(AsmMov(assembly_type_val, src, dst))
+    instructions.append(AsmRet())
+
+
+cdef void generate_return_instructions(TacReturn node):
+    if is_value_double(node.val):
+        generate_return_double_instructions(node)
+    else:
+        generate_return_integer_instructions(node)
 
 
 cdef void generate_copy_instructions(TacCopy node):
