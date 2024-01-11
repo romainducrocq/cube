@@ -146,13 +146,15 @@ cdef AsmCondCode generate_unsigned_condition_code(TacBinaryOp node):
 
 
 cdef AsmBinaryOp generate_binary_op(TacBinaryOp node):
-    # binary_operator = Add | Sub | Mult | BitAnd | BitOr | BitXor | BitShiftLeft | BitShiftRight
+    # binary_operator = Add | Sub | Mult | DivDouble | BitAnd | BitOr | BitXor | BitShiftLeft | BitShiftRight
     if isinstance(node, TacAdd):
         return AsmAdd()
     elif isinstance(node, TacSubtract):
         return AsmSub()
     elif isinstance(node, TacMultiply):
         return AsmMult()
+    elif isinstance(node, TacDivide):
+        return AsmDivDouble()
     elif isinstance(node, TacBitAnd):
         return AsmBitAnd()
     elif isinstance(node, TacBitOr):
