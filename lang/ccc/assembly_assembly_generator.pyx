@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport TDouble, copy_identifier, copy_double
+from ccc.abc_builtin_ast cimport TDouble, TULong, copy_identifier, copy_double
 
 from ccc.parser_c_ast cimport Int, Long, Double, UInt, ULong
 from ccc.parser_c_ast cimport CConstInt, CConstLong, CConstDouble, CConstUInt, CConstULong
@@ -201,6 +201,25 @@ cdef bint is_value_signed(TacValue node):
             "An error occurred in assembly generation, not all nodes were visited")
 
 
+cdef bint is_constant_value_32_bits(TacConstant node):
+    return isinstance(node.constant, (CConstInt, CConstUInt))
+
+
+cdef bint is_variable_value_32_bits(TacVariable node):
+    return isinstance(symbol_table[node.name.str_t].type_t, (Int, UInt))
+
+
+cdef bint is_value_32_bits(TacValue node):
+    if isinstance(node, TacConstant):
+        return is_constant_value_32_bits(node)
+    elif isinstance(node, TacVariable):
+        return is_variable_value_32_bits(node)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in assembly generation, not all nodes were visited")
+
+
 cdef bint is_constant_value_double(TacConstant node):
     return isinstance(node.constant, CConstDouble)
 
@@ -349,6 +368,8 @@ cdef void generate_double_to_signed_instructions(TacDoubleToInt node):
 
 
 cdef void generate_uint_double_to_unsigned_instructions(TacDoubleToUInt node):
+    # cvttsd2siq %xmm0, %rax
+    # movl %eax, -4(%rbp)
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AsmOperand src_dst = generate_register(REGISTER_KIND.get('Ax'))
@@ -360,17 +381,56 @@ cdef void generate_uint_double_to_unsigned_instructions(TacDoubleToUInt node):
 
 
 cdef void generate_ulong_double_to_unsigned_instructions(TacDoubleToUInt node):
-    # TODO
-    pass
+    # TODO HERE
+    
+    #   .section .rodata
+    #   .align 8
+    # .L_upper_bound:
+    #   .double 9223372036854775808.0
+    #   .text
+    #   --snip--
+    cdef CConst max_long_sd = CConstDouble(TDouble(9223372036854775808.0))
+    cdef AsmOperand upper_bound_sd = generate_double_constant_operand(max_long_sd, 8)
+    cdef AsmOperand src = generate_operand(node.src)
+    cdef AssemblyType assembly_type_sd = BackendDouble()
+    cdef AsmCondCode cond_code_ae = AsmAE()
+    cdef TIdentifier target_out_of_range = represent_label_identifier("sd2si_out_of_range")
+    cdef AsmOperand dst = generate_operand(node.dst)
+    cdef AssemblyType assembly_type_si = QuadWord()
+    cdef TIdentifier target_after = represent_label_identifier("sd2si_after")
+    cdef AsmOperand dst_out_of_range_sd = generate_register(REGISTER_KIND.get('Xmm1'))
+    cdef AsmBinaryOp binary_op_out_of_range_sd = AsmSub()
+    cdef AsmOperand upper_bound_si = AsmImm("9223372036854775808")
+    cdef AsmOperand src_out_of_range_si = generate_register(REGISTER_KIND.get('Dx'))
+    cdef AsmBinaryOp binary_op_out_of_range_si = AsmAdd()
+    #   comisd .L_upper_bound(%rip), %xmm0
+    instructions.append(AsmCmp(assembly_type_sd, upper_bound_sd, src))
+    #   jae .L_out_of_range
+    instructions.append(AsmJmpCC(cond_code_ae, target_out_of_range))
+    #   cvttsd2siq %xmm0, %rax
+    instructions.append(AsmCvttsd2si(assembly_type_si, src, dst))
+    #   jmp .L_end
+    instructions.append(AsmJmp(target_after))
+    # .L_out_of_range:
+    instructions.append(AsmLabel(target_out_of_range))
+    #   movsd %xmm0, %xmm1
+    instructions.append(AsmMov(assembly_type_sd, src, dst_out_of_range_sd))
+    #   subsd .L_upper_bound(%rip), %xmm1
+    instructions.append(AsmBinary(binary_op_out_of_range_sd, assembly_type_sd, upper_bound_sd, dst_out_of_range_sd))
+    #   cvttsd2siq %xmm1, %rax
+    instructions.append(AsmCvttsd2si(assembly_type_si, dst_out_of_range_sd, dst))
+    #   movq $9223372036854775808, %rdx
+    instructions.append(AsmMov(assembly_type_si, upper_bound_si, src_out_of_range_si))
+    #   addq %rdx, %rax
+    instructions.append(AsmBinary(binary_op_out_of_range_si, assembly_type_si, src_out_of_range_si, dst))
+    # .L_end:
+    instructions.append(AsmLabel(target_after))
 
 
 cdef void generate_double_to_unsigned_instructions(TacDoubleToUInt node):
-    if isinstance(generate_assembly_type(node.dst), LongWord):
-        # cvttsd2siq %xmm0, %rax
-        # movl %eax, -4(%rbp)
+    if is_value_32_bits(node.dst):
         generate_uint_double_to_unsigned_instructions(node)
     else:
-        # TODO
         generate_ulong_double_to_unsigned_instructions(node)
 
 
@@ -381,9 +441,21 @@ cdef void generate_signed_to_double_instructions(TacIntToDouble node):
     instructions.append(AsmCvtsi2sd(assembly_type_src, src, dst))
 
 
-cdef void generate_unsigned_to_double_instructions(TacUIntToDouble node):
+cdef void generate_uint_unsigned_to_double_instructions(TacUIntToDouble node):
     # TODO
     pass
+
+
+cdef void generate_ulong_unsigned_to_double_instructions(TacUIntToDouble node):
+    # TODO
+    pass
+
+
+cdef void generate_unsigned_to_double_instructions(TacUIntToDouble node):
+    if is_value_32_bits(node.src):
+        generate_uint_unsigned_to_double_instructions(node)
+    else:
+        generate_ulong_unsigned_to_double_instructions(node)
 
 
 cdef void generate_label_instructions(TacLabel node):
