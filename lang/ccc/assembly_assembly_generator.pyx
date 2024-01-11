@@ -52,23 +52,22 @@ cdef AsmImm generate_ulong_imm_operand(CConstULong node):
     return AsmImm(value)
 
 
-cdef TIdentifier generate_double_static_constant(TDouble value, int32 byte):
+cdef AsmData generate_double_static_constant_operand(double value, int32 byte):
     # TODO assert str(0.0) != str(-0.0)
     # if not, check sign with libc <math.h> signbit(double)
-    cdef str str_value = str(value.double_t)
-    cdef TIdentifier static_const_label
+    cdef str str_value = str(value)
+    cdef TIdentifier static_constant_label
     if str_value in static_const_label_map:
-        static_const_label = TIdentifier(static_const_label_map[str_value])
+        static_constant_label = TIdentifier(static_const_label_map[str_value])
     else:
-        static_const_label = represent_label_identifier("double")
-        static_const_label_map[str_value] = static_const_label.str_t
-        append_double_static_constant_top_level(copy_identifier(static_const_label), value, byte)
-    return static_const_label
+        static_constant_label = represent_label_identifier("double")
+        static_const_label_map[str_value] = static_constant_label.str_t
+        append_double_static_constant_top_level(copy_identifier(static_constant_label), value, byte)
+    return AsmData(static_constant_label)
 
 
-cdef AsmData generate_double_constant_operand(CConstDouble node, int32 byte):
-    cdef TIdentifier identifier = generate_double_static_constant(node.value, byte)
-    return AsmData(identifier)
+cdef AsmData generate_double_constant_operand(CConstDouble node):
+    return generate_double_static_constant_operand(node.value.double_t, 8)
 
 
 cdef AsmOperand generate_constant_operand(TacConstant node):
@@ -77,7 +76,7 @@ cdef AsmOperand generate_constant_operand(TacConstant node):
     elif isinstance(node.constant, CConstLong):
         return generate_long_imm_operand(node.constant)
     elif isinstance(node.constant, CConstDouble):
-        return generate_double_constant_operand(node.constant, 8)
+        return generate_double_constant_operand(node.constant)
     elif isinstance(node.constant, CConstUInt):
         return generate_uint_imm_operand(node.constant)
     elif isinstance(node.constant, CConstULong):
@@ -89,8 +88,8 @@ cdef AsmOperand generate_constant_operand(TacConstant node):
 
 
 cdef AsmPseudo generate_pseudo_operand(TacVariable node):
-    cdef TIdentifier identifier = copy_identifier(node.name)
-    return AsmPseudo(identifier)
+    cdef TIdentifier name = copy_identifier(node.name)
+    return AsmPseudo(name)
 
 
 cdef AsmOperand generate_operand(TacValue node):
@@ -381,16 +380,7 @@ cdef void generate_uint_double_to_unsigned_instructions(TacDoubleToUInt node):
 
 
 cdef void generate_ulong_double_to_unsigned_instructions(TacDoubleToUInt node):
-    # TODO HERE
-    
-    #   .section .rodata
-    #   .align 8
-    # .L_upper_bound:
-    #   .double 9223372036854775808.0
-    #   .text
-    #   --snip--
-    cdef CConst max_long_sd = CConstDouble(TDouble(9223372036854775808.0))
-    cdef AsmOperand upper_bound_sd = generate_double_constant_operand(max_long_sd, 8)
+    cdef AsmOperand upper_bound_sd = generate_double_static_constant_operand(9223372036854775808.0, 8)
     cdef AsmOperand src = generate_operand(node.src)
     cdef AssemblyType assembly_type_sd = BackendDouble()
     cdef AsmCondCode cond_code_ae = AsmAE()
@@ -400,30 +390,19 @@ cdef void generate_ulong_double_to_unsigned_instructions(TacDoubleToUInt node):
     cdef TIdentifier target_after = represent_label_identifier("sd2si_after")
     cdef AsmOperand dst_out_of_range_sd = generate_register(REGISTER_KIND.get('Xmm1'))
     cdef AsmBinaryOp binary_op_out_of_range_sd = AsmSub()
-    cdef AsmOperand upper_bound_si = AsmImm("9223372036854775808")
+    cdef AsmOperand upper_bound_si = AsmImm(TIdentifier("9223372036854775808"))
     cdef AsmOperand src_out_of_range_si = generate_register(REGISTER_KIND.get('Dx'))
     cdef AsmBinaryOp binary_op_out_of_range_si = AsmAdd()
-    #   comisd .L_upper_bound(%rip), %xmm0
     instructions.append(AsmCmp(assembly_type_sd, upper_bound_sd, src))
-    #   jae .L_out_of_range
     instructions.append(AsmJmpCC(cond_code_ae, target_out_of_range))
-    #   cvttsd2siq %xmm0, %rax
     instructions.append(AsmCvttsd2si(assembly_type_si, src, dst))
-    #   jmp .L_end
     instructions.append(AsmJmp(target_after))
-    # .L_out_of_range:
     instructions.append(AsmLabel(target_out_of_range))
-    #   movsd %xmm0, %xmm1
     instructions.append(AsmMov(assembly_type_sd, src, dst_out_of_range_sd))
-    #   subsd .L_upper_bound(%rip), %xmm1
     instructions.append(AsmBinary(binary_op_out_of_range_sd, assembly_type_sd, upper_bound_sd, dst_out_of_range_sd))
-    #   cvttsd2siq %xmm1, %rax
     instructions.append(AsmCvttsd2si(assembly_type_si, dst_out_of_range_sd, dst))
-    #   movq $9223372036854775808, %rdx
     instructions.append(AsmMov(assembly_type_si, upper_bound_si, src_out_of_range_si))
-    #   addq %rdx, %rax
     instructions.append(AsmBinary(binary_op_out_of_range_si, assembly_type_si, src_out_of_range_si, dst))
-    # .L_end:
     instructions.append(AsmLabel(target_after))
 
 
@@ -485,23 +464,23 @@ cdef void generate_copy_instructions(TacCopy node):
 
 cdef void generate_jump_if_zero_integer_instructions(TacJumpIfZero node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
-    cdef AsmCondCode cond_code = generate_signed_condition_code(TacEqual())
+    cdef AsmCondCode cond_code_e = AsmE()
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
     instructions.append(AsmCmp(assembly_type_cond, imm_zero, condition))
-    instructions.append(AsmJmpCC(cond_code, target))
+    instructions.append(AsmJmpCC(cond_code_e, target))
 
 
 cdef void generate_jump_if_zero_double_instructions(TacJumpIfZero node):
     cdef AsmOperand reg_zero = generate_register(REGISTER_KIND.get('Xmm0'))
-    cdef AsmCondCode cond_code = generate_unsigned_condition_code(TacEqual())
+    cdef AsmCondCode cond_code_e = AsmE()
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     cdef AssemblyType assembly_type_cond = BackendDouble()
     generate_zero_out_xmm_reg_instructions()
     instructions.append(AsmCmp(assembly_type_cond, condition, reg_zero))
-    instructions.append(AsmJmpCC(cond_code, target))
+    instructions.append(AsmJmpCC(cond_code_e, target))
 
 
 cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
@@ -513,23 +492,23 @@ cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
 
 cdef void generate_jump_if_not_zero_integer_instructions(TacJumpIfNotZero node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
-    cdef AsmCondCode cond_code = generate_signed_condition_code(TacNotEqual())
+    cdef AsmCondCode cond_code_ne = AsmNE()
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
     instructions.append(AsmCmp(assembly_type_cond, imm_zero, condition))
-    instructions.append(AsmJmpCC(cond_code, target))
+    instructions.append(AsmJmpCC(cond_code_ne, target))
 
 
 cdef void generate_jump_if_not_zero_double_instructions(TacJumpIfNotZero node):
     cdef AsmOperand reg_zero = generate_register(REGISTER_KIND.get('Xmm0'))
-    cdef AsmCondCode cond_code = generate_unsigned_condition_code(TacNotEqual())
+    cdef AsmCondCode cond_code_ne = AsmNE()
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
     cdef AssemblyType assembly_type_cond = BackendDouble()
     generate_zero_out_xmm_reg_instructions()
     instructions.append(AsmCmp(assembly_type_cond, condition, reg_zero))
-    instructions.append(AsmJmpCC(cond_code, target))
+    instructions.append(AsmJmpCC(cond_code_ne, target))
 
 
 cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
@@ -541,20 +520,20 @@ cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
 
 cdef void generate_unary_operator_conditional_integer_instructions(TacUnary node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
-    cdef AsmCondCode cond_code = generate_signed_condition_code(TacEqual())
+    cdef AsmCondCode cond_code_e = AsmE()
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand cmp_dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = generate_assembly_type(node.src)
     cdef AssemblyType assembly_type_dst = generate_assembly_type(node.dst)
     instructions.append(AsmCmp(assembly_type_src, imm_zero, src))
     instructions.append(AsmMov(assembly_type_dst, imm_zero, cmp_dst))
-    instructions.append(AsmSetCC(cond_code, cmp_dst))
+    instructions.append(AsmSetCC(cond_code_e, cmp_dst))
 
 
 cdef void generate_unary_operator_conditional_double_instructions(TacUnary node):
     cdef AsmOperand reg_zero = generate_register(REGISTER_KIND.get('Xmm0'))
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
-    cdef AsmCondCode cond_code = generate_unsigned_condition_code(TacEqual())
+    cdef AsmCondCode cond_code_e = AsmE()
     cdef AsmOperand src = generate_operand(node.src)
     cdef AsmOperand cmp_dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src = BackendDouble()
@@ -562,7 +541,7 @@ cdef void generate_unary_operator_conditional_double_instructions(TacUnary node)
     generate_zero_out_xmm_reg_instructions()
     instructions.append(AsmCmp(assembly_type_src, reg_zero, src))
     instructions.append(AsmMov(assembly_type_dst, imm_zero, cmp_dst))
-    instructions.append(AsmSetCC(cond_code, cmp_dst))
+    instructions.append(AsmSetCC(cond_code_e, cmp_dst))
 
 
 cdef void generate_unary_operator_conditional_instructions(TacUnary node):
@@ -584,8 +563,7 @@ cdef void generate_unary_operator_arithmetic_integer_instructions(TacUnary node)
 cdef void generate_unary_operator_arithmetic_double_negate_instructions(TacUnary node):
     cdef AsmBinaryOp binary_op = AsmBitXor()
     cdef AsmOperand src1 = generate_operand(node.src)
-    cdef CConst const_src2 = CConstDouble(TDouble(-0.0))
-    cdef AsmOperand src2 = generate_double_constant_operand(const_src2, 16)
+    cdef AsmOperand src2 = generate_double_static_constant_operand(-0.0, 16)
     cdef AsmOperand src1_dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_src1 = BackendDouble()
     instructions.append(AsmMov(assembly_type_src1, src1, src1_dst))
@@ -823,9 +801,9 @@ cdef AsmStaticVariable generate_static_variable_top_level(TacStaticVariable node
     return AsmStaticVariable(name, is_global, alignment, initial_value)
 
 
-cdef void append_double_static_constant_top_level(TIdentifier name, TDouble value, int32 byte):
+cdef void append_double_static_constant_top_level(TIdentifier name, double value, int32 byte):
     cdef TInt alignment = TInt(byte)
-    cdef StaticInit initial_value = DoubleInit(copy_double(value))
+    cdef StaticInit initial_value = DoubleInit(TDouble(value))
     static_constant_top_levels.append(AsmStaticConstant(name, alignment, initial_value))
 
 
