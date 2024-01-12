@@ -39,6 +39,46 @@ cdef str emit_double(TDouble node):
     return str(double_to_binary(node.double_t))
 
 
+cdef str emit_register_rsp_sse(AsmReg node):
+    # Reg(SP)    -> $ %rsp
+    # Reg(XMM0)  -> $ %xmm0
+    # Reg(XMM1)  -> $ %xmm1
+    # Reg(XMM2)  -> $ %xmm2
+    # Reg(XMM3)  -> $ %xmm3
+    # Reg(XMM4)  -> $ %xmm4
+    # Reg(XMM5)  -> $ %xmm5
+    # Reg(XMM6)  -> $ %xmm6
+    # Reg(XMM7)  -> $ %xmm7
+    # Reg(XMM14) -> $ %xmm14
+    # Reg(XMM15) -> $ %xmm15
+    if isinstance(node, AsmSp):
+        return "rsp"
+    elif isinstance(node, AsmXMM0):
+        return "xmm0"
+    elif isinstance(node, AsmXMM1):
+        return "xmm1"
+    elif isinstance(node, AsmXMM2):
+        return "xmm2"
+    elif isinstance(node, AsmXMM3):
+        return "xmm3"
+    elif isinstance(node, AsmXMM4):
+        return "xmm4"
+    elif isinstance(node, AsmXMM5):
+        return "xmm5"
+    elif isinstance(node, AsmXMM6):
+        return "xmm6"
+    elif isinstance(node, AsmXMM7):
+        return "xmm7"
+    elif isinstance(node, AsmXMM14):
+        return "xmm14"
+    elif isinstance(node, AsmXMM15):
+        return "xmm15"
+    else:
+
+        raise RuntimeError(
+            "An error occurred in code emission, not all nodes were visited")
+
+
 cdef str emit_register_1byte(AsmReg node):
     # Reg(AX)  -> $ %al
     # Reg(DX)  -> $ %dl
@@ -68,9 +108,7 @@ cdef str emit_register_1byte(AsmReg node):
     elif isinstance(node, AsmR11):
         return "r11b"
     else:
-
-        raise RuntimeError(
-            "An error occurred in code emission, not all nodes were visited")
+        return emit_register_rsp_sse(node)
 
 
 cdef str emit_register_4byte(AsmReg node):
@@ -102,9 +140,7 @@ cdef str emit_register_4byte(AsmReg node):
     elif isinstance(node, AsmR11):
         return "r11d"
     else:
-
-        raise RuntimeError(
-            "An error occurred in code emission, not all nodes were visited")
+        return emit_register_rsp_sse(node)
 
 
 cdef str emit_register_8byte(AsmReg node):
@@ -117,17 +153,6 @@ cdef str emit_register_8byte(AsmReg node):
     # Reg(R9)    -> $ %r9
     # Reg(R10)   -> $ %r10
     # Reg(R11)   -> $ %r11
-    # Reg(SP)    -> $ %rsp
-    # Reg(XMM0)  -> $ %xmm0
-    # Reg(XMM1)  -> $ %xmm1
-    # Reg(XMM2)  -> $ %xmm2
-    # Reg(XMM3)  -> $ %xmm3
-    # Reg(XMM4)  -> $ %xmm4
-    # Reg(XMM5)  -> $ %xmm5
-    # Reg(XMM6)  -> $ %xmm6
-    # Reg(XMM7)  -> $ %xmm7
-    # Reg(XMM14) -> $ %xmm14
-    # Reg(XMM15) -> $ %xmm15
     if isinstance(node, AsmAx):
         return "rax"
     elif isinstance(node, AsmDx):
@@ -146,32 +171,8 @@ cdef str emit_register_8byte(AsmReg node):
         return "r10"
     elif isinstance(node, AsmR11):
         return "r11"
-    elif isinstance(node, AsmSp):
-        return "rsp"
-    elif isinstance(node, AsmXMM0):
-        return "xmm0"
-    elif isinstance(node, AsmXMM1):
-        return "xmm1"
-    elif isinstance(node, AsmXMM2):
-        return "xmm2"
-    elif isinstance(node, AsmXMM3):
-        return "xmm3"
-    elif isinstance(node, AsmXMM4):
-        return "xmm4"
-    elif isinstance(node, AsmXMM5):
-        return "xmm5"
-    elif isinstance(node, AsmXMM6):
-        return "xmm6"
-    elif isinstance(node, AsmXMM7):
-        return "xmm7"
-    elif isinstance(node, AsmXMM14):
-        return "xmm14"
-    elif isinstance(node, AsmXMM15):
-        return "xmm15"
     else:
-
-        raise RuntimeError(
-            "An error occurred in code emission, not all nodes were visited")
+        return emit_register_rsp_sse(node)
 
 
 cdef str emit_condition_code(AsmCondCode node):
