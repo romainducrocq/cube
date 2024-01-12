@@ -176,7 +176,7 @@ cdef void checktype_binary_expression(CBinary node):
         node.exp_right = cast_expression(node.exp_right, common_type)
     if isinstance(node.binary_op, (CAdd, CSubtract, CMultiply, CDivide)):
         node.exp_type = common_type
-    if isinstance(node.binary_op, (CRemainder, CBitAnd, CBitOr, CBitXor)):
+    elif isinstance(node.binary_op, (CRemainder, CBitAnd, CBitOr, CBitXor)):
         node.exp_type = common_type
         if isinstance(node.exp_type, Double):
 
