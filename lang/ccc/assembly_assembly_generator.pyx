@@ -926,6 +926,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
 
     convert_symbol_table()
 
-    # correct_stack(asm_ast)
+    correct_stack(asm_ast)
 
     return asm_ast

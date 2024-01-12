@@ -1,6 +1,7 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
-from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
+from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram
+from ccc.assembly_asm_ast cimport AsmTopLevel, AsmFunction, AsmStaticVariable, AsmStaticConstant
 from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmMovSx, AsmMovZeroExtend, AsmCvttsd2si, AsmCvtsi2sd
 from ccc.assembly_asm_ast cimport AsmPush, AsmCmp, AsmSetCC, AsmUnary, AsmBinary
 from ccc.assembly_asm_ast cimport AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmDiv, AsmMult
@@ -503,6 +504,8 @@ cdef void correct_top_level(AsmTopLevel node):
         correct_function_top_level(node)
     elif isinstance(node, AsmStaticVariable):
         correct_variable_stack_top_level(node)
+    elif isinstance(node, AsmStaticConstant):
+        pass
     else:
 
         raise RuntimeError(
