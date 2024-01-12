@@ -1,4 +1,4 @@
-from ccc.abc_builtin_ast cimport TDouble, TULong, copy_identifier, copy_double
+from ccc.abc_builtin_ast cimport TDouble, copy_identifier
 
 from ccc.parser_c_ast cimport Int, Long, Double, UInt, ULong
 from ccc.parser_c_ast cimport CConstInt, CConstLong, CConstDouble, CConstUInt, CConstULong
@@ -18,7 +18,7 @@ from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack
 from ccc.util_ctypes cimport int32
 
 
-cdef dict[str, str] static_const_label_map = set()
+cdef dict[str, str] static_const_label_map = {}
 
 
 cdef TInt generate_alignment(Type node):
@@ -446,9 +446,8 @@ cdef void generate_uint_unsigned_to_double_instructions(TacUIntToDouble node):
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AsmOperand src_dst = generate_register(REGISTER_KIND.get('Ax'))
     cdef AsmOperand dst_src = generate_register(REGISTER_KIND.get('Ax'))
-    cdef AssemblyType assembly_type_src = LongWord()
     cdef AssemblyType assembly_type_dst = QuadWord()
-    instructions.append(AsmMovZeroExtend(assembly_type_src, src, src_dst))
+    instructions.append(AsmMovZeroExtend(src, src_dst))
     instructions.append(AsmCvtsi2sd(assembly_type_dst, dst_src, dst))
 
 
@@ -927,6 +926,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
 
     convert_symbol_table()
 
-    correct_stack(asm_ast)
+    # correct_stack(asm_ast)
 
     return asm_ast
