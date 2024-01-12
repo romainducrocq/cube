@@ -337,7 +337,7 @@ cdef void generate_fun_call_instructions(TacFunCall node):
 
     for i in range(len(i_stacks)):
         stack_padding += 8
-        generate_stack_arg_fun_call_instructions(node.args[i_stacks[- (i + 1)])
+        generate_stack_arg_fun_call_instructions(node.args[i_stacks[- (i + 1)]])
 
     cdef TIdentifier name = copy_identifier(node.name)
     instructions.append(AsmCall(name))
