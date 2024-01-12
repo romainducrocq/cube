@@ -3,7 +3,7 @@ from ccc.abc_builtin_ast cimport TLong, TUInt, TULong, TDouble
 from ccc.semantic_symbol_table cimport IntInit, LongInit, UIntInit, ULongInit, DoubleInit
 
 from ccc.assembly_asm_ast cimport *
-from ccc.assembly_backend_symbol_table cimport LongWord, QuadWord, BackendDouble
+from ccc.assembly_backend_symbol_table cimport backend_symbol_table, LongWord, QuadWord, BackendDouble, BackendObj
 
 from ccc.util_ctypes cimport int32, double_to_binary
 from ccc.util_fopen cimport file_open_write, write_line, file_close_write
@@ -251,7 +251,7 @@ cdef str emit_operand(AsmOperand node, int32 byte):
 
     if isinstance(node, AsmImm):
         operand = emit_identifier(node.value)
-        return "$" + operand
+        return f"${operand}"
     elif isinstance(node, AsmRegister):
         if byte == 1:
             operand = emit_register_1byte(node.reg)
@@ -264,13 +264,17 @@ cdef str emit_operand(AsmOperand node, int32 byte):
             raise RuntimeError(
                 "An error occurred in code emission, unmanaged register byte size")
 
-        return "%" + operand
+        return f"%{operand}"
     elif isinstance(node, AsmStack):
         operand = emit_int(node.value)
-        return operand + "(%rbp)"
+        return F"{operand}(%rbp)"
     elif isinstance(node, AsmData):
         operand = emit_identifier(node.name)
-        return operand + "(%rip)"
+        if operand in backend_symbol_table and \
+           isinstance(backend_symbol_table[operand], BackendObj) and \
+           backend_symbol_table[operand].is_constant:
+            operand = f".L{operand}"
+        return f"{operand}(%rip)"
     else:
 
         raise RuntimeError(
