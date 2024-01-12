@@ -288,9 +288,9 @@ cdef list[str] arg_registers = ["Di", "Si", "Dx", "Cx", "R8", "R9"]
 cdef list[str] arg_sse_registers = ["Xmm0", "Xmm1", "Xmm2", "Xmm3", "Xmm4", "Xmm5", "Xmm6", "Xmm7"]
 
 
-cdef void generate_reg_arg_fun_call_instructions(TacValue node, Py_ssize_t arg):
+cdef void generate_reg_arg_fun_call_instructions(TacValue node, str arg_register):
     cdef AsmOperand src = generate_operand(node)
-    cdef AsmOperand dst = generate_register(REGISTER_KIND.get(arg_registers[arg]))
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get(arg_register))
     cdef AssemblyType assembly_type = generate_assembly_type(node)
     instructions.append(AsmMov(assembly_type, src, dst))
 
@@ -299,7 +299,7 @@ cdef void generate_stack_arg_fun_call_instructions(TacValue node):
     cdef AsmOperand src = generate_operand(node)
     cdef AssemblyType assembly_type = generate_assembly_type(node)
     if isinstance(src, (AsmRegister, AsmImm)) or \
-       isinstance(assembly_type, QuadWord):
+       isinstance(assembly_type, (QuadWord, BackendDouble)):
         instructions.append(AsmPush(src))
         return
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Ax'))
@@ -316,7 +316,7 @@ cdef void generate_fun_call_instructions(TacFunCall node):
     cdef Py_ssize_t i
     for i in range(len(node.args)):
         if i < 6:
-            generate_reg_arg_fun_call_instructions(node.args[i], i)
+            generate_reg_arg_fun_call_instructions(node.args[i], arg_registers[i])
         else:
             stack_padding += 8
             i = len(node.args) - i + 5
@@ -818,7 +818,7 @@ cdef void generate_reg_param_function_instructions(TIdentifier node, str arg_reg
 
 
 cdef void generate_stack_param_function_instructions(TIdentifier node, int32 byte):
-    cdef AsmOperand src = AsmStack(TInt(byte * 8))
+    cdef AsmOperand src = AsmStack(TInt((byte + 2) * 8))
     cdef TIdentifier name = copy_identifier(node)
     cdef AsmOperand dst = AsmPseudo(name)
     cdef AssemblyType assembly_type_param = convert_backend_assembly_type(node.str_t)
@@ -836,19 +836,22 @@ cdef AsmFunction generate_function_top_level(TacFunction node):
     cdef Py_ssize_t param
     cdef Py_ssize_t param_reg = 0
     cdef Py_ssize_t param_sse_reg = 0
+    cdef int32 param_stack = 0
     for param in range(len(node.params)):
         if isinstance(symbol_table[node.params[param].str_t].type_t, Double):
             if param_sse_reg < 8:
                 generate_reg_param_function_instructions(node.params[param], arg_sse_registers[param_sse_reg])
+                param_sse_reg += 1
             else:
-                generate_stack_param_function_instructions(node.params[param],  param_sse_reg - 6)
-            param_sse_reg += 1
+                generate_stack_param_function_instructions(node.params[param],  param_stack)
+                param_stack += 1
         else:
             if param_reg < 6:
                 generate_reg_param_function_instructions(node.params[param], arg_registers[param_reg])
+                param_reg += 1
             else:
-                generate_stack_param_function_instructions(node.params[param],  param_reg - 4)
-            param_reg += 1
+                generate_stack_param_function_instructions(node.params[param],  param_stack)
+                param_stack += 1
     generate_list_instructions(node.body)
     return AsmFunction(name, is_global, body)
 
