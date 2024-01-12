@@ -1,18 +1,20 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram, AsmTopLevel, AsmFunction, AsmStaticVariable
-from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmMovSx, AsmMovZeroExtend, AsmPush, AsmCmp, AsmSetCC
-from ccc.assembly_asm_ast cimport AsmUnary, AsmBinary, AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmDiv, AsmMult
+from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmMovSx, AsmMovZeroExtend, AsmCvttsd2si, AsmCvtsi2sd
+from ccc.assembly_asm_ast cimport AsmPush, AsmCmp, AsmSetCC, AsmUnary, AsmBinary
+from ccc.assembly_asm_ast cimport AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmDiv, AsmMult
 from ccc.assembly_asm_ast cimport AsmOperand, AsmPseudo, AsmStack, AsmData
 from ccc.assembly_asm_ast cimport AsmBitAnd, AsmBitOr, AsmBitXor, AsmBitShiftLeft, AsmBitShiftRight
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-from ccc.assembly_backend_symbol_table cimport backend_symbol_table, AssemblyType, LongWord, QuadWord
+from ccc.assembly_backend_symbol_table cimport backend_symbol_table, AssemblyType, LongWord, QuadWord, BackendDouble
 
 from ccc.util_ctypes cimport int32
 
 
 cdef int32 OFFSET_LONG_WORD = -4
 cdef int32 OFFSET_QUAD_WORD = -8
+cdef int32 OFFSET_DOUBLE = -8
 cdef int32 counter = -1
 cdef dict[str, int32] pseudo_map = {}
 
@@ -34,6 +36,8 @@ cdef void allocate_offset_pseudo_register(AssemblyType assembly_type):
         counter += OFFSET_LONG_WORD
     elif isinstance(assembly_type, QuadWord):
         counter += OFFSET_QUAD_WORD
+    elif isinstance(assembly_type, BackendDouble):
+        counter += OFFSET_DOUBLE
 
 
 cdef void align_offset_pseudo_register(AssemblyType assembly_type):
@@ -72,6 +76,20 @@ cdef void replace_mov_sx_pseudo_registers(AsmMovSx node):
 
 
 cdef void replace_mov_zero_extend_pseudo_registers(AsmMovZeroExtend node):
+    if isinstance(node.src, AsmPseudo):
+        node.src = replace_operand_pseudo_register(node.src)
+    if isinstance(node.dst, AsmPseudo):
+        node.dst = replace_operand_pseudo_register(node.dst)
+
+
+cdef void replace_cvttsd2si_pseudo_registers(AsmCvttsd2si node):
+    if isinstance(node.src, AsmPseudo):
+        node.src = replace_operand_pseudo_register(node.src)
+    if isinstance(node.dst, AsmPseudo):
+        node.dst = replace_operand_pseudo_register(node.dst)
+
+
+cdef void replace_cvtsi2sd_pseudo_registers(AsmCvtsi2sd node):
     if isinstance(node.src, AsmPseudo):
         node.src = replace_operand_pseudo_register(node.src)
     if isinstance(node.dst, AsmPseudo):
@@ -124,6 +142,10 @@ cdef void replace_pseudo_registers(AsmInstruction node):
         replace_mov_sx_pseudo_registers(node)
     elif isinstance(node, AsmMovZeroExtend):
         replace_mov_zero_extend_pseudo_registers(node)
+    elif isinstance(node, AsmCvttsd2si):
+        replace_cvttsd2si_pseudo_registers(node)
+    elif isinstance(node, AsmCvtsi2sd):
+        replace_cvtsi2sd_pseudo_registers(node)
     elif isinstance(node, AsmPush):
         replace_push_pseudo_registers(node)
     elif isinstance(node, AsmCmp):
