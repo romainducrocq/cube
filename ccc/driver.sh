@@ -14,7 +14,7 @@ function verbose () {
 
 function usage () {
     if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
-        echo "Usage: ${PACKAGE_NAME} [Help] [Link] FILE"
+        echo "Usage: ${PACKAGE_NAME} [Help] [Link] FILE [Lib]"
         echo ""
         echo "[Help]:"
         echo "    --help       print help and exit"
@@ -23,9 +23,12 @@ function usage () {
         echo "[Link]:"
         echo "    -c           compile, but do not link"
         echo ""
+        echo "[Lib]:"
+        echo "    -l<libname>  links with a library file"
+        echo ""
         echo "FILE:            .c file to compile"
     else
-        echo "Usage: ${PACKAGE_NAME} [Help] [Debug] [Link] FILE"
+        echo "Usage: ${PACKAGE_NAME} [Help] [Debug] [Link] FILE [Lib]"
         echo ""
         echo "[Help]:"
         echo "    --help       print help and exit"
@@ -40,6 +43,9 @@ function usage () {
         echo ""
         echo "[Link]:"
         echo "    -c           compile, but do not link"
+        echo ""
+        echo "[Lib]:"
+        echo "    -l<libname>  links with a library file"
         echo ""
         echo "FILE:            .c file to compile"
     fi
@@ -103,27 +109,40 @@ function file_arg () {
     FILE=${FILE%.*}
 }
 
+function lib_arg () {
+    if [[ "${ARG}" == "-l"* ]]; then
+      LINK_LIBS="${LINK_LIBS} ${ARG}"
+      return 0
+    fi
+    return 1
+}
+
 function parse_args () {
     i=0
 
     shift_arg
-    if [ ${?} -ne 0 ]; then return; fi
+    if [ ${?} -ne 0 ]; then exit 1; fi
     help_arg
 
-    if [ ${?} -ne 0 ]; then return; fi
+    if [ ${?} -ne 0 ]; then exit 1; fi
     opt_arg
 
     if [ ${?} -eq 0 ]; then
         shift_arg
-        if [ ${?} -ne 0 ]; then return; fi
+        if [ ${?} -ne 0 ]; then exit 1; fi
     fi
     link_arg
 
     if [ ${?} -eq 0 ]; then
         shift_arg
-        if [ ${?} -ne 0 ]; then return; fi
+        if [ ${?} -ne 0 ]; then exit 1; fi
     fi
     file_arg
+
+    if [ ${?} -ne 0 ]; then exit 1; fi
+    shift_arg
+    if [ ${?} -ne 0 ]; then return; fi
+    lib_arg
 
     if [ ${?} -eq 0 ]; then
         shift_arg
@@ -159,11 +178,11 @@ function link () {
     if [ ${OPT_CODE} -lt 200 ]; then
         verbose "Link       -> ${FILE}.s"
         if [ ${LINK_CODE} -eq 0 ]; then
-            gcc ${FILE}.s -o ${FILE}
+            gcc ${FILE}.s -o ${FILE}${LINK_LIBS}
             if [ ${?} -ne 0 ]; then clean; exit 1; fi
             verbose "Executable -> ${FILE}"
         elif [ ${LINK_CODE} -eq 1 ]; then
-            gcc -c ${FILE}.s -o ${FILE}.o
+            gcc -c ${FILE}.s -o ${FILE}.o${LINK_LIBS}
             if [ ${?} -ne 0 ]; then clean; exit 1; fi
             verbose "Object     -> ${FILE}.o"
         else
@@ -176,6 +195,7 @@ function link () {
 OPT_CODE=0
 LINK_CODE=0
 FILE=""
+LINK_LIBS=""
 parse_args
 
 preprocess
