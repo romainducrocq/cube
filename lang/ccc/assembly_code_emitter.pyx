@@ -434,7 +434,6 @@ cdef void emit_binary_instructions(AsmBinary node):
         t = "pd"
     else:
         t = emit_type_instruction_suffix(node.assembly_type)
-    cdef str binary_op
     cdef str binary_op = emit_binary_op(node.binary_op)
     if isinstance(node.binary_op, AsmMult) and \
        not isinstance(node.assembly_type, BackendDouble):
@@ -597,17 +596,17 @@ cdef void emit_bss_static_variable_top_level(AsmStaticVariable node, str static_
 
 
 cdef void emit_static_variable_top_level(AsmStaticVariable node):
-    # StaticVariable(name, global, init)<i> initialized to non-zero value -> $ <data-static-variable-directives>
-    # StaticVariable(name, global, init)<d>                               -> $ <data-static-variable-directives>
-    # StaticVariable(name, global, init)<i> initialized to zero           -> $ <bss-static-variable-directives>
-    cdef str static_init = ""
+    # StaticVariable(name, global, align, init)<i> initialized to non-zero value -> $ <data-static-variable-directives>
+    # StaticVariable(name, global, align, init)<d>                               -> $ <data-static-variable-directives>
+    # StaticVariable(name, global, align, init)<i> initialized to zero           -> $ <bss-static-variable-directives>
+    cdef str static_init
     if isinstance(node.initial_value, IntInit):
         if node.initial_value.value.int_t:
             static_init = emit_int(node.initial_value.value)
             static_init = f".long {static_init}"
             emit_data_static_variable_top_level(node, static_init)
         else:
-            static_init = f".zero 4"
+            static_init = ".zero 4"
             emit_bss_static_variable_top_level(node, static_init)
     elif isinstance(node.initial_value, LongInit):
         if node.initial_value.value.long_t:
@@ -615,7 +614,7 @@ cdef void emit_static_variable_top_level(AsmStaticVariable node):
             static_init = f".quad {static_init}"
             emit_data_static_variable_top_level(node, static_init)
         else:
-            static_init = f".zero 8"
+            static_init = ".zero 8"
             emit_bss_static_variable_top_level(node, static_init)
     elif isinstance(node.initial_value, DoubleInit):
         static_init = emit_double(node.initial_value.value)
@@ -627,7 +626,7 @@ cdef void emit_static_variable_top_level(AsmStaticVariable node):
             static_init = f".long {static_init}"
             emit_data_static_variable_top_level(node, static_init)
         else:
-            static_init = f".zero 4"
+            static_init = ".zero 4"
             emit_bss_static_variable_top_level(node, static_init)
     elif isinstance(node.initial_value, ULongInit):
         if node.initial_value.value.ulong_t:
@@ -635,24 +634,47 @@ cdef void emit_static_variable_top_level(AsmStaticVariable node):
             static_init = f".quad {static_init}"
             emit_data_static_variable_top_level(node, static_init)
         else:
-            static_init = f".zero 8"
+            static_init = ".zero 8"
             emit_bss_static_variable_top_level(node, static_init)
-
     else:
 
-        print(type(node.initial_value))
+        raise RuntimeError(
+            "An error occurred in code emission, not all nodes were visited")
+
+
+cdef void emit_double_static_constant_top_level(AsmStaticConstant node):
+    # StaticConstant(name, align, init) -> $     .section .rodata
+    #                                      $     <alignment-directive>
+    #                                      $ .L<name>:
+    #                                      $     .quad <d>
+    cdef str name = emit_identifier(node.name)
+    cdef str static_init = emit_double(node.initial_value.value)
+    emit(".section .rodata", 1)
+    emit_alignment_directive_top_level(node.alignment)
+    emit(f".L{name}:", 0)
+    emit(f".quad {static_init}", 1)
+
+
+cdef void emit_static_constant_top_level(AsmStaticConstant node):
+    # StaticConstant(name, align, init)<d> -> $ <double-static-constant-directives>
+    if isinstance(node.initial_value, DoubleInit):
+        emit_double_static_constant_top_level(node)
+    else:
 
         raise RuntimeError(
             "An error occurred in code emission, not all nodes were visited")
 
 
 cdef void emit_top_level(AsmTopLevel node):
-    # Function(name, global, instructions) -> $ <function-top-level-directives>
-    # StaticVariable(name, global, init)   -> $ <static-variable-top-level-directives>
+    # Function(name, global, instructions)      -> $ <function-top-level-directives>
+    # StaticVariable(name, global, align, init) -> $ <static-variable-top-level-directives>
+    # StaticConstant(name, align, init)         -> $ <static-constant-top-level-directives>
     if isinstance(node, AsmFunction):
         emit_function_top_level(node)
     elif isinstance(node, AsmStaticVariable):
         emit_static_variable_top_level(node)
+    elif isinstance(node, AsmStaticConstant):
+        emit_static_constant_top_level(node)
     else:
 
         raise RuntimeError(
