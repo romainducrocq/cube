@@ -12,9 +12,8 @@ from ccc.assembly_backend_symbol_table cimport backend_symbol_table, AssemblyTyp
 from ccc.util_ctypes cimport int32
 
 
-cdef int32 OFFSET_LONG_WORD = -4
-cdef int32 OFFSET_QUAD_WORD = -8
-cdef int32 OFFSET_DOUBLE = -8
+cdef int32 OFFSET_32_BITS = -4
+cdef int32 OFFSET_64_BITS = -8
 cdef int32 counter = -1
 cdef dict[str, int32] pseudo_map = {}
 
@@ -33,18 +32,16 @@ cdef void allocate_offset_pseudo_register(AssemblyType assembly_type):
     global counter
 
     if isinstance(assembly_type, LongWord):
-        counter += OFFSET_LONG_WORD
-    elif isinstance(assembly_type, QuadWord):
-        counter += OFFSET_QUAD_WORD
-    elif isinstance(assembly_type, BackendDouble):
-        counter += OFFSET_DOUBLE
+        counter += OFFSET_32_BITS
+    elif isinstance(assembly_type, (QuadWord, BackendDouble)):
+        counter += OFFSET_64_BITS
 
 
 cdef void align_offset_pseudo_register(AssemblyType assembly_type):
     global counter
 
     if isinstance(assembly_type, LongWord):
-        counter += OFFSET_LONG_WORD
+        counter += OFFSET_32_BITS
 
 
 cdef AsmOperand replace_operand_pseudo_register(AsmPseudo node):
@@ -225,20 +222,42 @@ cdef void correct_mov_sx_zero_extend_from_any_to_addr_instructions(Py_ssize_t i,
                                       fun_instructions[i].dst, src_dst))
 
 
+cdef void correct_mov_zero_extend_from_any_to_any_instructions(Py_ssize_t i):
+    fun_instructions[i] = AsmMov(LongWord(),
+                                 fun_instructions[i].src, fun_instructions[i].dst)
+
+
 cdef void correct_cvttsd2si_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
     # cvttsd2si (_, addr)
     # $ cvttsd2si _, addr ->
-    #     $ movl      _  , reg
-    #     $ cvttsd2si reg, addr
+    #     $ cvttsd2si _  , reg
+    #     $ mov       reg, addr
+    cdef AsmOperand src_dst = fun_instructions[i].dst
+    fun_instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
+    fun_instructions.insert(k, AsmMov(fun_instructions[i].assembly_type,
+                                      fun_instructions[i].dst, src_dst))
+
+
+cdef void correct_cvtsi2sd_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k):
+    # cvtsi2sd (imm, _)
+    # $ cvtsi2sd imm, _ ->
+    #     $ mov      imm, reg
+    #     $ cvtsi2sd reg, _
     cdef AsmOperand src_src = fun_instructions[i].src
-    fun_instructions[i].src = generate_register(REGISTER_KIND.get('R11'))
+    fun_instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
     fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
                                           src_src, fun_instructions[i].src))
 
 
-cdef void correct_mov_zero_extend_from_any_to_any_instructions(Py_ssize_t i):
-    fun_instructions[i] = AsmMov(LongWord(),
-                                 fun_instructions[i].src, fun_instructions[i].dst)
+cdef void correct_cvtsi2sd_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
+    # cvtsi2sd (_, addr)
+    # $ cvtsi2sd _, addr ->
+    #     $ cvtsi2sd _  , reg
+    #     $ mov       reg, addr
+    cdef AsmOperand src_dst = fun_instructions[i].dst
+    fun_instructions[i].dst = generate_register(REGISTER_KIND.get('Xmm15'))
+    fun_instructions.insert(k, AsmMov(BackendDouble(),
+                                      fun_instructions[i].dst, src_dst))
 
 
 cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -250,6 +269,17 @@ cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
     fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
                                           src_dst, fun_instructions[i].dst))
+
+
+cdef correct_double_cmp_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
+    # cmp<d> (addr, addr)
+    # $ cmp<d> addr1, addr2 ->
+    #     $ mov    addr2, reg
+    #     $ cmp<d> addr1, reg
+    cdef AsmOperand dst_dst = fun_instructions[i].dst
+    fun_instructions[i].dst = generate_register(REGISTER_KIND.get('Xmm15'))
+    fun_instructions.insert(k - 1, AsmMov(BackendDouble(),
+                                          dst_dst, fun_instructions[i].dst))
 
 
 cdef void correct_shl_shr_from_addr_to_addr(Py_ssize_t i, Py_ssize_t k):
@@ -291,9 +321,9 @@ cdef void correct_div_from_imm(Py_ssize_t i, Py_ssize_t k):
 
 cdef void correct_any_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
     # mov | cmp | push | add | sub | mul (q imm, _)
-    # $ mov q imm, _ ->
-    #     $ mov quad_word imm, reg
-    #     $ mov reg          , _
+    # $ mov imm<q>, _ ->
+    #     $ mov imm<q>, reg
+    #     $ mov reg   , _
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
     fun_instructions.insert(k - 1, AsmMov(QuadWord(),
@@ -371,18 +401,33 @@ cdef void correct_function_top_level(AsmFunction node):
                 correct_cvttsd2si_from_any_to_addr_instructions(i, k)
                 count_insert += 1
 
+        elif isinstance(fun_instructions[i], AsmCvtsi2sd):
+            if is_from_imm_instruction(i):
+                correct_cvtsi2sd_from_imm_to_any_instructions(i, k)
+                k += 1
+                count_insert += 1
+
+            if is_to_addr_instruction(i):
+                correct_cvtsi2sd_from_any_to_addr_instructions(i, k)
+                count_insert += 1
+
         elif isinstance(fun_instructions[i], AsmCmp):
-            if is_from_long_imm_instruction(i):
-                correct_any_from_quad_word_imm_to_any(i, k)
-                count_insert += 1
+            if isinstance(fun_instructions[i].assembly_type, BackendDouble):
+                if is_to_addr_instruction(i):
+                    correct_double_cmp_from_any_to_addr_instructions(i, k)
+                    count_insert += 1
+            else:
+                if is_from_long_imm_instruction(i):
+                    correct_any_from_quad_word_imm_to_any(i, k)
+                    count_insert += 1
 
-            if is_from_addr_to_addr_instruction(i):
-                correct_any_from_addr_to_addr_instruction(i, k)
-                count_insert += 1
+                if is_from_addr_to_addr_instruction(i):
+                    correct_any_from_addr_to_addr_instruction(i, k)
+                    count_insert += 1
 
-            elif is_to_imm_instruction(i):
-                correct_cmp_from_any_to_imm_instructions(i, k)
-                count_insert += 1
+                elif is_to_imm_instruction(i):
+                    correct_cmp_from_any_to_imm_instructions(i, k)
+                    count_insert += 1
 
         elif isinstance(fun_instructions[i], AsmPush):
             if is_from_long_imm_instruction(i):
