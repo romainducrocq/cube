@@ -1,6 +1,6 @@
 from ccc.abc_builtin_ast cimport TLong, TUInt, TULong, TDouble
 
-from ccc.semantic_symbol_table cimport IntInit, LongInit, UIntInit, ULongInit
+from ccc.semantic_symbol_table cimport IntInit, LongInit, UIntInit, ULongInit, DoubleInit
 
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_backend_symbol_table cimport LongWord, QuadWord, BackendDouble
@@ -34,7 +34,7 @@ cdef str emit_ulong(TULong node):
     return str(node.ulong_t)
 
 
-cdef str_emit_double(TDouble node):
+cdef str emit_double(TDouble node):
     # double -> $ double
     return str(double_to_binary(node.double_t))
 
@@ -570,8 +570,9 @@ cdef void emit_data_static_variable_top_level(AsmStaticVariable node, str static
     #                                                                     $     .data
     #                                                                     $     <alignment-directive>
     #                                                                     $ <name>:
-    #                                                      if int-init(i) $     .long <it>
-    #                                                   elif long-init(i) $     .quad <it>
+    #                                                       if init<i>(i) $     .long <i>
+    #                                                     elif init<i>(i) $     .quad <i>
+    #                                                     elif init<d>(d) $     .quad <d>
     cdef str name = emit_identifier(node.name)
     emit_global_directive_top_level(node.is_global, name)
     emit(".data", 1)
@@ -596,8 +597,9 @@ cdef void emit_bss_static_variable_top_level(AsmStaticVariable node, str static_
 
 
 cdef void emit_static_variable_top_level(AsmStaticVariable node):
-    # StaticVariable(name, global, init) initialized to non-zero value -> $ <data-static-variable-directives>
-    # StaticVariable(name, global, init) initialized to zero           -> $ <bss-static-variable-directives>
+    # StaticVariable(name, global, init)<i> initialized to non-zero value -> $ <data-static-variable-directives>
+    # StaticVariable(name, global, init)<d>                               -> $ <data-static-variable-directives>
+    # StaticVariable(name, global, init)<i> initialized to zero           -> $ <bss-static-variable-directives>
     cdef str static_init = ""
     if isinstance(node.initial_value, IntInit):
         if node.initial_value.value.int_t:
@@ -615,6 +617,10 @@ cdef void emit_static_variable_top_level(AsmStaticVariable node):
         else:
             static_init = f".zero 8"
             emit_bss_static_variable_top_level(node, static_init)
+    elif isinstance(node.initial_value, DoubleInit):
+        static_init = emit_double(node.initial_value.value)
+        static_init = f".quad {static_init}"
+        emit_data_static_variable_top_level(node, static_init)
     elif isinstance(node.initial_value, UIntInit):
         if node.initial_value.value.uint_t:
             static_init = emit_uint(node.initial_value.value)
