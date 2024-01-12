@@ -1,11 +1,11 @@
-from ccc.abc_builtin_ast cimport TLong, TUInt, TULong
+from ccc.abc_builtin_ast cimport TLong, TUInt, TULong, TDouble
 
 from ccc.semantic_symbol_table cimport IntInit, LongInit, UIntInit, ULongInit
 
 from ccc.assembly_asm_ast cimport *
-from ccc.assembly_backend_symbol_table cimport LongWord, QuadWord
+from ccc.assembly_backend_symbol_table cimport LongWord, QuadWord, BackendDouble
 
-from ccc.util_ctypes cimport int32
+from ccc.util_ctypes cimport int32, double_to_binary
 from ccc.util_fopen cimport file_open_write, write_line, file_close_write
 
 
@@ -34,6 +34,11 @@ cdef str emit_ulong(TULong node):
     return str(node.ulong_t)
 
 
+cdef str_emit_double(TDouble node):
+    # double -> $ double
+    return str(double_to_binary(node.double_t))
+
+
 cdef str emit_register_1byte(AsmReg node):
     # Reg(AX)  -> $ %al
     # Reg(DX)  -> $ %dl
@@ -44,7 +49,6 @@ cdef str emit_register_1byte(AsmReg node):
     # Reg(R9)  -> $ %r9b
     # Reg(R10) -> $ %r10b
     # Reg(R11) -> $ %r11b
-    # Reg(SP)  -> $ %rsp
     if isinstance(node, AsmAx):
         return "al"
     elif isinstance(node, AsmDx):
@@ -63,8 +67,6 @@ cdef str emit_register_1byte(AsmReg node):
         return "r10b"
     elif isinstance(node, AsmR11):
         return "r11b"
-    elif isinstance(node, AsmSp):
-        return "rsp"
     else:
 
         raise RuntimeError(
@@ -81,7 +83,6 @@ cdef str emit_register_4byte(AsmReg node):
     # Reg(R9)  -> $ %r9d
     # Reg(R10) -> $ %r10d
     # Reg(R11) -> $ %r11d
-    # Reg(SP)  -> $ %rsp
     if isinstance(node, AsmAx):
         return "eax"
     elif isinstance(node, AsmDx):
@@ -100,8 +101,6 @@ cdef str emit_register_4byte(AsmReg node):
         return "r10d"
     elif isinstance(node, AsmR11):
         return "r11d"
-    elif isinstance(node, AsmSp):
-        return "rsp"
     else:
 
         raise RuntimeError(
@@ -109,16 +108,26 @@ cdef str emit_register_4byte(AsmReg node):
 
 
 cdef str emit_register_8byte(AsmReg node):
-    # Reg(AX)  -> $ %rax
-    # Reg(DX)  -> $ %rdx
-    # Reg(CX)  -> $ %rcx
-    # Reg(DI)  -> $ %rdi
-    # Reg(SI)  -> $ %rsi
-    # Reg(R8)  -> $ %r8
-    # Reg(R9)  -> $ %r9
-    # Reg(R10) -> $ %r10
-    # Reg(R11) -> $ %r11
-    # Reg(SP)  -> $ %rsp
+    # Reg(AX)    -> $ %rax
+    # Reg(DX)    -> $ %rdx
+    # Reg(CX)    -> $ %rcx
+    # Reg(DI)    -> $ %rdi
+    # Reg(SI)    -> $ %rsi
+    # Reg(R8)    -> $ %r8
+    # Reg(R9)    -> $ %r9
+    # Reg(R10)   -> $ %r10
+    # Reg(R11)   -> $ %r11
+    # Reg(SP)    -> $ %rsp
+    # Reg(XMM0)  -> $ %xmm0
+    # Reg(XMM1)  -> $ %xmm1
+    # Reg(XMM2)  -> $ %xmm2
+    # Reg(XMM3)  -> $ %xmm3
+    # Reg(XMM4)  -> $ %xmm4
+    # Reg(XMM5)  -> $ %xmm5
+    # Reg(XMM6)  -> $ %xmm6
+    # Reg(XMM7)  -> $ %xmm7
+    # Reg(XMM14) -> $ %xmm14
+    # Reg(XMM15) -> $ %xmm15
     if isinstance(node, AsmAx):
         return "rax"
     elif isinstance(node, AsmDx):
@@ -139,6 +148,26 @@ cdef str emit_register_8byte(AsmReg node):
         return "r11"
     elif isinstance(node, AsmSp):
         return "rsp"
+    elif isinstance(node, AsmXMM0):
+        return "xmm0"
+    elif isinstance(node, AsmXMM1):
+        return "xmm1"
+    elif isinstance(node, AsmXMM2):
+        return "xmm2"
+    elif isinstance(node, AsmXMM3):
+        return "xmm3"
+    elif isinstance(node, AsmXMM4):
+        return "xmm4"
+    elif isinstance(node, AsmXMM5):
+        return "xmm5"
+    elif isinstance(node, AsmXMM6):
+        return "xmm6"
+    elif isinstance(node, AsmXMM7):
+        return "xmm7"
+    elif isinstance(node, AsmXMM14):
+        return "xmm14"
+    elif isinstance(node, AsmXMM15):
+        return "xmm15"
     else:
 
         raise RuntimeError(
@@ -185,9 +214,10 @@ cdef str emit_condition_code(AsmCondCode node):
 cdef int32 emit_type_alignment_bytes(AssemblyType node):
     # LongWord -> $ 4
     # QuadWord -> $ 8
+    # Double   -> $ 8
     if isinstance(node, LongWord):
         return 4
-    elif isinstance(node, QuadWord):
+    elif isinstance(node, (QuadWord, BackendDouble)):
         return 8
     else:
 
@@ -198,10 +228,13 @@ cdef int32 emit_type_alignment_bytes(AssemblyType node):
 cdef str emit_type_instruction_suffix(AssemblyType node):
     # LongWord -> $ l
     # QuadWord -> $ q
+    # Double   -> $ sd
     if isinstance(node, LongWord):
         return "l"
     elif isinstance(node, QuadWord):
         return "q"
+    elif isinstance(node, BackendDouble):
+        return "sd"
     else:
 
         raise RuntimeError(
@@ -246,7 +279,9 @@ cdef str emit_operand(AsmOperand node, int32 byte):
 cdef str emit_binary_op(AsmBinaryOp node):
     # Add           -> $ add
     # Sub           -> $ sub
-    # Mult          -> $ imul
+    # Mult<i>       -> $ imul
+    # Mult<d>       -> $ mul
+    # DivDouble     -> $ div
     # BitAnd        -> $ and
     # BitOr         -> $ or
     # BitXor        -> $ xor
@@ -257,7 +292,9 @@ cdef str emit_binary_op(AsmBinaryOp node):
     elif isinstance(node, AsmSub):
         return "sub"
     elif isinstance(node, AsmMult):
-        return "imul"
+        return "mul"
+    elif isinstance(node, AsmDivDouble):
+        return "div"
     elif isinstance(node, AsmBitAnd):
         return "and"
     elif isinstance(node, AsmBitOr):
@@ -277,10 +314,13 @@ cdef str emit_binary_op(AsmBinaryOp node):
 cdef str emit_unary_op(AsmUnaryOp node):
     # Neg -> $ neg
     # Not -> $ not
+    # Shr -> $ shr
     if isinstance(node, AsmNeg):
         return "neg"
     elif isinstance(node, AsmNot):
         return "not"
+    elif isinstance(node, AsmShr):
+        return "shr"
     else:
 
         raise RuntimeError(
@@ -320,6 +360,22 @@ cdef void emit_mov_sx_instructions(AsmMovSx node):
     emit(f"movslq {src}, {dst}", 1)
 
 
+cdef void emit_cvttsd2si_instructions(AsmCvttsd2si node):
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str src = emit_operand(node.src, byte)
+    cdef str dst = emit_operand(node.dst, byte)
+    emit(f"cvttsd2si{t} {src}, {dst}", 1)
+
+
+cdef void emit_cvtsi2sd_instructions(AsmCvtsi2sd node):
+    cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
+    cdef str t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str src = emit_operand(node.src, byte)
+    cdef str dst = emit_operand(node.dst, byte)
+    emit(f"cvtsi2sd{t} {src}, {dst}", 1)
+
+
 cdef void emit_push_instructions(AsmPush node):
     cdef str src = emit_operand(node.src, 8)
     emit(f"pushq {src}", 1)
@@ -340,8 +396,10 @@ cdef void emit_cmp_instructions(AsmCmp node):
     cdef str t = emit_type_instruction_suffix(node.assembly_type)
     cdef str src = emit_operand(node.src, byte)
     cdef str dst = emit_operand(node.dst, byte)
-    emit(f"cmp{t} {src}, {dst}", 1)
-
+    if isinstance(node.assembly_type, BackendDouble):
+        emit(f"comi{t} {src}, {dst}", 1)
+    else:
+        emit(f"cmp{t} {src}, {dst}", 1)
 
 cdef void emit_jmp_instructions(AsmJmp node):
     cdef str label = emit_identifier(node.target)
@@ -370,8 +428,17 @@ cdef void emit_unary_instructions(AsmUnary node):
 
 cdef void emit_binary_instructions(AsmBinary node):
     cdef int32 byte = emit_type_alignment_bytes(node.assembly_type)
-    cdef str t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str t
+    if isinstance(node.binary_op, AsmBitXor) and \
+       isinstance(node.assembly_type, BackendDouble):
+        t = "pd"
+    else:
+        t = emit_type_instruction_suffix(node.assembly_type)
+    cdef str binary_op
     cdef str binary_op = emit_binary_op(node.binary_op)
+    if isinstance(node.binary_op, AsmMult) and \
+       not isinstance(node.assembly_type, BackendDouble):
+        binary_op = f"i{binary_op}"
     cdef str src = emit_operand(node.src, byte)
     cdef str dst = emit_operand(node.dst, byte)
     emit(f"{binary_op}{t} {src}, {dst}", 1)
@@ -408,10 +475,13 @@ cdef void emit_instructions(AsmInstruction node):
     #                                         $ ret
     # Mov(t, src, dst)                     -> $ mov<t> <src>, <dst>
     # MovSx(src, dst)                      -> $ movslq <src>, <dst>
+    # Cvttsd2si(t, src, dst)               -> $ cvttsd2si<t> <src>, <dst>
+    # Cvtsi2sd(t, src, dst)                -> $ cvtsi2sd<t> <src>, <dst>
     # Push(operand)                        -> $ pushq <operand>
     # Call(label)                          -> $ call <label>@PLT
     # Label(label)                         -> $ .L<label>:
-    # Cmp(t, operand, operand)             -> $ cmp<t> <operand>, <operand>
+    # Cmp(t, operand, operand)<i>          -> $ cmp<t> <operand>, <operand>
+    # Cmp(t, operand, operand)<d>          -> $ comi<t> <operand>, <operand>
     # Jmp(label)                           -> $ jmp .L<label>
     # JmpCC(cond_code, label)              -> $ j<cond_code> .L<label>
     # SetCC(cond_code, operand)            -> $ set<cond_code> <operand>
@@ -427,6 +497,10 @@ cdef void emit_instructions(AsmInstruction node):
         emit_mov_instructions(node)
     elif isinstance(node, AsmMovSx):
         emit_mov_sx_instructions(node)
+    elif isinstance(node, AsmCvttsd2si):
+        emit_cvttsd2si_instructions(node)
+    elif isinstance(node, AsmCvtsi2sd):
+        emit_cvtsi2sd_instructions(node)
     elif isinstance(node, AsmPush):
         emit_push_instructions(node)
     elif isinstance(node, AsmCall):

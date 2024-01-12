@@ -207,7 +207,7 @@ cdef void correct_double_mov_from_addr_to_addr_instructions(Py_ssize_t i, Py_ssi
     #     $ mov    addr1, reg
     #     $ mov<q> reg  , addr2
     cdef AsmOperand src_src = fun_instructions[i].src
-    fun_instructions[i].src = generate_register(REGISTER_KIND.get('Xmm15'))
+    fun_instructions[i].src = generate_register(REGISTER_KIND.get('Xmm14'))
     fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
                                           src_src, fun_instructions[i].src))
 
