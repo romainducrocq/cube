@@ -85,3 +85,12 @@ cdef double str_to_double(str str_double):
             f"String \"{str_double}\" is out of range")
 
     return val_double
+
+
+cdef union DoubleRepr:
+    double decimal
+    uint64_t binary
+
+
+cdef uint64_t double_to_binary(double decimal):
+    return DoubleRepr(decimal=decimal).binary
