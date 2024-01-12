@@ -201,11 +201,11 @@ cdef void correct_any_from_addr_to_addr_instruction(Py_ssize_t i, Py_ssize_t k):
                                           src_src, fun_instructions[i].src))
 
 
-cdef void correct_double_mov_binary_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
-    # add<q> | sub<q> | mul<q> | div<q> | xor<q> (_, addr)
-    # $ add<q> _, addr ->
-    #     $ mov    _  , reg
-    #     $ add<q> reg, addr
+cdef void correct_double_mov_from_addr_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
+    # mov<q> (_, addr)
+    # $ mov<q> addr1, addr2 ->
+    #     $ mov    addr1, reg
+    #     $ mov<q> reg  , addr2
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('Xmm15'))
     fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
@@ -261,11 +261,11 @@ cdef void correct_cvtsi2sd_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t
                                           src_src, fun_instructions[i].src))
 
 
-cdef void correct_cvtsi2sd_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
-    # cvtsi2sd (_, addr)
+cdef void correct_cvtsi2sd_binary_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
+    # cvtsi2sd | add<q> | sub<q> | mul<q> | div<q> | xor<q> (_, addr)
     # $ cvtsi2sd _, addr ->
     #     $ cvtsi2sd _  , reg
-    #     $ mov       reg, addr
+    #     $ mov      reg, addr
     cdef AsmOperand src_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('Xmm15'))
     fun_instructions.insert(k, AsmMov(BackendDouble(),
@@ -385,7 +385,7 @@ cdef void correct_function_top_level(AsmFunction node):
         if isinstance(fun_instructions[i], AsmMov):
             if isinstance(fun_instructions[i].assembly_type, BackendDouble):
                 if is_to_addr_instruction(i):
-                    correct_double_mov_binary_from_any_to_addr(i, k)
+                    correct_double_mov_from_addr_to_addr_instructions(i, k)
                     count_insert += 1
             else:
                 if is_from_long_imm_instruction(i):
@@ -425,7 +425,7 @@ cdef void correct_function_top_level(AsmFunction node):
                 count_insert += 1
 
             if is_to_addr_instruction(i):
-                correct_cvtsi2sd_from_any_to_addr_instructions(i, k)
+                correct_cvtsi2sd_binary_from_any_to_addr_instructions(i, k)
                 count_insert += 1
 
         elif isinstance(fun_instructions[i], AsmCmp):
@@ -454,7 +454,7 @@ cdef void correct_function_top_level(AsmFunction node):
         elif isinstance(fun_instructions[i], AsmBinary):
             if isinstance(fun_instructions[i].assembly_type, BackendDouble):
                 if is_to_addr_instruction(i):
-                    correct_double_mov_binary_from_any_to_addr(i, k)
+                    correct_cvtsi2sd_binary_from_any_to_addr_instructions(i, k)
                     count_insert += 1
             else:
                 if isinstance(fun_instructions[i].binary_op,
