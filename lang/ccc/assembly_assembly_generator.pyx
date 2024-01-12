@@ -314,13 +314,30 @@ cdef void generate_fun_call_instructions(TacFunCall node):
         generate_allocate_stack_instructions(stack_padding)
 
     cdef Py_ssize_t i
+    cdef list[Py_ssize_t] i_regs = []
+    cdef list[Py_ssize_t] i_sse_regs = []
+    cdef list[Py_ssize_t] i_stacks = []
     for i in range(len(node.args)):
-        if i < 6:
-            generate_reg_arg_fun_call_instructions(node.args[i], arg_registers[i])
+        if is_value_double(node.args[i]):
+            if len(i_sse_regs) < 8:
+                i_sse_regs.append(i)
+            else:
+                i_stacks.append(i)
         else:
-            stack_padding += 8
-            i = len(node.args) - i + 5
-            generate_stack_arg_fun_call_instructions(node.args[i])
+            if len(i_regs) < 6:
+                i_regs.append(i)
+            else:
+                i_stacks.append(i)
+
+    for i in range(len(i_regs)):
+        generate_reg_arg_fun_call_instructions(node.args[i_regs[i]], arg_registers[i])
+
+    for i in range(len(i_sse_regs)):
+        generate_reg_arg_fun_call_instructions(node.args[i_sse_regs[i]], arg_sse_registers[i])
+
+    for i in range(len(i_stacks)):
+        stack_padding += 8
+        generate_stack_arg_fun_call_instructions(node.args[i_stacks[- (i + 1)])
 
     cdef TIdentifier name = copy_identifier(node.name)
     instructions.append(AsmCall(name))
@@ -328,7 +345,11 @@ cdef void generate_fun_call_instructions(TacFunCall node):
     if stack_padding:
         generate_deallocate_stack_instructions(stack_padding)
 
-    cdef AsmOperand src = generate_register(REGISTER_KIND.get('Ax'))
+    cdef AsmOperand src
+    if is_value_double(node.dst):
+        src = generate_register(REGISTER_KIND.get('Xmm0'))
+    else:
+        src = generate_register(REGISTER_KIND.get('Ax'))
     cdef AsmOperand dst = generate_operand(node.dst)
     cdef AssemblyType assembly_type_dst = generate_assembly_type(node.dst)
     instructions.append(AsmMov(assembly_type_dst, src, dst))
