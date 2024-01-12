@@ -200,6 +200,17 @@ cdef void correct_any_from_addr_to_addr_instruction(Py_ssize_t i, Py_ssize_t k):
                                           src_src, fun_instructions[i].src))
 
 
+cdef void correct_double_mov_binary_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
+    # add<q> | sub<q> | mul<q> | div<q> | xor<q> (_, addr)
+    # $ add<q> _, addr ->
+    #     $ mov    _  , reg
+    #     $ add<q> reg, addr
+    cdef AsmOperand src_src = fun_instructions[i].src
+    fun_instructions[i].src = generate_register(REGISTER_KIND.get('Xmm15'))
+    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
+                                          src_src, fun_instructions[i].src))
+
+
 cdef void correct_mov_sx_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k):
     # movsx (imm, _)
     # $ movsx imm, _ ->
@@ -272,10 +283,10 @@ cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
 
 
 cdef correct_double_cmp_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
-    # cmp<d> (addr, addr)
-    # $ cmp<d> addr1, addr2 ->
-    #     $ mov    addr2, reg
-    #     $ cmp<d> addr1, reg
+    # cmp<d> (_, addr)
+    # $ cmp<d> _, addr ->
+    #     $ mov    addr, reg
+    #     $ cmp<d> _   , reg
     cdef AsmOperand dst_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('Xmm15'))
     fun_instructions.insert(k - 1, AsmMov(BackendDouble(),
@@ -284,9 +295,9 @@ cdef correct_double_cmp_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k
 
 cdef void correct_shl_shr_from_addr_to_addr(Py_ssize_t i, Py_ssize_t k):
     # shl | shr (addr, addr)
-    # $ add addr1, addr2 ->
+    # $ shl addr1, addr2 ->
     #     $ mov addr1, reg
-    #     $ add reg  , addr2
+    #     $ shl reg, addr2
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('Cx'))
     fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
@@ -371,13 +382,18 @@ cdef void correct_function_top_level(AsmFunction node):
         replace_pseudo_registers(fun_instructions[i])
 
         if isinstance(fun_instructions[i], AsmMov):
-            if is_from_long_imm_instruction(i):
-                correct_any_from_quad_word_imm_to_any(i, k)
-                count_insert += 1
+            if isinstance(fun_instructions[i].assembly_type, BackendDouble):
+                if is_to_addr_instruction(i):
+                    correct_double_mov_binary_from_any_to_addr(i, k)
+                    count_insert += 1
+            else:
+                if is_from_long_imm_instruction(i):
+                    correct_any_from_quad_word_imm_to_any(i, k)
+                    count_insert += 1
 
-            if is_from_addr_to_addr_instruction(i):
-                correct_any_from_addr_to_addr_instruction(i, k)
-                count_insert += 1
+                if is_from_addr_to_addr_instruction(i):
+                    correct_any_from_addr_to_addr_instruction(i, k)
+                    count_insert += 1
 
         elif isinstance(fun_instructions[i], AsmMovSx):
             if is_from_imm_instruction(i):
@@ -435,36 +451,40 @@ cdef void correct_function_top_level(AsmFunction node):
                 count_insert += 1
 
         elif isinstance(fun_instructions[i], AsmBinary):
-
-            if isinstance(fun_instructions[i].binary_op,
-                          (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)):
-                if is_from_long_imm_instruction(i):
-                    correct_any_from_quad_word_imm_to_any(i, k)
-                    count_insert += 1
-
-                if is_from_addr_to_addr_instruction(i):
-                    correct_any_from_addr_to_addr_instruction(i, k)
-                    count_insert += 1
-
-            elif isinstance(fun_instructions[i].binary_op,
-                            (AsmBitShiftLeft, AsmBitShiftRight)):
-                if is_from_long_imm_instruction(i):
-                    correct_any_from_quad_word_imm_to_any(i, k)
-                    count_insert += 1
-
-                if is_from_addr_to_addr_instruction(i):
-                    correct_shl_shr_from_addr_to_addr(i, k)
-                    count_insert += 1
-
-            elif isinstance(fun_instructions[i].binary_op, AsmMult):
-                if is_from_long_imm_instruction(i):
-                    correct_any_from_quad_word_imm_to_any(i, k)
-                    k += 1
-                    count_insert += 1
-
+            if isinstance(fun_instructions[i].assembly_type, BackendDouble):
                 if is_to_addr_instruction(i):
-                    correct_mul_from_any_to_addr(i, k)
-                    count_insert += 2
+                    correct_double_mov_binary_from_any_to_addr(i, k)
+                    count_insert += 1
+            else:
+                if isinstance(fun_instructions[i].binary_op,
+                              (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)):
+                    if is_from_long_imm_instruction(i):
+                        correct_any_from_quad_word_imm_to_any(i, k)
+                        count_insert += 1
+
+                    if is_from_addr_to_addr_instruction(i):
+                        correct_any_from_addr_to_addr_instruction(i, k)
+                        count_insert += 1
+
+                elif isinstance(fun_instructions[i].binary_op,
+                                (AsmBitShiftLeft, AsmBitShiftRight)):
+                    if is_from_long_imm_instruction(i):
+                        correct_any_from_quad_word_imm_to_any(i, k)
+                        count_insert += 1
+
+                    if is_from_addr_to_addr_instruction(i):
+                        correct_shl_shr_from_addr_to_addr(i, k)
+                        count_insert += 1
+
+                elif isinstance(fun_instructions[i].binary_op, AsmMult):
+                    if is_from_long_imm_instruction(i):
+                        correct_any_from_quad_word_imm_to_any(i, k)
+                        k += 1
+                        count_insert += 1
+
+                    if is_to_addr_instruction(i):
+                        correct_mul_from_any_to_addr(i, k)
+                        count_insert += 2
 
         elif isinstance(fun_instructions[i], (AsmIdiv, AsmDiv)):
             if is_from_imm_instruction(i):
