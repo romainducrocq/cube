@@ -14,7 +14,7 @@ function verbose () {
 
 function usage () {
     if [ -f "$HOME/.${PACKAGE_NAME}/${PACKAGE_NAME}/${PACKAGE_NAME}" ]; then
-        echo "Usage: ${PACKAGE_NAME} [Help] [Link] FILE [Lib]"
+        echo "Usage: ${PACKAGE_NAME} [Help] [Link] [Lib] FILE"
         echo ""
         echo "[Help]:"
         echo "    --help       print help and exit"
@@ -28,7 +28,7 @@ function usage () {
         echo ""
         echo "FILE:            .c file to compile"
     else
-        echo "Usage: ${PACKAGE_NAME} [Help] [Debug] [Link] FILE [Lib]"
+        echo "Usage: ${PACKAGE_NAME} [Help] [Debug] [Link] [Lib] FILE"
         echo ""
         echo "[Help]:"
         echo "    --help       print help and exit"
@@ -137,12 +137,13 @@ function parse_args () {
         shift_arg
         if [ ${?} -ne 0 ]; then exit 1; fi
     fi
-    file_arg
-
-    if [ ${?} -ne 0 ]; then exit 1; fi
-    shift_arg
-    if [ ${?} -ne 0 ]; then return; fi
     lib_arg
+
+    if [ ${?} -eq 0 ]; then
+        shift_arg
+        if [ ${?} -ne 0 ]; then exit 1; fi
+    fi
+    file_arg
 
     if [ ${?} -eq 0 ]; then
         shift_arg
@@ -178,11 +179,11 @@ function link () {
     if [ ${OPT_CODE} -lt 200 ]; then
         verbose "Link       -> ${FILE}.s"
         if [ ${LINK_CODE} -eq 0 ]; then
-            gcc ${FILE}.s -o ${FILE}${LINK_LIBS}
+            gcc ${FILE}.s${LINK_LIBS} -o ${FILE}
             if [ ${?} -ne 0 ]; then clean; exit 1; fi
             verbose "Executable -> ${FILE}"
         elif [ ${LINK_CODE} -eq 1 ]; then
-            gcc -c ${FILE}.s -o ${FILE}.o${LINK_LIBS}
+            gcc -c ${FILE}.s${LINK_LIBS} -o ${FILE}.o
             if [ ${?} -ne 0 ]; then clean; exit 1; fi
             verbose "Object     -> ${FILE}.o"
         else
