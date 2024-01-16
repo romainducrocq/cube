@@ -159,6 +159,7 @@ cdef class AsmCondCode(AST):
     #           | AE
     #           | B
     #           | BE
+    #           | P
     def __cinit__(self):
         self._fields = ()
 
@@ -219,6 +220,12 @@ cdef class AsmB(AsmCondCode):
 
 cdef class AsmBE(AsmCondCode):
     # BE
+    def __cinit__(self):
+        self._fields = ()
+
+
+cdef class AsmP(AsmCondCode):
+    # P
     def __cinit__(self):
         self._fields = ()
 

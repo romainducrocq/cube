@@ -186,6 +186,7 @@ cdef str emit_condition_code(AsmCondCode node):
     # BE -> $ be
     # A  -> $ a
     # AE -> $ ae
+    # P  -> $ p
     if isinstance(node, AsmE):
         return "e"
     elif isinstance(node, AsmNE):
@@ -206,6 +207,8 @@ cdef str emit_condition_code(AsmCondCode node):
         return "a"
     elif isinstance(node, AsmAE):
         return "ae"
+    elif isinstance(node, AsmP):
+        return "p"
     else:
 
         raise RuntimeError(

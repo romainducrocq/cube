@@ -131,6 +131,10 @@ cdef class AsmBE(AsmCondCode):
     pass
 
 
+cdef class AsmP(AsmCondCode):
+    pass
+
+
 cdef class AsmOperand(AST):
     pass
 
