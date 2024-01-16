@@ -161,7 +161,7 @@ cdef TacValue represent_exp_assignment_instructions(CAssignment node):
 cdef TacValue represent_exp_assignment_compound_instructions(CAssignmentCompound node):
     cdef TacValue src1 = represent_exp_instructions(node.exp_left)
     cdef TacValue src2 = represent_exp_instructions(node.exp_right)
-    cdef TacValue dst = represent_inner_value(node.exp_left)
+    cdef TacValue dst = represent_inner_value(node)
     cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
     instructions.append(TacBinary(binary_op, src1, src2, dst))
     return dst
@@ -185,7 +185,7 @@ cdef TacValue represent_exp_conditional_instructions(CConditional node):
 
 cdef TacValue represent_exp_unary_instructions(CUnary node):
     cdef TacValue src = represent_exp_instructions(node.exp)
-    cdef TacValue dst = represent_inner_value(node.exp)
+    cdef TacValue dst = represent_inner_value(node)
     cdef TacUnaryOp unary_op = represent_unary_op(node.unary_op)
     instructions.append(TacUnary(unary_op, src, dst))
     return dst
@@ -200,7 +200,7 @@ cdef TacValue represent_exp_binary_and_instructions(CBinary node):
     cdef TacValue src_true = TacConstant(CConstInt(TInt(1)))
     cdef TacValue src_false = TacConstant(CConstInt(TInt(0)))
     cdef TIdentifier target_true = represent_label_identifier("and_true")
-    cdef TacValue dst = represent_inner_value(node.exp_left)
+    cdef TacValue dst = represent_inner_value(node)
     instructions.append(TacCopy(src_true, dst))
     instructions.append(TacJump(target_true))
     instructions.append(TacLabel(target_false))
@@ -218,7 +218,7 @@ cdef TacValue represent_exp_binary_or_instructions(CBinary node):
     cdef TacValue src_true = TacConstant(CConstInt(TInt(1)))
     cdef TacValue src_false = TacConstant(CConstInt(TInt(0)))
     cdef TIdentifier target_false = represent_label_identifier("or_false")
-    cdef TacValue dst = represent_inner_value(node.exp_left)
+    cdef TacValue dst = represent_inner_value(node)
     instructions.append(TacCopy(src_false, dst))
     instructions.append(TacJump(target_false))
     instructions.append(TacLabel(target_true))
@@ -230,7 +230,7 @@ cdef TacValue represent_exp_binary_or_instructions(CBinary node):
 cdef TacValue represent_exp_binary_instructions(CBinary node):
     cdef TacValue src1 = represent_exp_instructions(node.exp_left)
     cdef TacValue src2 = represent_exp_instructions(node.exp_right)
-    cdef TacValue dst = represent_inner_value(node.exp_left)
+    cdef TacValue dst = represent_inner_value(node)
     cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
     instructions.append(TacBinary(binary_op, src1, src2, dst))
     return dst
