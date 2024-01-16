@@ -53,8 +53,6 @@ cdef AsmImm generate_ulong_imm_operand(CConstULong node):
 
 
 cdef AsmData generate_double_static_constant_operand(double value, int32 byte):
-    # TODO assert str(0.0) != str(-0.0)
-    # if not, check sign with libc <math.h> signbit(double)
     cdef str str_value = str(value)
     cdef TIdentifier static_constant_label
     if str_value in static_const_label_map:

@@ -397,7 +397,7 @@ cdef void correct_function_top_level(AsmFunction node):
 
         if isinstance(fun_instructions[i], AsmMov):
             if isinstance(fun_instructions[i].assembly_type, BackendDouble):
-                if is_to_addr_instruction(i):
+                if is_from_addr_to_addr_instruction(i):
                     correct_double_mov_from_addr_to_addr_instructions(i, k)
                     count_insert += 1
             else:
