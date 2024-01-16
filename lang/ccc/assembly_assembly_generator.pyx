@@ -527,32 +527,60 @@ cdef void generate_copy_instructions(TacCopy node):
     instructions.append(AsmMov(assembly_type_src, src, dst))
 
 
-cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
+cdef void generate_jump_if_zero_integer_instructions(TacJumpIfZero node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
     cdef AsmCondCode cond_code_e = AsmE()
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
-    cdef AssemblyType assembly_type_cond
-    if is_value_double(node.condition):
-        assembly_type_cond = LongWord()
-    else:
-        assembly_type_cond = generate_assembly_type(node.condition)
+    cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
     instructions.append(AsmCmp(assembly_type_cond, imm_zero, condition))
     instructions.append(AsmJmpCC(cond_code_e, target))
 
 
-cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
+cdef void generate_jump_if_zero_double_instructions(TacJumpIfZero node):
+    cdef AsmOperand reg_zero = generate_register(REGISTER_KIND.get('Xmm0'))
+    cdef AsmCondCode cond_code_e = AsmE()
+    cdef TIdentifier target = copy_identifier(node.target)
+    cdef AsmOperand condition = generate_operand(node.condition)
+    cdef AssemblyType assembly_type_cond = BackendDouble()
+    generate_zero_out_xmm_reg_instructions()
+    instructions.append(AsmCmp(assembly_type_cond, condition, reg_zero))
+    instructions.append(AsmJmpCC(cond_code_e, target))
+
+
+cdef void generate_jump_if_zero_instructions(TacJumpIfZero node):
+    if is_value_double(node.condition):
+        generate_jump_if_zero_double_instructions(node)
+    else:
+        generate_jump_if_zero_integer_instructions(node)
+
+
+cdef void generate_jump_if_not_zero_integer_instructions(TacJumpIfNotZero node):
     cdef AsmOperand imm_zero = AsmImm(TIdentifier("0"))
     cdef AsmCondCode cond_code_ne = AsmNE()
     cdef TIdentifier target = copy_identifier(node.target)
     cdef AsmOperand condition = generate_operand(node.condition)
-    cdef AssemblyType assembly_type_cond
-    if is_value_double(node.condition):
-        assembly_type_cond = LongWord()
-    else:
-        assembly_type_cond = generate_assembly_type(node.condition)
+    cdef AssemblyType assembly_type_cond = generate_assembly_type(node.condition)
     instructions.append(AsmCmp(assembly_type_cond, imm_zero, condition))
     instructions.append(AsmJmpCC(cond_code_ne, target))
+
+
+cdef void generate_jump_if_not_zero_double_instructions(TacJumpIfNotZero node):
+    cdef AsmOperand reg_zero = generate_register(REGISTER_KIND.get('Xmm0'))
+    cdef AsmCondCode cond_code_ne = AsmNE()
+    cdef TIdentifier target = copy_identifier(node.target)
+    cdef AsmOperand condition = generate_operand(node.condition)
+    cdef AssemblyType assembly_type_cond = BackendDouble()
+    generate_zero_out_xmm_reg_instructions()
+    instructions.append(AsmCmp(assembly_type_cond, condition, reg_zero))
+    instructions.append(AsmJmpCC(cond_code_ne, target))
+
+
+cdef void generate_jump_if_not_zero_instructions(TacJumpIfNotZero node):
+    if is_value_double(node.condition):
+        generate_jump_if_not_zero_double_instructions(node)
+    else:
+        generate_jump_if_not_zero_integer_instructions(node)
 
 
 cdef void generate_unary_operator_conditional_integer_instructions(TacUnary node):
