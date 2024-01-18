@@ -881,14 +881,14 @@ cdef AsmFunction generate_function_top_level(TacFunction node):
                 generate_reg_param_function_instructions(node.params[param], arg_sse_registers[param_sse_reg])
                 param_sse_reg += 1
             else:
-                generate_stack_param_function_instructions(node.params[param],  param_stack)
+                generate_stack_param_function_instructions(node.params[param], param_stack)
                 param_stack += 1
         else:
             if param_reg < 6:
                 generate_reg_param_function_instructions(node.params[param], arg_registers[param_reg])
                 param_reg += 1
             else:
-                generate_stack_param_function_instructions(node.params[param],  param_stack)
+                generate_stack_param_function_instructions(node.params[param], param_stack)
                 param_stack += 1
     generate_list_instructions(node.body)
     return AsmFunction(name, is_global, body)

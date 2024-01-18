@@ -25,6 +25,7 @@ cdef object RGX_IS_GLOB_VAR = re_compile(r"^cdef .*[^:$]$")
 cdef object RGX_IS_CLASS_VAR = re_compile(r"^\s{4}cdef .*[^:$]$")
 cdef object RGX_IS_PY_MAIN = re_compile(r"^cpdef.*main.py.*\(.*\)\s*:$")
 cdef object RGX_IS_TYPEDEF = re_compile(r"^ctypedef .*[^:$]$")
+cdef object RGX_IS_UNION_PYX = re_compile(r"^cdef union .*:$")
 
 cdef int pyx_id = 0
 cdef list[str] pxd_typedefs = []
@@ -189,6 +190,11 @@ cdef str get_variable_symbol(str line):
            lstrip(" ").split(" ")[-1]
 
 
+cdef str get_union_symbol(str line):
+    return line.split(":")[0].lstrip(" ").\
+           lstrip(" ").split(" ")[-1]
+
+
 cdef str get_typedef_symbol(str line):
     return line.lstrip(" ").split(" ")[-1]
 
@@ -302,6 +308,11 @@ cdef void process_source(str pyx_file):
                 pyx_private_symbols[unique_id] = re_compile(r"\b{0}\b".format(symbol))
         elif re_match(RGX_IS_GLOB_VAR, line):
             symbol = get_variable_symbol(line)
+            unique_id = get_unique_id(pyx_file, symbol)
+            if not unique_id in pxd_public_symbols:
+                pyx_private_symbols[unique_id] = re_compile(r"\b{0}\b".format(symbol))
+        elif re_match(RGX_IS_UNION_PYX, line):
+            symbol = get_union_symbol(line)
             unique_id = get_unique_id(pyx_file, symbol)
             if not unique_id in pxd_public_symbols:
                 pyx_private_symbols[unique_id] = re_compile(r"\b{0}\b".format(symbol))
