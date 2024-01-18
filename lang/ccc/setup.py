@@ -11,6 +11,12 @@ file_in = open(f"{path.dirname(getcwd())}/build/python_version.txt", "r", encodi
 PYTHON_VERSION = file_in.read()
 file_in.close()
 
+ANNOTATE = True
+
+if ANNOTATE:
+    import Cython.Compiler.Options
+    Cython.Compiler.Options.annotate = ANNOTATE
+
 ext_modules = [
     Extension(f"{PACKAGE_NAME}.main_compiler",  ["./main_compiler.pyx"]),
     Extension(f"{PACKAGE_NAME}.abc_builtin_ast", ["./abc_builtin_ast.pyx"]),
@@ -40,6 +46,7 @@ ext_modules = [
 
 for ext_module in ext_modules:
     ext_module.cython_directives = {"language_level": "3"}
+    ext_module.annotate = ANNOTATE
 
 setup(
     name=f"{PACKAGE_NAME}",
