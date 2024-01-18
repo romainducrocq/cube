@@ -179,6 +179,10 @@ cdef AsmBinary deallocate_stack_bytes(int32 byte):
 cdef list[AsmInstruction] fun_instructions = []
 
 
+cdef void insert_fun_instruction(Py_ssize_t k, AsmInstruction node):
+    fun_instructions[k:k] = [node]
+
+
 cdef void prepend_alloc_stack():
     cdef int32 byte = -1 * counter
 
@@ -187,7 +191,8 @@ cdef void prepend_alloc_stack():
         raise RuntimeError(
             f"An error occurred in function stack allocation, stack alignment {byte} is not a multiple of 8")
 
-    fun_instructions.insert(0, allocate_stack_bytes(byte))
+    cdef item_instr = allocate_stack_bytes(byte)
+    insert_fun_instruction(0, item_instr)
 
 
 cdef void correct_any_from_addr_to_addr_instruction(Py_ssize_t i, Py_ssize_t k):
@@ -197,8 +202,8 @@ cdef void correct_any_from_addr_to_addr_instruction(Py_ssize_t i, Py_ssize_t k):
     #     $ mov reg  , addr2
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
-                                          src_src, fun_instructions[i].src))
+    cdef AsmInstruction item_instr = AsmMov(fun_instructions[i].assembly_type, src_src, fun_instructions[i].src)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef void correct_double_mov_from_addr_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -208,8 +213,8 @@ cdef void correct_double_mov_from_addr_to_addr_instructions(Py_ssize_t i, Py_ssi
     #     $ mov<q> reg  , addr2
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('Xmm14'))
-    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
-                                          src_src, fun_instructions[i].src))
+    cdef AsmInstruction item_instr = AsmMov(fun_instructions[i].assembly_type, src_src, fun_instructions[i].src)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef void correct_mov_sx_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -219,8 +224,8 @@ cdef void correct_mov_sx_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k
     #     $ movsx reg, _
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-    fun_instructions.insert(k - 1, AsmMov(LongWord(),
-                                          src_src, fun_instructions[i].src))
+    cdef AsmInstruction item_instr = AsmMov(LongWord(), src_src, fun_instructions[i].src)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef void correct_mov_sx_zero_extend_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -230,13 +235,13 @@ cdef void correct_mov_sx_zero_extend_from_any_to_addr_instructions(Py_ssize_t i,
     #     $ mov   reg, addr
     cdef AsmOperand src_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-    fun_instructions.insert(k, AsmMov(QuadWord(),
-                                      fun_instructions[i].dst, src_dst))
+    cdef AsmInstruction item_instr = AsmMov(QuadWord(), fun_instructions[i].dst, src_dst)
+    insert_fun_instruction(k, item_instr)
 
 
 cdef void correct_mov_zero_extend_from_any_to_any_instructions(Py_ssize_t i):
-    fun_instructions[i] = AsmMov(LongWord(),
-                                 fun_instructions[i].src, fun_instructions[i].dst)
+    cdef AsmInstruction item_instr = AsmMov(LongWord(), fun_instructions[i].src, fun_instructions[i].dst)
+    fun_instructions[i] = item_instr
 
 
 cdef void correct_cvttsd2si_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -246,8 +251,8 @@ cdef void correct_cvttsd2si_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize
     #     $ mov       reg, addr
     cdef AsmOperand src_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-    fun_instructions.insert(k, AsmMov(fun_instructions[i].assembly_type,
-                                      fun_instructions[i].dst, src_dst))
+    cdef AsmInstruction item_instr = AsmMov(fun_instructions[i].assembly_type, fun_instructions[i].dst, src_dst)
+    insert_fun_instruction(k, item_instr)
 
 
 cdef void correct_cvtsi2sd_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -257,8 +262,8 @@ cdef void correct_cvtsi2sd_from_imm_to_any_instructions(Py_ssize_t i, Py_ssize_t
     #     $ cvtsi2sd reg, _
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
-                                          src_src, fun_instructions[i].src))
+    cdef AsmInstruction item_instr = AsmMov(fun_instructions[i].assembly_type, src_src, fun_instructions[i].src)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef void correct_cvtsi2sd_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -268,8 +273,8 @@ cdef void correct_cvtsi2sd_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_
     #     $ mov      reg, addr
     cdef AsmOperand src_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('Xmm15'))
-    fun_instructions.insert(k, AsmMov(BackendDouble(),
-                                      fun_instructions[i].dst, src_dst))
+    cdef AsmInstruction item_instr = AsmMov(BackendDouble(), fun_instructions[i].dst, src_dst)
+    insert_fun_instruction(k, item_instr)
 
 
 cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -279,8 +284,8 @@ cdef void correct_cmp_from_any_to_imm_instructions(Py_ssize_t i, Py_ssize_t k):
     #     $ cmp reg1, reg2
     cdef AsmOperand src_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
-                                          src_dst, fun_instructions[i].dst))
+    cdef AsmInstruction item_instr = AsmMov(fun_instructions[i].assembly_type, src_dst, fun_instructions[i].dst)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef correct_double_cmp_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -290,8 +295,8 @@ cdef correct_double_cmp_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k
     #     $ cmp<d> _   , reg
     cdef AsmOperand dst_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('Xmm15'))
-    fun_instructions.insert(k - 1, AsmMov(BackendDouble(),
-                                          dst_dst, fun_instructions[i].dst))
+    cdef AsmInstruction item_instr = AsmMov(BackendDouble(), dst_dst, fun_instructions[i].dst)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef void correct_shl_shr_from_addr_to_addr(Py_ssize_t i, Py_ssize_t k):
@@ -301,8 +306,8 @@ cdef void correct_shl_shr_from_addr_to_addr(Py_ssize_t i, Py_ssize_t k):
     #     $ shl reg, addr2
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('Cx'))
-    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
-                                          src_src, fun_instructions[i].src))
+    cdef AsmInstruction item_instr = AsmMov(fun_instructions[i].assembly_type, src_src, fun_instructions[i].src)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef void correct_mul_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
@@ -314,10 +319,10 @@ cdef void correct_mul_from_any_to_addr(Py_ssize_t i, Py_ssize_t k):
     cdef AsmOperand src_src = fun_instructions[i].dst
     cdef AsmOperand dst_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('R11'))
-    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
-                                          src_src, fun_instructions[i].dst))
-    fun_instructions.insert(k + 1, AsmMov(fun_instructions[i].assembly_type,
-                                          fun_instructions[i].dst, dst_dst))
+    cdef AsmInstruction item_instr1 = AsmMov(fun_instructions[i].assembly_type, src_src, fun_instructions[i].dst)
+    cdef AsmInstruction item_instr2 = AsmMov(fun_instructions[i].assembly_type, fun_instructions[i].dst, dst_dst)
+    insert_fun_instruction(k - 1, item_instr1)
+    insert_fun_instruction(k + 1, item_instr2)
 
 
 cdef void correct_binary_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t k):
@@ -327,10 +332,10 @@ cdef void correct_binary_from_any_to_addr_instructions(Py_ssize_t i, Py_ssize_t 
     #     $ mov    reg, addr
     cdef AsmOperand src_dst = fun_instructions[i].dst
     fun_instructions[i].dst = generate_register(REGISTER_KIND.get('Xmm15'))
-    fun_instructions.insert(k - 1, AsmMov(BackendDouble(),
-                                          src_dst, fun_instructions[i].dst))
-    fun_instructions.insert(k + 1, AsmMov(BackendDouble(),
-                                          fun_instructions[i].dst, src_dst))
+    cdef AsmInstruction item_instr1 = AsmMov(BackendDouble(), src_dst, fun_instructions[i].dst)
+    cdef AsmInstruction item_instr2 = AsmMov(BackendDouble(), fun_instructions[i].dst, src_dst)
+    insert_fun_instruction(k - 1, item_instr1)
+    insert_fun_instruction(k + 1, item_instr2)
 
 
 cdef void correct_div_from_imm(Py_ssize_t i, Py_ssize_t k):
@@ -340,8 +345,8 @@ cdef void correct_div_from_imm(Py_ssize_t i, Py_ssize_t k):
     #     $ idiv reg
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-    fun_instructions.insert(k - 1, AsmMov(fun_instructions[i].assembly_type,
-                                          src_src, fun_instructions[i].src))
+    cdef AsmInstruction item_instr = AsmMov(fun_instructions[i].assembly_type, src_src, fun_instructions[i].src)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef void correct_any_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
@@ -351,8 +356,8 @@ cdef void correct_any_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
     #     $ mov reg   , _
     cdef AsmOperand src_src = fun_instructions[i].src
     fun_instructions[i].src = generate_register(REGISTER_KIND.get('R10'))
-    fun_instructions.insert(k - 1, AsmMov(QuadWord(),
-                                          src_src, fun_instructions[i].src))
+    cdef AsmInstruction item_instr = AsmMov(QuadWord(), src_src, fun_instructions[i].src)
+    insert_fun_instruction(k - 1, item_instr)
 
 
 cdef bint is_from_long_imm_instruction(Py_ssize_t i):
