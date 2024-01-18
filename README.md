@@ -27,7 +27,7 @@
 
 - [x] Long integers  
 - [x] Unsigned integers  
-- [ ] Floating-point numbers  
+- [x] Floating-point numbers  
 - [ ] Pointers  
 - [ ] Arrays and pointer arithmetic  
 - [ ] Characters and strings  
