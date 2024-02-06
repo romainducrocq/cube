@@ -15,7 +15,7 @@ from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, co
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes, correct_stack
 
-from ccc.util_ctypes cimport int32
+from ccc.util_ctypes cimport int32, int64, uint32, uint64, str_to_uint64
 
 
 cdef dict[str, str] static_const_label_map = {}
@@ -39,19 +39,19 @@ cdef AsmImm generate_int_imm_operand(CConstInt node):
 
 
 cdef AsmImm generate_long_imm_operand(CConstLong node):
-    cdef bint is_long = int(node.value.long_t) > 2147483647
+    cdef bint is_long = node.value.long_t > (<int64>2147483647)
     cdef TIdentifier value = TIdentifier(str(node.value.long_t))
     return AsmImm(value, is_long)
 
 
 cdef AsmImm generate_uint_imm_operand(CConstUInt node):
-    cdef bint is_long = int(node.value.uint_t) > 2147483647
+    cdef bint is_long = int(node.value.uint_t) > (<uint32>2147483647)
     cdef TIdentifier value = TIdentifier(str(node.value.uint_t))
     return AsmImm(value, is_long)
 
 
 cdef AsmImm generate_ulong_imm_operand(CConstULong node):
-    cdef bint is_long = int(node.value.ulong_t) > 2147483647
+    cdef bint is_long = int(node.value.ulong_t) > (<uint64>2147483647)
     cdef TIdentifier value = TIdentifier(str(node.value.ulong_t))
     return AsmImm(value, is_long)
 
@@ -371,7 +371,7 @@ cdef void generate_zero_extend_instructions(TacZeroExtend node):
 
 cdef void generate_imm_truncate_instructions(AsmImm node):
     if node.is_long:
-        node.value.str_t = str(int(node.value.str_t) - 4294967296)
+        node.value.str_t = str(<uint64>(str_to_uint64(node.value.str_t) - (<uint64>4294967296)))
 
 
 cdef void generate_truncate_instructions(TacTruncate node):
