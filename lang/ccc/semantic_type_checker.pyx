@@ -1,9 +1,4 @@
-from ccc.abc_builtin_ast cimport int32, copy_int, copy_long, copy_double, copy_uint, copy_ulong
-from ccc.abc_builtin_ast cimport copy_int_to_long, copy_int_to_double, copy_int_to_uint, copy_int_to_ulong
-from ccc.abc_builtin_ast cimport copy_long_to_int, copy_long_to_double, copy_long_to_uint, copy_long_to_ulong
-from ccc.abc_builtin_ast cimport copy_double_to_int, copy_double_to_long, copy_double_to_uint, copy_double_to_ulong
-from ccc.abc_builtin_ast cimport copy_uint_to_int, copy_uint_to_long, copy_uint_to_double, copy_uint_to_ulong
-from ccc.abc_builtin_ast cimport copy_ulong_to_int, copy_ulong_to_long, copy_ulong_to_double, copy_ulong_to_uint
+from ccc.util_ctypes cimport int32, int64, uint32, uint64
 
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern, CReturn
 from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment
@@ -244,10 +239,90 @@ cdef void checktype_function_declaration(CFunctionDeclaration node):
     function_declaration_name_str = node.name.str_t
 
 
+cdef TLong copy_int_to_long(TInt node):
+    return TLong(<int64>node.int_t)
+
+
+cdef TDouble copy_int_to_double(TInt node):
+    return TDouble(<double>node.int_t)
+
+
+cdef TUInt copy_int_to_uint(TInt node):
+    return TUInt(<uint32>node.int_t)
+
+
+cdef TULong copy_int_to_ulong(TInt node):
+    return TULong(<uint64>node.int_t)
+
+
+cdef TInt copy_long_to_int(TLong node):
+    return TInt(<int32>node.long_t)
+
+
+cdef TDouble copy_long_to_double(TLong node):
+    return TDouble(<double>node.long_t)
+
+
+cdef TUInt copy_long_to_uint(TLong node):
+    return TUInt(<uint32>node.long_t)
+
+
+cdef TULong copy_long_to_ulong(TLong node):
+    return TULong(<uint64>node.long_t)
+
+
+cdef TInt copy_double_to_int(TDouble node):
+    return TInt(<int32>node.double_t)
+
+
+cdef TLong copy_double_to_long(TDouble node):
+    return TLong(<int64>node.double_t)
+
+
+cdef TUInt copy_double_to_uint(TDouble node):
+    return TUInt(<uint32>node.double_t)
+
+
+cdef TULong copy_double_to_ulong(TDouble node):
+    return TULong(<uint64>node.double_t)
+
+
+cdef TInt copy_uint_to_int(TUInt node):
+    return TInt(<int32>node.uint_t)
+
+
+cdef TLong copy_uint_to_long(TUInt node):
+    return TLong(<int64>node.uint_t)
+
+
+cdef TDouble copy_uint_to_double(TUInt node):
+    return TDouble(<double>node.uint_t)
+
+
+cdef TULong copy_uint_to_ulong(TUInt node):
+    return TULong(<uint64>node.uint_t)
+
+
+cdef TInt copy_ulong_to_int(TULong node):
+    return TInt(<int32>node.ulong_t)
+
+
+cdef TLong copy_ulong_to_long(TULong node):
+    return TLong(<int64>node.ulong_t)
+
+
+cdef TDouble copy_ulong_to_double(TULong node):
+    return TDouble(<double>node.ulong_t)
+
+
+cdef TUInt copy_ulong_to_uint(TULong node):
+    return TUInt(<uint32>node.ulong_t)
+
+
 cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
     if isinstance(static_init_type, Int):
         if isinstance(node.constant, CConstInt):
-            return Initial(IntInit(copy_int(node.constant.value)))
+            return Initial(IntInit(node.constant.value))
         elif isinstance(node.constant, CConstLong):
             return Initial(IntInit(copy_long_to_int(node.constant.value)))
         elif isinstance(node.constant, CConstDouble):
@@ -260,7 +335,7 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
         if isinstance(node.constant, CConstInt):
             return Initial(LongInit(copy_int_to_long(node.constant.value)))
         elif isinstance(node.constant, CConstLong):
-            return Initial(LongInit(copy_long(node.constant.value)))
+            return Initial(LongInit(node.constant.value))
         elif isinstance(node.constant, CConstDouble):
             return Initial(LongInit(copy_double_to_long(node.constant.value)))
         elif isinstance(node.constant, CConstUInt):
@@ -273,7 +348,7 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
         elif isinstance(node.constant, CConstLong):
             return Initial(DoubleInit(copy_long_to_double(node.constant.value)))
         elif isinstance(node.constant, CConstDouble):
-            return Initial(DoubleInit(copy_double(node.constant.value)))
+            return Initial(DoubleInit(node.constant.value))
         elif isinstance(node.constant, CConstUInt):
             return Initial(DoubleInit(copy_uint_to_double(node.constant.value)))
         elif isinstance(node.constant, CConstULong):
@@ -286,7 +361,7 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
         elif isinstance(node.constant, CConstDouble):
             return Initial(UIntInit(copy_double_to_uint(node.constant.value)))
         elif isinstance(node.constant, CConstUInt):
-            return Initial(UIntInit(copy_uint(node.constant.value)))
+            return Initial(UIntInit(node.constant.value))
         elif isinstance(node.constant, CConstULong):
             return Initial(UIntInit(copy_ulong_to_uint(node.constant.value)))
     elif isinstance(static_init_type, ULong):
@@ -299,7 +374,7 @@ cdef Initial checktype_constant_initial(CConstant node, Type static_init_type):
         elif isinstance(node.constant, CConstUInt):
             return Initial(ULongInit(copy_uint_to_ulong(node.constant.value)))
         elif isinstance(node.constant, CConstULong):
-            return Initial(ULongInit(copy_ulong(node.constant.value)))
+            return Initial(ULongInit(node.constant.value))
 
 
 cdef Initial checktype_no_init_initial(Type static_init_type):
