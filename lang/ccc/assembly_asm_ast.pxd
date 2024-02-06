@@ -141,6 +141,7 @@ cdef class AsmOperand(AST):
 
 cdef class AsmImm(AsmOperand):
     cdef public TIdentifier value
+    cdef public bint is_long
 
 
 cdef class AsmRegister(AsmOperand):

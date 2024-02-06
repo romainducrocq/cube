@@ -162,7 +162,8 @@ cdef void replace_pseudo_registers(AsmInstruction node):
 cdef AsmBinary allocate_stack_bytes(int32 byte):
     cdef AsmBinaryOp binary_op = AsmSub()
     cdef AssemblyType assembly_type = QuadWord()
-    cdef AsmOperand src = AsmImm(TIdentifier(str(byte)))
+    cdef bint is_long = False
+    cdef AsmOperand src = AsmImm(TIdentifier(str(byte)), is_long)
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
     return AsmBinary(binary_op, assembly_type, src, dst)
 
@@ -170,7 +171,8 @@ cdef AsmBinary allocate_stack_bytes(int32 byte):
 cdef AsmBinary deallocate_stack_bytes(int32 byte):
     cdef AsmBinaryOp binary_op = AsmAdd()
     cdef AssemblyType assembly_type = QuadWord()
-    cdef AsmOperand src = AsmImm(TIdentifier(str(byte)))
+    cdef bint is_long = False
+    cdef AsmOperand src = AsmImm(TIdentifier(str(byte)), is_long)
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Sp'))
     return AsmBinary(binary_op, assembly_type, src, dst)
 
@@ -361,7 +363,7 @@ cdef void correct_any_from_quad_word_imm_to_any(Py_ssize_t i, Py_ssize_t k):
 
 cdef bint is_from_long_imm_instruction(Py_ssize_t i):
     return isinstance(fun_instructions[i].src, AsmImm) and \
-            int(fun_instructions[i].src.value.str_t) > 2147483647
+            fun_instructions[i].src.is_long
 
 
 cdef bint is_from_imm_instruction(Py_ssize_t i):

@@ -243,10 +243,11 @@ cdef class AsmOperand(AST):
 cdef class AsmImm(AsmOperand):
     # Imm(int value)
     def __cinit__(self):
-        self._fields = ('value',)
+        self._fields = ('value', 'is_long')
 
-    def __init__(self, TIdentifier value):
+    def __init__(self, TIdentifier value, bint is_long):
         self.value = value
+        self.is_long = is_long
 
 
 cdef class AsmRegister(AsmOperand):
