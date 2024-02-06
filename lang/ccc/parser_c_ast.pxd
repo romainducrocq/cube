@@ -157,12 +157,6 @@ cdef class CConditional(CExp):
     cdef public CExp exp_right
 
 
-cdef class CAssignmentCompound(CExp):
-    cdef public CBinaryOp binary_op
-    cdef public CExp exp_left
-    cdef public CExp exp_right
-
-
 cdef class CFunctionCall(CExp):
     cdef public TIdentifier name
     cdef public list[CExp] args

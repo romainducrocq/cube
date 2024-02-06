@@ -2,7 +2,7 @@ from ccc.parser_c_ast cimport TIdentifier, CProgram, CFunctionDeclaration, CVari
 from ccc.parser_c_ast cimport CDeclaration, CFunDecl, CVarDecl, CStatic, CExtern, CBlock, CB, CBlockItem, CD, CS
 from ccc.parser_c_ast cimport CStatement, CReturn, CExpression, CIf, CLabel, CGoto, CCompound
 from ccc.parser_c_ast cimport CWhile, CDoWhile, CFor, CBreak, CContinue, CForInit, CInitDecl, CInitExp, CNull
-from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
+from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 
 from ccc.semantic_name cimport resolve_label_identifier, resolve_variable_identifier
@@ -11,7 +11,7 @@ from ccc.semantic_loop_annotater cimport annotate_break_loop, annotate_continue_
 from ccc.semantic_loop_annotater cimport init_annotate_loops
 from ccc.semantic_type_checker cimport checktype_function_call_expression, checktype_var_expression
 from ccc.semantic_type_checker cimport checktype_cast_expression, checktype_constant_expression
-from ccc.semantic_type_checker cimport checktype_assignment_expression, checktype_assignment_compound_expression
+from ccc.semantic_type_checker cimport checktype_assignment_expression
 from ccc.semantic_type_checker cimport checktype_unary_expression, checktype_binary_expression
 from ccc.semantic_type_checker cimport checktype_conditional_expression, checktype_return_statement
 from ccc.semantic_type_checker cimport checktype_params, checktype_function_declaration
@@ -107,10 +107,6 @@ cdef void resolve_assignment_expression(CAssignment node):
     resolve_expression(node.exp_right)
 
 
-cdef void resolve_assignment_compound_expression(CAssignmentCompound node):
-    resolve_expression(node.exp_right)
-
-
 cdef void resolve_unary_expression(CUnary node):
     resolve_expression(node.exp)
 
@@ -142,9 +138,6 @@ cdef void resolve_expression(CExp node):
     elif isinstance(node, CAssignment):
         resolve_assignment_expression(node)
         checktype_assignment_expression(node)
-    elif isinstance(node, CAssignmentCompound):
-        resolve_assignment_compound_expression(node)
-        checktype_assignment_compound_expression(node)
     elif isinstance(node, CUnary):
         resolve_unary_expression(node)
         checktype_unary_expression(node)

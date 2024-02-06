@@ -221,7 +221,6 @@ cdef class CExp(AST):
     #     | Unary(unary_operator, exp, type)
     #     | Binary(binary_operator, exp, exp, type)
     #     | Assignment(exp, exp, type)
-    #     | AssignmentCompound(binary_operator, exp, exp, type)
     #     | Conditional(exp, exp, exp, type)
     #     | FunctionCall(identifier, exp*, type)
     def __cinit__(self):
@@ -284,17 +283,6 @@ cdef class CAssignment(CExp):
         self._fields = ('exp_left', 'exp_right', 'exp_type')
 
     def __init__(self, CExp exp_left, CExp exp_right):
-        self.exp_left = exp_left
-        self.exp_right = exp_right
-
-
-cdef class CAssignmentCompound(CExp):
-    # AssignmentCompound(binary_operator, exp, exp)
-    def __cinit__(self):
-        self._fields = ('binary_op', 'exp_left', 'exp_right', 'exp_type')
-
-    def __init__(self, CBinaryOp binary_op, CExp exp_left, CExp exp_right):
-        self.binary_op = binary_op
         self.exp_left = exp_left
         self.exp_right = exp_right
 

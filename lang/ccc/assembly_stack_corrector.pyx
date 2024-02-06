@@ -49,8 +49,7 @@ cdef AsmOperand replace_operand_pseudo_register(AsmPseudo node):
     global pseudo_map
 
     if node.name.str_t not in pseudo_map:
-        if node.name.str_t in backend_symbol_table and \
-           backend_symbol_table[node.name.str_t].is_static:
+        if backend_symbol_table[node.name.str_t].is_static:
             return replace_pseudo_register_data(node)
         else:
             allocate_offset_pseudo_register(backend_symbol_table[node.name.str_t].assembly_type)

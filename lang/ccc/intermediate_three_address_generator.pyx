@@ -158,15 +158,6 @@ cdef TacValue represent_exp_assignment_instructions(CAssignment node):
     return dst
 
 
-cdef TacValue represent_exp_assignment_compound_instructions(CAssignmentCompound node):
-    cdef TacValue src1 = represent_exp_instructions(node.exp_left)
-    cdef TacValue src2 = represent_exp_instructions(node.exp_right)
-    cdef TacValue dst = represent_inner_value(node)
-    cdef TacBinaryOp binary_op = represent_binary_op(node.binary_op)
-    instructions.append(TacBinary(binary_op, src1, src2, dst))
-    return dst
-
-
 cdef TacValue represent_exp_conditional_instructions(CConditional node):
     cdef TIdentifier target_else = represent_label_identifier("ternary_else")
     cdef TacValue condition = represent_exp_instructions(node.condition)
@@ -247,8 +238,6 @@ cdef TacValue represent_exp_instructions(CExp node):
         return represent_exp_cast_instructions(node)
     elif isinstance(node, CAssignment):
         return represent_exp_assignment_instructions(node)
-    elif isinstance(node, CAssignmentCompound):
-        return represent_exp_assignment_compound_instructions(node)
     elif isinstance(node, CConditional):
         return represent_exp_conditional_instructions(node)
     elif isinstance(node, CUnary):

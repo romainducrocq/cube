@@ -6,7 +6,7 @@ from ccc.abc_builtin_ast cimport copy_uint_to_int, copy_uint_to_long, copy_uint_
 from ccc.abc_builtin_ast cimport copy_ulong_to_int, copy_ulong_to_long, copy_ulong_to_double, copy_ulong_to_uint
 
 from ccc.parser_c_ast cimport CVariableDeclaration, CFunctionDeclaration, CStatic, CExtern, CReturn
-from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment, CAssignmentCompound
+from ccc.parser_c_ast cimport CExp, CFunctionCall, CVar, CCast, CConstant, CAssignment
 from ccc.parser_c_ast cimport CUnary, CBinary, CConditional
 from ccc.parser_c_ast cimport CNot, CComplement, CAnd, COr, CAdd, CSubtract, CMultiply, CDivide, CRemainder
 from ccc.parser_c_ast cimport CBitAnd, CBitOr, CBitXor, CBitShiftLeft, CBitShiftRight
@@ -128,15 +128,6 @@ cdef void checktype_assignment_expression(CAssignment node):
     if not is_same_type(node.exp_right.exp_type, node.exp_left.exp_type):
         node.exp_right = cast_expression(node.exp_right, node.exp_left.exp_type)
     node.exp_type = node.exp_left.exp_type
-
-
-cdef void checktype_assignment_compound_expression(CAssignmentCompound node):
-    cdef Type common_type = get_joint_type(node.exp_left.exp_type, node.exp_right.exp_type)
-    if not is_same_type(node.exp_left.exp_type, common_type):
-        node.exp_left = cast_expression(node.exp_left, common_type)
-    if not is_same_type(node.exp_right.exp_type, common_type):
-        node.exp_right = cast_expression(node.exp_right, common_type)
-    node.exp_type = common_type
 
 
 cdef void checktype_unary_expression(CUnary node):
