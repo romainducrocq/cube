@@ -3,4 +3,4 @@ from ccc.util_ctypes cimport int32
 
 cdef AsmBinary allocate_stack_bytes(int32 byte)
 cdef AsmBinary deallocate_stack_bytes(int32 byte)
-cdef void correct_stack(AsmProgram asm_ast)
+cdef void fix_stack(AsmProgram asm_ast)

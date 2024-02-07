@@ -13,7 +13,7 @@ from ccc.assembly_backend_symbol_table cimport AssemblyType, LongWord, QuadWord,
 from ccc.assembly_convert_symbol_table cimport static_constant_top_levels
 from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, convert_symbol_table
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
-from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes, correct_stack
+from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes, fix_stack
 
 from ccc.util_ctypes cimport int32, int64, uint32, uint64, str_to_uint64
 
@@ -947,6 +947,6 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
 
     convert_symbol_table()
 
-    correct_stack(asm_ast)
+    fix_stack(asm_ast)
 
     return asm_ast
