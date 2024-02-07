@@ -288,25 +288,30 @@ cdef void correct_cvttsd2si_from_any_to_addr_instructions(AsmCvttsd2si node):
     fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
-cdef void correct_cvtsi2sd_from_imm_to_any_instructions():
-    # cvtsi2sd (imm, _)
-    # $ cvtsi2sd imm, _ ->
-    #     $ mov      imm, reg
-    #     $ cvtsi2sd reg, _
-    cdef AsmOperand src_src = fix_instructions[-1].src
-    fix_instructions[-1].src = generate_register(REGISTER_KIND.get('R10'))
-    fix_instructions.append(AsmMov(fix_instructions[-1].assembly_type, src_src, fix_instructions[-1].src))
-    swap_fix_instruction_back()
+# cvtsi2sd (imm, _)
+# $ cvtsi2sd imm, _ ->
+#     $ mov      imm, reg
+#     $ cvtsi2sd reg, _
+cdef void correct_cvtsi2sd_from_imm_to_any_instructions(AsmCvtsi2sd node):
+    cdef AsmOperand src = node.src
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
+    cdef AssemblyType assembly_type = node.assembly_type
+    node.src = dst
+    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
+    fix_instructions.append(node)
 
 
-cdef void correct_cvtsi2sd_from_any_to_addr_instructions():
-    # cvtsi2sd | add<q> | sub<q> | mul<q> | div<q> | xor<q> (_, addr)
-    # $ cvtsi2sd _, addr ->
-    #     $ cvtsi2sd _  , reg
-    #     $ mov      reg, addr
-    cdef AsmOperand src_dst = fix_instructions[-1].dst
-    fix_instructions[-1].dst = generate_register(REGISTER_KIND.get('Xmm15'))
-    fix_instructions.append(AsmMov(BackendDouble(), fix_instructions[-1].dst, src_dst))
+# cvtsi2sd | add<q> | sub<q> | mul<q> | div<q> | xor<q> (_, addr)
+# $ cvtsi2sd _, addr ->
+#     $ cvtsi2sd _  , reg
+#     $ mov      reg, addr
+cdef void correct_cvtsi2sd_from_any_to_addr_instructions(AsmCvtsi2sd node):
+    cdef AsmOperand src = generate_register(REGISTER_KIND.get('Xmm15'))
+    cdef AsmOperand dst = node.dst
+    cdef AssemblyType assembly_type = BackendDouble()
+    node.dst = src
+    fix_instructions[-1] = node
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
 cdef void correct_cmp_from_any_to_imm_instructions():
@@ -467,14 +472,14 @@ cdef void correct_function_top_level(AsmFunction node):
         elif isinstance(fix_instructions[-1], AsmCvttsd2si):
             if is_to_addr_instruction():
                 correct_cvttsd2si_from_any_to_addr_instructions(fix_instructions[-1])
-## OK
+
         elif isinstance(fix_instructions[-1], AsmCvtsi2sd):
             if is_from_imm_instruction():
-                correct_cvtsi2sd_from_imm_to_any_instructions()
+                correct_cvtsi2sd_from_imm_to_any_instructions(fix_instructions[-1])
 
             if is_to_addr_instruction():
-                correct_cvtsi2sd_from_any_to_addr_instructions()
-
+                correct_cvtsi2sd_from_any_to_addr_instructions(fix_instructions[-1])
+## OK
         elif isinstance(fix_instructions[-1], AsmCmp):
             if isinstance(fix_instructions[-1].assembly_type, BackendDouble):
                 if is_to_addr_instruction():
