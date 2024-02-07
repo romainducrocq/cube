@@ -203,8 +203,8 @@ cdef void correct_mov_from_addr_to_addr_instruction(AsmMov node):
     cdef AsmOperand src = node.src
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = node.assembly_type
+    node.src = dst
     fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    node.src = fix_instructions[-1].dst
     fix_instructions.append(node)
 
 
@@ -219,31 +219,46 @@ cdef void correct_any_from_addr_to_addr_instruction(): # TODO rm
     swap_fix_instruction_back()
 
 
+# mov<q> (_, addr)
+# $ mov<q> addr1, addr2 ->
+#     $ mov    addr1, reg
+#     $ mov<q> reg  , addr2
 cdef void correct_double_mov_from_addr_to_addr_instructions(AsmMov node):
-    # mov<q> (_, addr)
-    # $ mov<q> addr1, addr2 ->
-    #     $ mov    addr1, reg
-    #     $ mov<q> reg  , addr2
     cdef AsmOperand src = node.src
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Xmm14'))
     cdef AssemblyType assembly_type = node.assembly_type
+    node.src = dst
     fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    node.src = fix_instructions[-1].dst
     fix_instructions.append(node)
 
 
-cdef void correct_mov_sx_from_imm_to_any_instructions():
-    # movsx (imm, _)
-    # $ movsx imm, _ ->
-    #     $ mov   imm, reg
-    #     $ movsx reg, _
-    cdef AsmOperand src_src = fix_instructions[-1].src
-    fix_instructions[-1].src = generate_register(REGISTER_KIND.get('R10'))
-    fix_instructions.append(AsmMov(LongWord(), src_src, fix_instructions[-1].src))
-    swap_fix_instruction_back()
+# movsx (imm, _)
+# $ movsx imm, _ ->
+#     $ mov   imm, reg
+#     $ movsx reg, _
+cdef void correct_mov_sx_from_imm_to_any_instructions(AsmMovSx node):
+    cdef AsmOperand src = node.src
+    cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
+    cdef AssemblyType assembly_type = LongWord()
+    node.src = dst
+    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
+    fix_instructions.append(node)
 
 
-cdef void correct_mov_sx_zero_extend_from_any_to_addr_instructions():
+# movsx | mov0x (_, addr)
+# $ movsx _, addr ->
+#     $ movsx _  , reg
+#     $ mov   reg, addr
+cdef void correct_mov_sx_from_any_to_addr_instructions(AsmMovSx node):
+    cdef AsmOperand src = generate_register(REGISTER_KIND.get('R11'))
+    cdef AsmOperand dst = node.dst
+    cdef AssemblyType assembly_type = QuadWord()
+    node.dst = src
+    fix_instructions[-1] = node
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+
+
+cdef void correct_mov_sx_zero_extend_from_any_to_addr_instructions(): # TODO rm
     # movsx | mov0x (_, addr)
     # $ movsx _, addr ->
     #     $ movsx _  , reg
@@ -366,8 +381,8 @@ cdef void correct_mov_from_quad_word_imm_to_any(AsmMov node):
     cdef AsmOperand src = node.src
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = QuadWord()
+    node.src = dst
     fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    node.src = fix_instructions[-1].dst
     fix_instructions.append(node)
 
 
@@ -429,13 +444,13 @@ cdef void correct_function_top_level(AsmFunction node):
 
                 if is_from_addr_to_addr_instruction():
                     correct_mov_from_addr_to_addr_instruction(fix_instructions[-1])
-
+## OK
         elif isinstance(fix_instructions[-1], AsmMovSx):
             if is_from_imm_instruction():
-                correct_mov_sx_from_imm_to_any_instructions()
+                correct_mov_sx_from_imm_to_any_instructions(fix_instructions[-1])
 
             if is_to_addr_instruction():
-                correct_mov_sx_zero_extend_from_any_to_addr_instructions()
+                correct_mov_sx_from_any_to_addr_instructions(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmMovZeroExtend):
             correct_mov_zero_extend_from_any_to_any_instructions()
