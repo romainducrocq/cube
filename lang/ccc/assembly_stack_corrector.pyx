@@ -189,13 +189,20 @@ cdef void set_alloc_stack():
     fix_instructions[0].src.value.str_t = str(byte)
 
 
+cdef void swap_fix_instructions_back():
+    fix_instructions[-1], fix_instructions[-2] = fix_instructions[-2], fix_instructions[-1]
+
+
 cdef void fix_mov_from_addr_to_addr_instruction(AsmMov node):
     cdef AsmOperand src = node.src
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_cmp_from_addr_to_addr_instruction(AsmCmp node):
@@ -203,8 +210,11 @@ cdef void fix_cmp_from_addr_to_addr_instruction(AsmCmp node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_binary_any_from_addr_to_addr_instruction(AsmBinary node):
@@ -212,8 +222,11 @@ cdef void fix_binary_any_from_addr_to_addr_instruction(AsmBinary node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_double_mov_from_addr_to_addr_instructions(AsmMov node):
@@ -221,8 +234,11 @@ cdef void fix_double_mov_from_addr_to_addr_instructions(AsmMov node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Xmm14'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_mov_sx_from_imm_to_any_instructions(AsmMovSx node):
@@ -230,8 +246,11 @@ cdef void fix_mov_sx_from_imm_to_any_instructions(AsmMovSx node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = LongWord()
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_mov_sx_from_any_to_addr_instructions(AsmMovSx node):
@@ -239,7 +258,9 @@ cdef void fix_mov_sx_from_any_to_addr_instructions(AsmMovSx node):
     cdef AsmOperand dst = node.dst
     cdef AssemblyType assembly_type = QuadWord()
     node.dst = src
+    # only for cython
     fix_instructions[-1] = node
+    #
     fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
@@ -248,7 +269,9 @@ cdef void fix_mov_zero_extend_from_any_to_addr_instructions(AsmMov node):
     cdef AsmOperand dst = node.dst
     cdef AssemblyType assembly_type = QuadWord()
     node.dst = src
+    # only for cython
     fix_instructions[-1] = node
+    #
     fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
@@ -265,7 +288,9 @@ cdef void fix_cvttsd2si_from_any_to_addr_instructions(AsmCvttsd2si node):
     cdef AsmOperand dst = node.dst
     cdef AssemblyType assembly_type = node.assembly_type
     node.dst = src
+    # only for cython
     fix_instructions[-1] = node
+    #
     fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
@@ -274,8 +299,11 @@ cdef void fix_cvtsi2sd_from_imm_to_any_instructions(AsmCvtsi2sd node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_cvtsi2sd_from_any_to_addr_instructions(AsmCvtsi2sd node):
@@ -283,7 +311,9 @@ cdef void fix_cvtsi2sd_from_any_to_addr_instructions(AsmCvtsi2sd node):
     cdef AsmOperand dst = node.dst
     cdef AssemblyType assembly_type = BackendDouble()
     node.dst = src
+    # only for cython
     fix_instructions[-1] = node
+    #
     fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
@@ -292,8 +322,11 @@ cdef void fix_cmp_from_any_to_imm_instructions(AsmCmp node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R11'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.dst = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef fix_double_cmp_from_any_to_addr_instructions(AsmCmp node):
@@ -301,8 +334,11 @@ cdef fix_double_cmp_from_any_to_addr_instructions(AsmCmp node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Xmm15'))
     cdef AssemblyType assembly_type = BackendDouble()
     node.dst = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_binary_shx_from_addr_to_addr(AsmBinary node):
@@ -310,8 +346,11 @@ cdef void fix_binary_shx_from_addr_to_addr(AsmBinary node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Cx'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_binary_imul_from_any_to_addr(AsmBinary node):
@@ -319,8 +358,11 @@ cdef void fix_binary_imul_from_any_to_addr(AsmBinary node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R11'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.dst = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
     fix_instructions.append(AsmMov(assembly_type, dst, src))
 
 
@@ -329,8 +371,11 @@ cdef void fix_double_binary_from_any_to_addr_instructions(AsmBinary node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('Xmm15'))
     cdef AssemblyType assembly_type = BackendDouble()
     node.dst = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
     fix_instructions.append(AsmMov(assembly_type, dst, src))
 
 
@@ -339,8 +384,11 @@ cdef void fix_idiv_from_imm(AsmIdiv node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_div_from_imm(AsmDiv node):
@@ -348,8 +396,11 @@ cdef void fix_div_from_imm(AsmDiv node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = node.assembly_type
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_mov_from_quad_word_imm_to_any(AsmMov node):
@@ -357,8 +408,11 @@ cdef void fix_mov_from_quad_word_imm_to_any(AsmMov node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = QuadWord()
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_cmp_from_quad_word_imm_to_any(AsmCmp node):
@@ -366,8 +420,11 @@ cdef void fix_cmp_from_quad_word_imm_to_any(AsmCmp node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = QuadWord()
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_push_from_quad_word_imm_to_any(AsmPush node):
@@ -375,17 +432,22 @@ cdef void fix_push_from_quad_word_imm_to_any(AsmPush node):
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = QuadWord()
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
-
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 cdef void fix_binary_from_quad_word_imm_to_any(AsmBinary node):
     cdef AsmOperand src = node.src
     cdef AsmOperand dst = generate_register(REGISTER_KIND.get('R10'))
     cdef AssemblyType assembly_type = QuadWord()
     node.src = dst
-    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    fix_instructions.append(node)
+    # only for cython
+    fix_instructions[-1] = node
+    #
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
+    swap_fix_instructions_back()
 
 
 cdef void fix_mov_instruction(AsmMov node):
