@@ -258,18 +258,21 @@ cdef void correct_mov_sx_from_any_to_addr_instructions(AsmMovSx node):
     fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
-cdef void correct_mov_sx_zero_extend_from_any_to_addr_instructions(): # TODO rm
-    # movsx | mov0x (_, addr)
-    # $ movsx _, addr ->
-    #     $ movsx _  , reg
-    #     $ mov   reg, addr
-    cdef AsmOperand src_dst = fix_instructions[-1].dst
-    fix_instructions[-1].dst = generate_register(REGISTER_KIND.get('R11'))
-    fix_instructions.append(AsmMov(QuadWord(), fix_instructions[-1].dst, src_dst))
+cdef void correct_mov_zero_extend_from_any_to_addr_instructions(AsmMov node):
+    cdef AsmOperand src = generate_register(REGISTER_KIND.get('R11'))
+    cdef AsmOperand dst = node.dst
+    cdef AssemblyType assembly_type = QuadWord()
+    node.dst = src
+    fix_instructions[-1] = node
+    fix_instructions.append(AsmMov(assembly_type, src, dst))
 
 
-cdef void correct_mov_zero_extend_from_any_to_any_instructions():
-    fix_instructions[-1] = AsmMov(LongWord(), fix_instructions[-1].src, fix_instructions[-1].dst)
+cdef void correct_mov_zero_extend_from_any_to_any_instructions(AsmMovZeroExtend node):
+    cdef AsmOperand src = node.src
+    cdef AsmOperand dst = node.dst
+    cdef AssemblyType assembly_type = LongWord()
+    fix_instructions[-1] = AsmMov(assembly_type, src, dst)
+    del node
 
 
 cdef void correct_cvttsd2si_from_any_to_addr_instructions():
@@ -444,7 +447,7 @@ cdef void correct_function_top_level(AsmFunction node):
 
                 if is_from_addr_to_addr_instruction():
                     correct_mov_from_addr_to_addr_instruction(fix_instructions[-1])
-## OK
+
         elif isinstance(fix_instructions[-1], AsmMovSx):
             if is_from_imm_instruction():
                 correct_mov_sx_from_imm_to_any_instructions(fix_instructions[-1])
@@ -453,11 +456,11 @@ cdef void correct_function_top_level(AsmFunction node):
                 correct_mov_sx_from_any_to_addr_instructions(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmMovZeroExtend):
-            correct_mov_zero_extend_from_any_to_any_instructions()
+            correct_mov_zero_extend_from_any_to_any_instructions(fix_instructions[-1])
 
             if is_to_addr_instruction():
-                correct_mov_sx_zero_extend_from_any_to_addr_instructions()
-
+                correct_mov_zero_extend_from_any_to_addr_instructions(fix_instructions[-1])
+## OK
         elif isinstance(fix_instructions[-1], AsmCvttsd2si):
             if is_to_addr_instruction():
                 correct_cvttsd2si_from_any_to_addr_instructions()
