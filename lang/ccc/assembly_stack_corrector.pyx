@@ -388,32 +388,6 @@ cdef void correct_binary_from_quad_word_imm_to_any(AsmBinary node):
     fix_instructions.append(node)
 
 
-cdef bint is_from_long_imm_instruction():
-    return isinstance(fix_instructions[-1].src, AsmImm) and \
-            fix_instructions[-1].src.is_long
-
-
-cdef bint is_from_imm_instruction():
-    return isinstance(fix_instructions[-1].src, AsmImm)
-
-
-cdef bint is_to_imm_instruction():
-    return isinstance(fix_instructions[-1].dst, AsmImm)
-
-
-cdef bint is_from_addr_instruction():
-    return isinstance(fix_instructions[-1].src, (AsmStack, AsmData))
-
-
-cdef bint is_to_addr_instruction():
-    return isinstance(fix_instructions[-1].dst, (AsmStack, AsmData))
-
-
-cdef bint is_from_addr_to_addr_instruction():
-    return is_from_addr_instruction() and \
-           is_to_addr_instruction()
-
-
 cdef void correct_function_top_level(AsmFunction node):
     global fix_instructions
     fix_instructions = [allocate_stack_bytes(0)]
@@ -427,93 +401,104 @@ cdef void correct_function_top_level(AsmFunction node):
 
         if isinstance(fix_instructions[-1], AsmMov):
             if isinstance(fix_instructions[-1].assembly_type, BackendDouble):
-                if is_from_addr_to_addr_instruction():
+                if isinstance(fix_instructions[-1].src, (AsmStack, AsmData)) and \
+                   isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                     correct_double_mov_from_addr_to_addr_instructions(fix_instructions[-1])
             else:
-                if is_from_long_imm_instruction():
+                if isinstance(fix_instructions[-1].src, AsmImm) and \
+                   fix_instructions[-1].src.is_long:
                     correct_mov_from_quad_word_imm_to_any(fix_instructions[-1])
 
-                if is_from_addr_to_addr_instruction():
+                if isinstance(fix_instructions[-1].src, (AsmStack, AsmData)) and \
+                   isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                     correct_mov_from_addr_to_addr_instruction(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmMovSx):
-            if is_from_imm_instruction():
+            if isinstance(fix_instructions[-1].src, AsmImm):
                 correct_mov_sx_from_imm_to_any_instructions(fix_instructions[-1])
 
-            if is_to_addr_instruction():
+            if isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                 correct_mov_sx_from_any_to_addr_instructions(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmMovZeroExtend):
             correct_mov_zero_extend_from_any_to_any_instructions(fix_instructions[-1])
 
-            if is_to_addr_instruction():
+            if isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                 correct_mov_zero_extend_from_any_to_addr_instructions(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmCvttsd2si):
-            if is_to_addr_instruction():
+            if isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                 correct_cvttsd2si_from_any_to_addr_instructions(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmCvtsi2sd):
-            if is_from_imm_instruction():
+            if isinstance(fix_instructions[-1].src, AsmImm):
                 correct_cvtsi2sd_from_imm_to_any_instructions(fix_instructions[-1])
 
-            if is_to_addr_instruction():
+            if isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                 correct_cvtsi2sd_from_any_to_addr_instructions(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmCmp):
             if isinstance(fix_instructions[-1].assembly_type, BackendDouble):
-                if is_to_addr_instruction():
+                if isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                     correct_double_cmp_from_any_to_addr_instructions(fix_instructions[-1])
 
             else:
-                if is_from_long_imm_instruction():
+                if isinstance(fix_instructions[-1].src, AsmImm) and \
+                   fix_instructions[-1].src.is_long:
                     correct_cmp_from_quad_word_imm_to_any(fix_instructions[-1])
 
-                if is_from_addr_to_addr_instruction():
+                if isinstance(fix_instructions[-1].src, (AsmStack, AsmData)) and \
+                   isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                     correct_cmp_from_addr_to_addr_instruction(fix_instructions[-1])
 
-                elif is_to_imm_instruction():
+                elif isinstance(fix_instructions[-1].dst, AsmImm):
                     correct_cmp_from_any_to_imm_instructions(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmPush):
-            if is_from_long_imm_instruction():
+            if isinstance(fix_instructions[-1].src, AsmImm) and \
+               fix_instructions[-1].src.is_long:
                 correct_push_from_quad_word_imm_to_any(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmBinary):
             if isinstance(fix_instructions[-1].assembly_type, BackendDouble):
-                if is_to_addr_instruction():
+                if isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                     correct_double_binary_from_any_to_addr_instructions(fix_instructions[-1])
 
             else:
                 if isinstance(fix_instructions[-1].binary_op,
                               (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)):
-                    if is_from_long_imm_instruction():
+                    if isinstance(fix_instructions[-1].src, AsmImm) and \
+                       fix_instructions[-1].src.is_long:
                         correct_binary_from_quad_word_imm_to_any(fix_instructions[-1])
 
-                    if is_from_addr_to_addr_instruction():
+                    if isinstance(fix_instructions[-1].src, (AsmStack, AsmData)) and \
+                       isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                         correct_binary_any_from_addr_to_addr_instruction(fix_instructions[-1])
 
                 elif isinstance(fix_instructions[-1].binary_op,
                                 (AsmBitShiftLeft, AsmBitShiftRight)):
-                    if is_from_long_imm_instruction():
+                    if isinstance(fix_instructions[-1].src, AsmImm) and \
+                       fix_instructions[-1].src.is_long:
                         correct_binary_from_quad_word_imm_to_any(fix_instructions[-1])
 
-                    if is_from_addr_to_addr_instruction():
+                    if isinstance(fix_instructions[-1].src, (AsmStack, AsmData)) and \
+                       isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                         correct_binary_shx_from_addr_to_addr(fix_instructions[-1])
 
                 elif isinstance(fix_instructions[-1].binary_op, AsmMult):
-                    if is_from_long_imm_instruction():
+                    if isinstance(fix_instructions[-1].src, AsmImm) and \
+                       fix_instructions[-1].src.is_long:
                         correct_binary_from_quad_word_imm_to_any(fix_instructions[-1])
 
-                    if is_to_addr_instruction():
+                    if isinstance(fix_instructions[-1].dst, (AsmStack, AsmData)):
                         correct_binary_imul_from_any_to_addr(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmIdiv):
-            if is_from_imm_instruction():
+            if isinstance(fix_instructions[-1].src, AsmImm):
                 correct_idiv_from_imm(fix_instructions[-1])
 
         elif isinstance(fix_instructions[-1], AsmDiv):
-            if is_from_imm_instruction():
+            if isinstance(fix_instructions[-1].src, AsmImm):
                 correct_div_from_imm(fix_instructions[-1])
 
     set_alloc_stack()
