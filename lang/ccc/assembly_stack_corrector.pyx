@@ -271,8 +271,7 @@ cdef void fix_mov_sx_from_any_to_addr_instruction(AsmMovSx node):
 cdef void fix_mov_sx_instruction(AsmMovSx node):
     if isinstance(node.src, AsmImm):
         fix_mov_sx_from_imm_to_any_instruction(node)
-        node = fix_instructions[-1]
-
+        
     if isinstance(node.dst, (AsmStack, AsmData)):
         fix_mov_sx_from_any_to_addr_instruction(node)
 
@@ -345,8 +344,7 @@ cdef void fix_cvtsi2sd_from_any_to_addr_instruction(AsmCvtsi2sd node):
 cdef void fix_cvtsi2sd_instruction(AsmCvtsi2sd node):
     if isinstance(node.src, AsmImm):
         fix_cvtsi2sd_from_imm_to_any_instruction(node)
-        node = fix_instructions[-1]
-
+        
     if isinstance(node.dst, (AsmStack, AsmData)):
         fix_cvtsi2sd_from_any_to_addr_instruction(node)
 
@@ -408,8 +406,7 @@ cdef void fix_cmp_instruction(AsmCmp node):
         if isinstance(node.src, AsmImm) and \
            node.src.is_quad:
             fix_cmp_from_quad_word_imm_to_any_instruction(node)
-            node = fix_instructions[-1]
-
+            
         if isinstance(node.src, (AsmStack, AsmData)) and \
            isinstance(node.dst, (AsmStack, AsmData)):
             fix_cmp_from_addr_to_addr_instruction(node)
@@ -509,8 +506,7 @@ cdef void fix_binary_instruction(AsmBinary node):
             if isinstance(node.src, AsmImm) and \
                node.src.is_quad:
                 fix_binary_from_quad_word_imm_to_any_instruction(node)
-                node = fix_instructions[-1]
-
+                
             if isinstance(node.src, (AsmStack, AsmData)) and \
                isinstance(node.dst, (AsmStack, AsmData)):
                 fix_binary_any_from_addr_to_addr_instruction(node)
@@ -520,8 +516,7 @@ cdef void fix_binary_instruction(AsmBinary node):
             if isinstance(node.src, AsmImm) and \
                node.src.is_quad:
                 fix_binary_from_quad_word_imm_to_any_instruction(node)
-                node = fix_instructions[-1]
-
+                
             if isinstance(node.src, (AsmStack, AsmData)) and \
                isinstance(node.dst, (AsmStack, AsmData)):
                 fix_binary_shx_from_addr_to_addr_instruction(node)
@@ -530,8 +525,7 @@ cdef void fix_binary_instruction(AsmBinary node):
             if isinstance(node.src, AsmImm) and \
                node.src.is_quad:
                 fix_binary_from_quad_word_imm_to_any_instruction(node)
-                node = fix_instructions[-1]
-
+                
             if isinstance(node.dst, (AsmStack, AsmData)):
                 fix_binary_imul_from_any_to_addr_instruction(node)
 
