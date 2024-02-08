@@ -10,7 +10,6 @@ from ccc.semantic_type_checker cimport is_type_signed, is_const_signed
 
 from ccc.assembly_asm_ast cimport *
 from ccc.assembly_backend_symbol_table cimport AssemblyType, LongWord, QuadWord, BackendDouble
-from ccc.assembly_convert_symbol_table cimport static_constant_top_levels
 from ccc.assembly_convert_symbol_table cimport convert_backend_assembly_type, convert_symbol_table
 from ccc.assembly_register cimport REGISTER_KIND, generate_register
 from ccc.assembly_stack_corrector cimport allocate_stack_bytes, deallocate_stack_bytes, fix_stack
@@ -33,27 +32,27 @@ cdef TInt generate_alignment(Type node):
 
 
 cdef AsmImm generate_int_imm_operand(CConstInt node):
-    cdef bint is_long = False
+    cdef bint is_quad = False
     cdef TIdentifier value = TIdentifier(str(node.value.int_t))
-    return AsmImm(value, is_long)
+    return AsmImm(value, is_quad)
 
 
 cdef AsmImm generate_long_imm_operand(CConstLong node):
-    cdef bint is_long = node.value.long_t > (<int64>2147483647)
+    cdef bint is_quad = node.value.long_t > (<int64>2147483647)
     cdef TIdentifier value = TIdentifier(str(node.value.long_t))
-    return AsmImm(value, is_long)
+    return AsmImm(value, is_quad)
 
 
 cdef AsmImm generate_uint_imm_operand(CConstUInt node):
-    cdef bint is_long = int(node.value.uint_t) > (<uint32>2147483647)
+    cdef bint is_quad = int(node.value.uint_t) > (<uint32>2147483647)
     cdef TIdentifier value = TIdentifier(str(node.value.uint_t))
-    return AsmImm(value, is_long)
+    return AsmImm(value, is_quad)
 
 
 cdef AsmImm generate_ulong_imm_operand(CConstULong node):
-    cdef bint is_long = int(node.value.ulong_t) > (<uint64>2147483647)
+    cdef bint is_quad = int(node.value.ulong_t) > (<uint64>2147483647)
     cdef TIdentifier value = TIdentifier(str(node.value.ulong_t))
-    return AsmImm(value, is_long)
+    return AsmImm(value, is_quad)
 
 
 cdef AsmData generate_double_static_constant_operand(double value, int32 byte):
@@ -370,7 +369,7 @@ cdef void generate_zero_extend_instructions(TacZeroExtend node):
 
 
 cdef void generate_imm_truncate_instructions(AsmImm node):
-    if node.is_long:
+    if node.is_quad:
         node.value.str_t = str(<uint64>(str_to_uint64(node.value.str_t) - (<uint64>4294967296)))
 
 
@@ -905,10 +904,12 @@ cdef AsmStaticVariable generate_static_variable_top_level(TacStaticVariable node
     return AsmStaticVariable(name, is_global, alignment, initial_value)
 
 
+cdef list[AsmTopLevel] p_static_constant_top_levels = []
+
 cdef void append_double_static_constant_top_level(TIdentifier name, double value, int32 byte):
     cdef TInt alignment = TInt(byte)
     cdef StaticInit initial_value = DoubleInit(TDouble(value))
-    static_constant_top_levels.append(AsmStaticConstant(name, alignment, initial_value))
+    p_static_constant_top_levels.append(AsmStaticConstant(name, alignment, initial_value))
 
 
 cdef AsmTopLevel generate_top_level(TacTopLevel node):
@@ -927,14 +928,20 @@ cdef AsmTopLevel generate_top_level(TacTopLevel node):
 
 cdef AsmProgram generate_program(TacProgram node):
     # program = Program(function_definition)
+    global p_static_constant_top_levels
     static_const_label_map.clear()
-    static_constant_top_levels.clear()
+
+    cdef list[TacTopLevel] static_constant_top_levels = []
+    p_static_constant_top_levels = static_constant_top_levels
+
     cdef Py_ssize_t top_level
     cdef list[AsmTopLevel] top_levels = []
-    for top_level in range(len(node.top_levels)):
-        top_levels.append(generate_top_level(node.top_levels[top_level]))
-    top_levels = static_constant_top_levels + top_levels
-    return AsmProgram(top_levels)
+    for top_level in range(len(node.static_variable_top_levels)):
+        top_levels.append(generate_top_level(node.static_variable_top_levels[top_level]))
+    for top_level in range(len(node.function_top_levels)):
+        top_levels.append(generate_top_level(node.function_top_levels[top_level]))
+
+    return AsmProgram(static_constant_top_levels, top_levels)
 
 
 cdef AsmProgram assembly_generation(TacProgram tac_ast):
@@ -945,7 +952,7 @@ cdef AsmProgram assembly_generation(TacProgram tac_ast):
         raise RuntimeError(
             "An error occurred in assembly generation, ASM was not generated")
 
-    convert_symbol_table()
+    convert_symbol_table(asm_ast)
 
     fix_stack(asm_ast)
 

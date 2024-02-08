@@ -487,12 +487,12 @@ cdef TacFunction represent_function_top_level(CFunctionDeclaration node):
     return TacFunction(name, is_global, params, body)
 
 
-cdef list[TacTopLevel] function_top_levels = []
+cdef list[TacTopLevel] p_function_top_levels = []
 
 
 cdef void represent_fun_decl_top_level(CFunDecl node):
     if node.function_decl.body:
-        function_top_levels.append(represent_function_top_level(node.function_decl))
+        p_function_top_levels.append(represent_function_top_level(node.function_decl))
 
 
 cdef void represent_var_decl_top_level(CVarDecl node):
@@ -511,7 +511,7 @@ cdef void represent_declaration_top_level(CDeclaration node):
             "An error occurred in three address code representation, not all nodes were visited")
 
 
-cdef list[TacTopLevel] static_variable_top_levels = []
+cdef list[TacTopLevel] p_static_variable_top_levels = []
 
 
 cdef StaticInit represent_tentative_static_init(Type static_init_type):
@@ -547,7 +547,7 @@ cdef void represent_static_variable_top_level(StaticAttr node, Type static_init_
         raise RuntimeError(
             "An error occurred in three address code representation, top level variable has invalid initializer")
 
-    static_variable_top_levels.append(TacStaticVariable(name, is_global, static_init_type, initial_value))
+    p_static_variable_top_levels.append(TacStaticVariable(name, is_global, static_init_type, initial_value))
 
 
 cdef void represent_symbol_top_level(Symbol node, str symbol):
@@ -558,21 +558,22 @@ cdef void represent_symbol_top_level(Symbol node, str symbol):
 
 cdef TacProgram represent_program(CProgram node):
     # program = Program(top_level*)
-    global function_top_levels
+    global p_static_variable_top_levels
+    global p_function_top_levels
 
-    cdef list[TacTopLevel] top_levels = []
-    function_top_levels = top_levels
+    cdef list[TacTopLevel] function_top_levels = []
+    p_function_top_levels = function_top_levels
     cdef Py_ssize_t declaration
     for declaration in range(len(node.declarations)):
         represent_declaration_top_level(node.declarations[declaration])
 
-    static_variable_top_levels.clear()
+    cdef list[TacTopLevel] static_variable_top_levels = []
+    p_static_variable_top_levels = static_variable_top_levels
     cdef str symbol
     for symbol in symbol_table:
         represent_symbol_top_level(symbol_table[symbol], symbol)
-    top_levels = static_variable_top_levels + top_levels
 
-    return TacProgram(top_levels)
+    return TacProgram(static_variable_top_levels, function_top_levels)
 
 
 cdef TacProgram three_address_code_representation(CProgram c_ast):

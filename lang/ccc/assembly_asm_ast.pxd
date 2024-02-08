@@ -141,7 +141,7 @@ cdef class AsmOperand(AST):
 
 cdef class AsmImm(AsmOperand):
     cdef public TIdentifier value
-    cdef public bint is_long
+    cdef public bint is_quad
 
 
 cdef class AsmRegister(AsmOperand):
@@ -335,4 +335,5 @@ cdef class AsmStaticConstant(AsmTopLevel):
 
 
 cdef class AsmProgram(AST):
+    cdef public list[AsmTopLevel] static_constant_top_levels
     cdef public list[AsmTopLevel] top_levels

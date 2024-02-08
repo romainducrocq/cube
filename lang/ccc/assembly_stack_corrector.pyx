@@ -1,7 +1,7 @@
 from ccc.abc_builtin_ast cimport copy_identifier
 
 from ccc.assembly_asm_ast cimport TIdentifier, TInt, AsmProgram
-from ccc.assembly_asm_ast cimport AsmTopLevel, AsmFunction, AsmStaticVariable, AsmStaticConstant
+from ccc.assembly_asm_ast cimport AsmTopLevel, AsmFunction, AsmStaticVariable
 from ccc.assembly_asm_ast cimport AsmInstruction, AsmImm, AsmMov, AsmMovSx, AsmMovZeroExtend, AsmCvttsd2si, AsmCvtsi2sd
 from ccc.assembly_asm_ast cimport AsmPush, AsmCmp, AsmSetCC, AsmUnary, AsmBinary
 from ccc.assembly_asm_ast cimport AsmBinaryOp, AsmAdd, AsmSub, AsmIdiv, AsmDiv, AsmMult
@@ -178,7 +178,7 @@ cdef AsmBinary deallocate_stack_bytes(int32 byte):
 cdef list[AsmInstruction] fix_instructions = []
 
 
-cdef void set_alloc_stack():
+cdef void fix_allocate_stack_bytes():
     cdef int32 byte = -1 * counter
 
     if byte % 8 != 0:
@@ -237,7 +237,7 @@ cdef void fix_mov_instruction(AsmMov node):
 
     else:
         if isinstance(node.src, AsmImm) and \
-           node.src.is_long:
+           node.src.is_quad:
             fix_mov_from_quad_word_imm_to_any_instruction(node)
 
         if isinstance(node.src, (AsmStack, AsmData)) and \
@@ -282,7 +282,6 @@ cdef void fix_mov_zero_extend_from_any_to_any_instruction(AsmMovZeroExtend node)
     cdef AsmOperand dst = node.dst
     cdef AssemblyType assembly_type = LongWord()
     fix_instructions[-1] = AsmMov(assembly_type, src, dst)
-    del node
 
 
 cdef void fix_mov_zero_extend_from_any_to_addr_instruction(AsmMov node):
@@ -407,7 +406,7 @@ cdef void fix_cmp_instruction(AsmCmp node):
 
     else:
         if isinstance(node.src, AsmImm) and \
-           node.src.is_long:
+           node.src.is_quad:
             fix_cmp_from_quad_word_imm_to_any_instruction(node)
             node = fix_instructions[-1]
 
@@ -433,7 +432,7 @@ cdef void fix_push_from_quad_word_imm_to_any_instruction(AsmPush node):
 
 cdef void fix_push_instruction(AsmPush node):
     if isinstance(node.src, AsmImm) and \
-       node.src.is_long:
+       node.src.is_quad:
         fix_push_from_quad_word_imm_to_any_instruction(node)
 
 
@@ -508,7 +507,7 @@ cdef void fix_binary_instruction(AsmBinary node):
         if isinstance(node.binary_op,
                       (AsmAdd, AsmSub, AsmBitAnd, AsmBitOr, AsmBitXor)):
             if isinstance(node.src, AsmImm) and \
-               node.src.is_long:
+               node.src.is_quad:
                 fix_binary_from_quad_word_imm_to_any_instruction(node)
                 node = fix_instructions[-1]
 
@@ -519,7 +518,7 @@ cdef void fix_binary_instruction(AsmBinary node):
         elif isinstance(node.binary_op,
                         (AsmBitShiftLeft, AsmBitShiftRight)):
             if isinstance(node.src, AsmImm) and \
-               node.src.is_long:
+               node.src.is_quad:
                 fix_binary_from_quad_word_imm_to_any_instruction(node)
                 node = fix_instructions[-1]
 
@@ -529,7 +528,7 @@ cdef void fix_binary_instruction(AsmBinary node):
 
         elif isinstance(node.binary_op, AsmMult):
             if isinstance(node.src, AsmImm) and \
-               node.src.is_long:
+               node.src.is_quad:
                 fix_binary_from_quad_word_imm_to_any_instruction(node)
                 node = fix_instructions[-1]
 
@@ -620,13 +619,13 @@ cdef void fix_function_top_level(AsmFunction node):
 
         fix_instruction()
 
-    set_alloc_stack()
+    fix_allocate_stack_bytes()
 
     node.instructions.clear()
     node.instructions = fix_instructions
 
 
-cdef void fix_variable_stack_top_level(AsmStaticVariable node):
+cdef void fix_static_variable_top_level(AsmStaticVariable node):
     pass
 
 
@@ -634,9 +633,7 @@ cdef void fix_top_level(AsmTopLevel node):
     if isinstance(node, AsmFunction):
         fix_function_top_level(node)
     elif isinstance(node, AsmStaticVariable):
-        fix_variable_stack_top_level(node)
-    elif isinstance(node, AsmStaticConstant):
-        pass
+        fix_static_variable_top_level(node)
     else:
 
         raise RuntimeError(

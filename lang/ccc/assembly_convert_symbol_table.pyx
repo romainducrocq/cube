@@ -1,10 +1,8 @@
 from ccc.semantic_symbol_table cimport symbol_table, Int, Long, Double, UInt, ULong, FunType
 from ccc.semantic_symbol_table cimport IdentifierAttr, FunAttr, StaticAttr, DoubleInit
+from ccc.assembly_asm_ast cimport AsmProgram, AsmTopLevel, AsmStaticConstant
 
 from ccc.assembly_backend_symbol_table cimport *
-
-
-static_constant_top_levels = []
 
 
 cdef AssemblyType convert_backend_assembly_type(str name_str):
@@ -34,18 +32,25 @@ cdef void convert_double_static_constant():
     add_backend_symbol(BackendObj(assembly_type, is_static, is_constant))
 
 
-cdef void convert_static_constant_top_levels():
+cdef void convert_static_constant_top_level(AsmStaticConstant node):
     global symbol
 
-    cdef int static_constant
-    for static_constant in range(len(static_constant_top_levels)):
-        symbol = static_constant_top_levels[static_constant].name.str_t
-        if isinstance(static_constant_top_levels[static_constant].initial_value, DoubleInit):
-            convert_double_static_constant()
-        else:
+    symbol = node.name.str_t
+    if isinstance(node.initial_value, DoubleInit):
+        convert_double_static_constant()
+    else:
 
-            raise RuntimeError(
-                "An error occurred in backend symbol table conversion, not all nodes were visited")
+        raise RuntimeError(
+            "An error occurred in backend symbol table conversion, not all nodes were visited")
+
+
+cdef void convert_top_level(AsmTopLevel node):
+    if isinstance(node, AsmStaticConstant):
+        convert_static_constant_top_level(node)
+    else:
+
+        raise RuntimeError(
+            "An error occurred in stack management, not all nodes were visited")
 
 
 cdef void convert_fun_type(FunAttr node):
@@ -60,13 +65,19 @@ cdef void convert_obj_type(IdentifierAttr node):
     add_backend_symbol(BackendObj(assembly_type, is_static, is_constant))
 
 
-cdef void convert_symbol_table():
+cdef void convert_backend_symbol_table(AsmProgram node):
     global symbol
 
-    convert_static_constant_top_levels()
+    cdef Py_ssize_t top_level
+    for top_level in range(len(node.static_constant_top_levels)):
+        convert_top_level(node.static_constant_top_levels[top_level])
 
     for symbol in symbol_table:
         if isinstance(symbol_table[symbol].type_t, FunType):
             convert_fun_type(symbol_table[symbol].attrs)
         else:
             convert_obj_type(symbol_table[symbol].attrs)
+
+
+cdef void convert_symbol_table(AsmProgram asm_ast):
+    convert_backend_symbol_table(asm_ast)

@@ -243,11 +243,11 @@ cdef class AsmOperand(AST):
 cdef class AsmImm(AsmOperand):
     # Imm(int value)
     def __cinit__(self):
-        self._fields = ('value', 'is_long')
+        self._fields = ('value', 'is_quad')
 
-    def __init__(self, TIdentifier value, bint is_long):
+    def __init__(self, TIdentifier value, bint is_quad):
         self.value = value
-        self.is_long = is_long
+        self.is_quad = is_quad
 
 
 cdef class AsmRegister(AsmOperand):
@@ -628,7 +628,8 @@ cdef class AsmStaticConstant(AsmTopLevel):
 cdef class AsmProgram(AST):
     # AST = Program(top_levels*)
     def __cinit__(self):
-        self._fields = ('top_levels',)
+        self._fields = ('static_constant_top_levels', 'top_levels')
 
-    def __init__(self, list[AsmTopLevel] top_levels):
+    def __init__(self, list[AsmTopLevel] static_constant_top_levels, list[AsmTopLevel] top_levels):
+        self.static_constant_top_levels = static_constant_top_levels
         self.top_levels = top_levels

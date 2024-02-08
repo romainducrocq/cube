@@ -201,4 +201,5 @@ cdef class TacStaticVariable(TacTopLevel):
 
 
 cdef class TacProgram(AST):
-    cdef public list[TacTopLevel] top_levels
+    cdef public list[TacTopLevel] static_variable_top_levels
+    cdef public list[TacTopLevel] function_top_levels

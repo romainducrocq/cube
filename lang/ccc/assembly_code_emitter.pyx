@@ -693,6 +693,8 @@ cdef void emit_program(AsmProgram node):
     # Program(top_level*) -> $ [<top_level>]
     #                        $     .section .note.GNU-stack,"",@progbits
     cdef Py_ssize_t top_level
+    for top_level in range(len(node.static_constant_top_levels)):
+        emit_top_level(node.static_constant_top_levels[top_level])
     for top_level in range(len(node.top_levels)):
         emit_top_level(node.top_levels[top_level])
     emit(".section .note.GNU-stack,\"\",@progbits", 1)

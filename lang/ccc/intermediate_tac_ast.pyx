@@ -387,7 +387,8 @@ cdef class TacStaticVariable(TacTopLevel):
 cdef class TacProgram(AST):
     # AST = Program(top_level*)
     def __cinit__(self):
-        self._fields = ('top_levels',)
+        self._fields = ('static_variable_top_levels', 'function_top_levels')
 
-    def __init__(self, list[TacTopLevel] top_levels):
-        self.top_levels = top_levels
+    def __init__(self, list[TacTopLevel] static_variable_top_levels, list[TacTopLevel] function_top_levels):
+        self.static_variable_top_levels = static_variable_top_levels
+        self.function_top_levels = function_top_levels
