@@ -1,10 +1,13 @@
-# [Lang] Cython C Compiler 
+# cube (c^3) - Cython C Compiler 
+
+> **THIS IS AN EARLY VERSION OF MY [C COMPILER](https://github.com/romainducrocq/wheelcc)! ALL DEVELOPMENT HAS BEEN MOVED THERE, THIS REPOSITORY WILL NO LONGER RECEIVE UPDATES!**
 
 ****
 
-- Writing a C Compiler - Build a Real Programming Language from Scratch, Nora Sandler: https://nostarch.com/writing-c-compiler  
-    - Test suite: https://github.com/nlsandler/writing-a-c-compiler-tests.git  
-    - OCaml reference implementation: https://github.com/nlsandler/nqcc2  
+## References:
+
+- Writing a C Compiler, Nora Sandler: https://nostarch.com/writing-c-compiler  
+- Test suite: https://github.com/nlsandler/writing-a-c-compiler-tests.git  
 
 ****
 
