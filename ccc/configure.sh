@@ -24,12 +24,7 @@ if [ ! -d "$HOME/.${PACKAGE_NAME}/" ]; then
 fi
 
 if [ ! -d "$HOME/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/" ]; then
-    PATCH=0
-    while \
-    wget -q --method=HEAD https://www.python.org/ftp/python/${PYTHON_VERSION}.$(( $PATCH + 1 ))/Python-${PYTHON_VERSION}.$(( $PATCH + 1 )).tar.xz
-    do
-        PATCH=$(( $PATCH + 1 ));
-    done
+    PATCH=13
 
     wget https://www.python.org/ftp/python/${PYTHON_VERSION}.${PATCH}/Python-${PYTHON_VERSION}.${PATCH}.tar.xz
     if [ ${?} -ne 0 ]; then exit 1; fi
