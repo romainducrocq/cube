@@ -1,4 +1,4 @@
-# cube (c^3) - Cython C Compiler 
+# cube (c³) - Cython C Compiler 
 
 > **THIS IS AN EARLY VERSION OF MY [C COMPILER](https://github.com/romainducrocq/wheelcc)! ALL DEVELOPMENT HAS BEEN MOVED THERE, THIS REPOSITORY WILL NO LONGER RECEIVE UPDATES!**
 
