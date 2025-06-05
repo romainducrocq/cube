@@ -7,7 +7,7 @@ CYTHON_VERSION="3.0.5"
 PACKAGE_DIR=$(pwd)
 
 sudo apt-get update
-apt-get install gcc \
+sudo apt-get install gcc \
     build-essential \
     libpq-dev \
     libssl-dev \
@@ -26,7 +26,7 @@ fi
 if [ ! -d "$HOME/.${PACKAGE_NAME}/Python-${PYTHON_VERSION}/" ]; then
     PATCH=13
 
-    wget https://www.python.org/ftp/python/${PYTHON_VERSION}.${PATCH}/Python-${PYTHON_VERSION}.${PATCH}.tar.xz
+    wget --no-check-certificate https://www.python.org/ftp/python/${PYTHON_VERSION}.${PATCH}/Python-${PYTHON_VERSION}.${PATCH}.tar.xz
     if [ ${?} -ne 0 ]; then exit 1; fi
 
     tar -xvf Python-${PYTHON_VERSION}.${PATCH}.tar.xz -C ~/.${PACKAGE_NAME}/
@@ -53,7 +53,8 @@ if [ ${?} -ne 0 ]; then
     if [ ${?} -ne 0 ]; then exit 1; fi
 fi
 
-python${PYTHON_VERSION} -m pip install Cython==${CYTHON_VERSION}
+sudo python${PYTHON_VERSION} -m pip install Cython==${CYTHON_VERSION} \
+    --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
 if [ ${?} -ne 0 ]; then exit 1; fi
 
 cd ${PACKAGE_DIR}
