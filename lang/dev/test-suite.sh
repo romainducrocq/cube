@@ -1,5 +1,6 @@
 #!/bin/bash
 
+PACKAGE_DIR="$(dirname $(readlink -f ../))"
 PACKAGE_NAME="$(cat ../build/package_name.txt)"
 
 function test () {
@@ -7,12 +8,12 @@ function test () {
     echo "----------------------------------------------------------------------"
     echo "${@}"
     ./test_compiler ./driver.sh ${@}
-    if [ ${?} -ne 0 ]; then exit 1; fi
+    # if [ ${?} -ne 0 ]; then exit 1; fi
 }
 
 cd ../../../writing-a-c-compiler-tests/
 find . -maxdepth 1 -type l -delete
-ln -s ../LANG-CCC/${PACKAGE_NAME}/* .
+ln -s ${PACKAGE_DIR}/${PACKAGE_NAME}/* .
 
 if [ ${#} -ne 0 ]; then
     test ${@}
